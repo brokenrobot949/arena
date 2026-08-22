@@ -77,7 +77,9 @@ h1,h2,h3{font-family:var(--font-display);text-transform:uppercase;letter-spacing
 
 #topbar{
   position:sticky;top:0;z-index:40;
-  display:flex;align-items:center;gap:10px;
+  /* Wraps so the status row can claim a full line of its own. Without it the
+     status div's flex-basis:100% squeezes the champion's name to zero. */
+  display:flex;align-items:center;flex-wrap:wrap;gap:10px;
   padding:10px 14px;
   background:var(--cobalt);
   color:var(--stone);
@@ -100,6 +102,31 @@ h1,h2,h3{font-family:var(--font-display);text-transform:uppercase;letter-spacing
   padding:3px 10px 3px 7px;font-size:13px;line-height:1;
 }
 .purse .chip .icon{width:16px;height:16px}
+/* Second topbar row: current activity on the left, health on the right. Only
+   rendered when there is a champion, so the header keeps its old height on the
+   creation screen. */
+.tb-status{
+  flex-basis:100%;display:flex;align-items:center;gap:7px;
+  margin-top:7px;font-size:11.5px;line-height:1;
+}
+.tb-status[hidden]{display:none}
+.tb-status .icon{width:14px;height:14px;flex:none;opacity:.85}
+.tb-doing{
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  letter-spacing:.02em;
+}
+.tb-hp{display:flex;align-items:center;gap:6px;margin-left:auto;flex:none}
+.tb-hpbar{
+  display:block;width:74px;height:9px;
+  background:rgba(255,255,255,.28);border:2px solid var(--ink);
+  border-radius:var(--r-pill);overflow:hidden;
+}
+.tb-hpbar span{display:block;height:100%;background:var(--jade);transition:width .25s ease-out}
+.tb-hpbar.is-low span{background:var(--gold)}
+.tb-hpbar.is-out span{background:var(--vermilion)}
+.tb-hp .num{font-size:11px;white-space:nowrap}
+/* Knocked out: the activity line becomes the countdown, and says so. */
+.tb-status.is-down .tb-doing{font-weight:700}
 @media (max-width:430px){
   .purse{gap:4px}
   .purse .chip{font-size:10.5px;padding:3px 6px 3px 4px;gap:3px}
@@ -282,7 +309,12 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
   flex:1;min-width:60px;max-width:110px;height:8px;
   background:var(--paper);border:var(--bd-thin);border-radius:var(--r-pill);overflow:hidden;
 }
-.sbar span{display:block;height:100%;background:var(--cobalt)}
+.sbar span{display:block;height:100%;background:var(--cobalt);transition:width .25s ease-out}
+/* The HP row reuses the stat bar so the block reads as one column, but it is
+   health, not progress toward a level - jade, and it warns as it drops. */
+.sbar.hp span{background:var(--jade)}
+.sbar.hp.is-low span{background:var(--gold)}
+.sbar.hp.is-out span{background:var(--vermilion)}
 
 /* ============================================================
    SHOP
@@ -744,6 +776,17 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
       <svg class="icon" aria-hidden="true"><use href="#icon-scroll"/></svg>
       <span class="sr">Records: export or import your save</span>
     </button>
+    <!-- Second row: what the champion is doing and how hurt they are. Hidden
+         entirely when there is no champion, so the header does not reserve
+         space for a status that cannot exist. -->
+    <div class="tb-status" id="topbar-status" hidden>
+      <svg class="icon" aria-hidden="true" id="topbar-doing-icon"><use href="#icon-hourglass"/></svg>
+      <span class="tb-doing" id="topbar-doing"></span>
+      <span class="tb-hp">
+        <span class="tb-hpbar"><span id="topbar-hpfill"></span></span>
+        <span class="num" id="topbar-hpnum"></span>
+      </span>
+    </div>
   </header>
 
   <main id="main">
@@ -992,6 +1035,7 @@ const CONST = {
 
   START_STAT: 5,
   WEAPON_START: ['daggers', 'clubs'],
+  STARTING_CLASS: 'grunt',
   WEAPON_START_LEVEL: 1,
   WEAPON_UNLOCK_LEVEL: 4,
   WEAPON_MAX_LEVEL: 10,
@@ -1280,6 +1324,12 @@ const BONUS_KEYS = {
 /* Doc 3.4 tier scaling. A class carrying a drawback gets +0.4x on its
    positives - "the only modifier in the system". */
 const CLASS_TIERS = {
+  /* Tier 0 is the starting class every champion is created wearing. It asks for
+     no weapon at no proficiency, so classUnlocked() clears it for a champion
+     who has done nothing, and it carries a deliberately small magnitude - the
+     point is that the Battle Class panel is never empty and never reads as
+     something the player has failed to do yet, not that it is worth chasing. */
+  0: { bonuses: 1, magnitude: 0.5, prof: 0, weapons: 0 },
   1: { bonuses: 2, magnitude: 1.0, prof: 4, weapons: 1 },
   2: { bonuses: 2, magnitude: 1.6, prof: 6, weapons: 2 },
   3: { bonuses: 3, magnitude: 2.0, prof: 8, weapons: 3 }
@@ -1648,6 +1698,14 @@ function buildFeats() {
    `afflictionType` / `tutelageType` carry the doc's `affliction:bleed` and
    `tutelage:dex` sub-selections without needing a second bonus key. */
 const CLASSES = {
+  /* Tier 0 - what every champion is created wearing.
+     vigor on purpose, and NOT tutelage: a training bonus on a class every
+     champion has from birth would silently move the whole idle economy that
+     Phases 3, 5 and 8 measured, and it would stack with the Standing Orders
+     legacy perk on the same key. A small max-HP bump touches only combat, is
+     the gentlest thing in the pool, and suits a rank-and-file soldier. */
+  grunt:       { label: 'Grunt',       tier: 0, icon: 'shield', weapons: [],               bonuses: ['vigor'] },
+
   /* Tier 1 - signature, one weapon at proficiency 4 */
   thief:       { label: 'Thief',       tier: 1, icon: 'coin',   weapons: ['daggers'],      bonuses: ['avarice', 'evasion'] },
   brute:       { label: 'Brute',       tier: 1, icon: 'anvil',  weapons: ['clubs'],        bonuses: ['recovery', 'vigor'] },
@@ -1685,6 +1743,20 @@ const CLASS_KEYS = Object.keys(CLASSES);
    Paladin are two table rows; these are the whole difference. One fires every
    CONST.FLOURISH_EVERY exchanges. */
 const FLOURISHES = {
+  /* Tier 0. Deliberately the plainest voice in the registry - a Grunt has no
+     signature move, and the lines say so without being a joke at the player's
+     expense. They should read as competent and unremarkable, because that is
+     exactly what the class is until something better is earned. */
+  grunt: [
+    "The Grunt plants both feet and does the simple thing well.",
+    "No flourish, no wasted motion — just the work.",
+    "Nothing fancy. The Grunt blocks, breathes, and answers.",
+    "Drill takes over where instinct hasn't arrived yet.",
+    "The Grunt holds the line the way it was taught to.",
+    "Unremarkable, steady, and still standing.",
+    "A soldier's guard, held exactly where it should be.",
+    "The Grunt trades blow for blow and calls it even."
+  ],
   thief: [
     "The Thief slips through the guard and pockets the moment.",
     "A dagger flashes, and something valuable changes hands.",
@@ -2567,7 +2639,10 @@ function newCharacter(raceKey, name, epithet, account) {
     statTp: { str: 0, dex: 0, int: 0, con: 0, cha: 0 },
     weapons: weapons,
     activeWeapon: CONST.WEAPON_START[0],
-    battleClass: null,
+    /* Every champion starts as a Grunt (tier 0). The Battle Class panel is
+       never empty, and the first thing a new player reads there is what they
+       ARE rather than a list of things they are not yet. */
+    battleClass: CONST.STARTING_CLASS,
     gear: { weapon: { quality: 0, augments: [] }, armor: { quality: 0, augments: [] } },
     hp: FORMULAS.maxHp(stats.con),
     /* Inherited Purse (legacy perk). */
@@ -3070,8 +3145,10 @@ function classProgress(c, id) {
     need: need,
     parts: parts,
     met: parts.every(p => p.have >= need),
-    /* 0..1 across all required weapons, for the progress readout. */
-    fraction: parts.reduce((n, p) => n + Math.min(1, p.have / need), 0) / parts.length
+    /* 0..1 across all required weapons, for the progress readout. Guarded on an
+       empty requirement list: the tier-0 starting class asks for no weapons, and
+       0/0 is NaN, which renders as a blank progress bar rather than a full one. */
+    fraction: parts.length ? parts.reduce((n, p) => n + Math.min(1, p.have / need), 0) / parts.length : 1
   };
 }
 
@@ -4460,6 +4537,73 @@ function routeFromHash() {
    RENDER
    ============================================================== */
 
+
+/* What the champion is doing, in one line, for the topbar. Pure: it reads the
+   state and the clock passed in and returns text, so the tick and the render
+   cannot disagree about it. Order matters - a knocked-out champion is on the
+   bench whatever else is true, and doc 4 makes that a timed state, so the
+   countdown IS the activity rather than a note beside it. */
+function championActivity(s, now) {
+  const c = s.character;
+  if (!c) return null;
+  if (c.knockoutUntil && now < c.knockoutUntil) {
+    return { kind: 'down', icon: 'hourglass',
+             text: 'Knocked out · back in ' + dur(c.knockoutUntil - now) };
+  }
+  const a = s.arena;
+  if (a && a.active) {
+    return a.boss
+      ? { kind: 'boss', icon: 'book', text: 'Story bout · ' + (a.enemyName || 'a boss') }
+      : { kind: 'arena', icon: 'sword', text: 'In the arena · round ' + a.round };
+  }
+  if (hasSession(c.training)) {
+    const f = FACILITIES[c.training.facility];
+    const label = f ? f.label : 'training';
+    /* The weapon target is the thing a player forgets, so it is named. */
+    const target = f && f.feeds === 'weapon' ? trainingTarget(c) : null;
+    return { kind: 'train', icon: f ? f.icon : 'dumbbell',
+             text: 'Training · ' + label +
+                   (target && WEAPONS[target] ? ' (' + WEAPONS[target].label + ')' : '') };
+  }
+  return { kind: 'idle', icon: 'hourglass', text: 'Idle · nothing under way' };
+}
+
+/* Driven from renderAll AND from the tick, because both the knockout countdown
+   and the HP bar move without any render happening. Writes in place rather
+   than rebuilding, so it never costs keyboard focus. */
+function updateTopbarLive() {
+  const c = state.character;
+  const row = document.getElementById('topbar-status');
+  if (!row) return;
+  row.hidden = !c;
+  if (!c) return;
+
+  const now = Date.now();
+  const act = championActivity(state, now);
+  const doing = document.getElementById('topbar-doing');
+  if (doing && doing.textContent !== act.text) doing.textContent = act.text;
+  row.classList.toggle('is-down', act.kind === 'down');
+  const useEl = document.querySelector('#topbar-doing-icon use');
+  const href = '#icon-' + act.icon;
+  if (useEl && useEl.getAttribute('href') !== href) useEl.setAttribute('href', href);
+
+  const max = maxHpOf(c);
+  /* During a run the arena's copy is the live one; the champion's own hp is
+     only written back on settlement. */
+  const hp = (state.arena && state.arena.active) ? state.arena.playerHp : num(c.hp, 0);
+  const pct = max > 0 ? clamp(hp / max, 0, 1) : 0;
+  const fill = document.getElementById('topbar-hpfill');
+  if (fill) fill.style.width = (pct * 100).toFixed(1) + '%';
+  const bar = fill && fill.parentElement;
+  if (bar) {
+    bar.classList.toggle('is-low', pct <= 0.5 && pct > 0.2);
+    bar.classList.toggle('is-out', pct <= 0.2);
+  }
+  const numEl = document.getElementById('topbar-hpnum');
+  const txt = Math.round(hp) + ' / ' + max;
+  if (numEl && numEl.textContent !== txt) numEl.textContent = txt;
+  row.setAttribute('aria-label', act.text + ', ' + txt + ' health');
+}
 /* The purse is a glance, not a ledger. Exact figures matter while they are
    comparable to a price - and the dearest thing in the game is a level-10
    facility at about 31,500g - so everything under a million stays exact and
@@ -4492,6 +4636,7 @@ function renderAll() {
   const bar = document.getElementById('topbar-title');
   bar.textContent = c ? String(c.name).split(' ')[0] : 'Endless Arena';
   if (c) bar.setAttribute('title', c.name); else bar.removeAttribute('title');
+  updateTopbarLive();
   renderChampion();
   renderTrain();
   renderArena();
@@ -4629,10 +4774,20 @@ function updateTrainLive() {
 function updateChampionLive() {
   const c = state.character;
   if (!c || activeScreen !== 'champion') return;
+  const max = maxHpOf(c);
   const el = document.getElementById('champ-hp');
   if (el) {
-    const txt = Math.round(c.hp) + ' / ' + maxHpOf(c);
+    const txt = Math.round(c.hp) + ' / ' + max;
     if (el.textContent !== txt) el.textContent = txt;
+  }
+  /* The bar moves with the number, in place - HP ticks up every second while
+     training, and rebuilding the block for it would cost keyboard focus. */
+  const bar = document.getElementById('champ-hpbar');
+  if (bar) {
+    const pct = max > 0 ? clamp(c.hp / max, 0, 1) : 0;
+    bar.firstElementChild.style.width = (pct * 100).toFixed(1) + '%';
+    bar.classList.toggle('is-low', pct <= 0.5 && pct > 0.2);
+    bar.classList.toggle('is-out', pct <= 0.2);
   }
 }
 
@@ -5443,16 +5598,18 @@ function runMarkup(a, c) {
         '<span class="round num" id="ar-round">' + a.round + '</span>' +
         '<span class="crowd" title="Crowd">' + crowdPips + '</span></div>' +
 
-      '<div class="fighter">' +
-        '<div class="who"><strong>' + esc(c.name) + '</strong>' +
-          '<span class="num" id="ar-php">' + Math.round(a.playerHp) + ' / ' + max + '</span></div>' +
-        '<div id="ar-pbar">' + hpBar(a.playerHp, max, 'player') + '</div>' +
-      '</div>' +
-
+      /* Enemy above, champion below - the champion's bar sits closest to the
+         controls that act on it, and the pair reads as "them, then us". */
       '<div class="fighter">' +
         '<div class="who"><strong id="ar-ename">' + esc(a.enemyName) + '</strong>' +
           '<span class="num" id="ar-ehp">' + Math.round(a.enemyHp) + ' / ' + Math.round(a.enemyMaxHp) + '</span></div>' +
         '<div id="ar-ebar">' + hpBar(a.enemyHp, a.enemyMaxHp, 'enemy') + '</div>' +
+      '</div>' +
+
+      '<div class="fighter">' +
+        '<div class="who"><strong>' + esc(c.name) + '</strong>' +
+          '<span class="num" id="ar-php">' + Math.round(a.playerHp) + ' / ' + max + '</span></div>' +
+        '<div id="ar-pbar">' + hpBar(a.playerHp, max, 'player') + '</div>' +
       '</div>' +
 
       '<div class="pot">' +
@@ -5629,6 +5786,9 @@ function arenaStep() {
     if (ev.who === 'enemy' && (ev.kind === 'hit' || ev.kind === 'crit')) floatDamage('#ar-pbar', ev.amount, ev.kind === 'crit');
     if (ev.who === 'player' && (ev.kind === 'hit' || ev.kind === 'crit')) floatDamage('#ar-ebar', ev.amount, ev.kind === 'crit');
   });
+  /* The topbar health gauge tracks the fight, not the tick that happens to
+     follow it. */
+  updateTopbarLive();
   if (!a.active) {                        // settled inside the exchange
     stopArenaTick();
     save(walked ? 'auto-yield' : 'run-end');
@@ -6026,7 +6186,14 @@ function championMarkup(c) {
       '<p class="race-special">' + esc(race.special) + '</p>' +
     '</div>' +
     '<div class="panel"><h3 class="sub">Stats</h3><ul class="statlist">' + stats + '</ul>' +
-      '<p class="hp-line">HP <span class="num" id="champ-hp">' + Math.round(c.hp) + ' / ' + maxHpOf(c) + '</span></p></div>' +
+      /* HP reads as a bar as well as a number, the same way every stat above it
+         does - it is the one line in the block that was numbers only. */
+      '<ul class="statlist"><li><span class="k">HP</span>' +
+        '<span class="v num" id="champ-hp">' + Math.round(c.hp) + ' / ' + maxHpOf(c) + '</span>' +
+        '<span class="sbar hp" id="champ-hpbar"><span style="width:' +
+          (maxHpOf(c) > 0 ? clamp(c.hp / maxHpOf(c), 0, 1) * 100 : 0).toFixed(1) + '%"></span></span>' +
+        '<span class="fx">' + (c.knockoutUntil && Date.now() < c.knockoutUntil
+          ? 'On the bench' : 'Recovers while training') + '</span></li></ul></div>' +
     /* Doc 7 asks for a gear summary on this screen, not only in the Shop -
        this is where a player checks what their champion is carrying. */
     '<div class="panel"><h3 class="sub">Gear</h3><ul class="statlist">' +
@@ -6338,6 +6505,7 @@ function tick(dtMs) {
 
   /* Targeted updates only - a full re-render here would rebuild every button
      and drop keyboard focus once per second. */
+  updateTopbarLive();
   updateTrainLive();
   updateChampionLive();
   if (dirty && activeScreen === 'train') renderTrain();   // structure changed (KO cleared)
@@ -6850,7 +7018,12 @@ function assertAll() {
        k + ' does not start both root weapons at level 1');
     ok(c.weapons[c.activeWeapon], k + ' equips a weapon it does not have');
     ok(c.gear.weapon.quality === 0 && c.gear.armor.quality === 0, k + ' does not start in Crude gear');
-    ok(c.battleClass === null, k + ' starts with a battle class');
+    /* Every champion is created wearing the tier-0 starting class - the Battle
+       Class panel is never empty. It has to be legitimately unlocked too, or
+       migrateCharacter would strip it back off on the next load. */
+    ok(c.battleClass === CONST.STARTING_CLASS, k + ' does not start as a ' + CONST.STARTING_CLASS);
+    ok(classUnlocked(c, CONST.STARTING_CLASS), k + ' cannot legitimately hold the starting class');
+    ok(CLASSES[CONST.STARTING_CLASS].tier === 0, 'the starting class is not tier 0');
     ok(migrateCharacter(JSON.parse(JSON.stringify(c))) !== null, k + ' cannot survive a save round trip');
   });
   ok(newCharacter('dwarf', 'A', 'B', freshAccount).hp === 164, 'dwarf max HP != 164');
@@ -6966,7 +7139,12 @@ function assertAll() {
   /* HP regen: 0.8%/min anywhere, 3.5%/min at the Medic, never past max. */
   const rHp = rig();
   rHp.character.hp = 1;
-  const maxHp = FORMULAS.maxHp(rHp.character.stats.con);
+  /* maxHpOf, NOT FORMULAS.maxHp(con): the raw formula skips every vigor bonus,
+     which is the one thing the derived accessor exists to fold in. This read
+     the same for eight phases because no champion had vigor by default - the
+     tier-0 starting class gave every champion one and the mismatch surfaced
+     at once. Nothing downstream may compute HP from raw CON. */
+  const maxHp = maxHpOf(rHp.character);
   applyRegen(rHp, 10, 'forge');
   ok(Math.abs(rHp.character.hp - (1 + maxHp * 0.008 * 10)) < 1e-9, 'passive regen is not 0.8%/min');
   const rMed = rig();
@@ -7495,11 +7673,17 @@ function assertAll() {
      'equipping a class does not move Might by its tier term');
 
   /* --- battle classes and the bonus pool (doc 3.4, 3.5) --- */
-  ok(CLASS_KEYS.length === 22, 'expected 22 classes, found ' + CLASS_KEYS.length);
-  const byTier = { 1: 0, 2: 0, 3: 0 };
+  /* Doc 3.5's twenty-two, plus the one tier-0 starting class. */
+  ok(CLASS_KEYS.length === 23, 'expected 23 classes, found ' + CLASS_KEYS.length);
+  const byTier = { 0: 0, 1: 0, 2: 0, 3: 0 };
   CLASS_KEYS.forEach(id => { byTier[CLASSES[id].tier]++; });
   ok(byTier[1] === 14 && byTier[2] === 6 && byTier[3] === 2,
      'class tier counts drifted from doc 3.5: ' + JSON.stringify(byTier));
+  ok(byTier[0] === 1, 'there is not exactly one starting class');
+  /* A tier-0 class must be wearable by a champion who has done nothing, or
+     newCharacter hands out something migrateCharacter will strip on load. */
+  ok(classUnlocked(newCharacter('human', 'A', 'B', defaultAccount()), CONST.STARTING_CLASS),
+     'the starting class is not unlocked for a brand new champion');
 
   /* Doc 10's acceptance criterion, made mechanical: a class is a data row, and
      every effect it names must already exist in the doc 3.4 pool. If this ever
@@ -8946,7 +9130,14 @@ function assertAll() {
         'importing a ledger past ' + n + ' gold left its feat locked'));
       CONST.FEAT_RETIREMENTS.forEach(n => ok(featEarned(state.account, 'retire-' + n),
         'importing a ledger past ' + n + ' retirements left its feat locked'));
-    } finally { state = keepState; savesArmed = keepArmed; }
+    } finally {
+      state = keepState; savesArmed = keepArmed;
+      /* importSave renders. Restoring state without re-rendering leaves the
+         screen describing the imported rig - the topbar showed "Endless Arena"
+         after a suite run because the last thing painted was a champion-less
+         import. assertAll() must leave the page exactly as it found it. */
+      renderAll();
+    }
   })();
 
   /* --- a champion always has a name to show ------------------
@@ -8971,6 +9162,85 @@ function assertAll() {
     const a = migrateAccount({ hall: [{ id: 'h', name: '   ', race: 'human',
       stats: { str: 5, dex: 5, int: 5, con: 5, cha: 5 } }] });
     ok(a.hall[0].name.trim().length > 0, 'a Hall card kept a blank name');
+  })();
+
+  /* --- the topbar says what the champion is doing ------------
+     championActivity is pure and takes the clock, so the tick and the render
+     can never disagree about it. Order is the substance: a knocked-out champion
+     is on the bench whatever else is true, and doc 4 makes that a TIMED state,
+     so the countdown is the activity rather than a note beside it. */
+  (function () {
+    const rig = () => {
+      const s = defaultState();
+      s.character = newCharacter('human', 'Doer', 'Busy', s.account);
+      return s;
+    };
+    ok(championActivity({ character: null, arena: defaultArena(), account: defaultAccount() }, 0) === null,
+      'a championless account reported an activity');
+
+    let s = rig();
+    ok(championActivity(s, 1000).kind === 'idle', 'a champion doing nothing is not idle');
+
+    s = rig();
+    s.character.training = { facility: 'forge', startedAt: 0, weaponTarget: null };
+    const t = championActivity(s, 1000);
+    ok(t.kind === 'train' && /Blacksmith Forge/.test(t.text),
+      'a training champion does not report the facility by name');
+    /* A weapon facility names the weapon - it is the thing players forget. */
+    s.character.training = { facility: 'sparring', startedAt: 0, weaponTarget: 'clubs' };
+    ok(/Clubs/.test(championActivity(s, 1000).text),
+      'sparring does not name the weapon being trained');
+
+    s = rig();
+    s.character.bestRound = 0;
+    startRun(s, 0);
+    ok(championActivity(s, 1000).kind === 'arena', 'a live run is not reported as the arena');
+    ok(/round/.test(championActivity(s, 1000).text), 'the arena activity does not name the round');
+
+    /* A knockout OUTRANKS everything, and carries its countdown. */
+    s = rig();
+    s.character.training = { facility: 'forge', startedAt: 0, weaponTarget: null };
+    s.character.knockoutUntil = 60000;
+    const k = championActivity(s, 1000);
+    ok(k.kind === 'down', 'a knocked-out champion still reported as training');
+    ok(/Knocked out/.test(k.text) && /59s/.test(k.text),
+      'the knockout activity does not carry its remaining time: ' + k.text);
+    /* And it stops the moment the cooldown expires, not a tick later. */
+    ok(championActivity(s, 60000).kind !== 'down', 'the knockout state outlived its own timer');
+  })();
+
+  /* --- the starting class ------------------------------------
+     Every champion is created wearing it, which means it has to satisfy the
+     same gate migrateCharacter applies on load - otherwise creation hands out
+     something the next reload silently takes away. */
+  (function () {
+    const cl = CLASSES[CONST.STARTING_CLASS];
+    ok(!!cl, 'CONST.STARTING_CLASS names no class');
+    ok(cl.tier === 0, 'the starting class is not tier 0');
+    ok(cl.weapons.length === 0, 'the starting class demands a weapon a new champion cannot have');
+    ok(MIGHT_UNCHANGED(), 'the starting class moves Might on a brand new champion');
+    function MIGHT_UNCHANGED() {
+      const c = newCharacter('human', 'A', 'B', defaultAccount());
+      const withClass = mightOf(c);
+      c.battleClass = null;
+      return mightOf(c) === withClass;
+    }
+    /* It survives a save round trip rather than being stripped as unearned. */
+    const s = defaultState();
+    s.character = newCharacter('human', 'Keeper', 'Steady', s.account);
+    const back = migrate(JSON.parse(JSON.stringify(s)));
+    ok(back.character.battleClass === CONST.STARTING_CLASS,
+      'the starting class was stripped on load - creation and migration disagree');
+    /* Its bonus reaches the game through the pool like every other class, and
+       is NOT tutelage: a training bonus on a class every champion is born with
+       would move the whole idle economy and stack with the legacy perk. */
+    ok(cl.bonuses.indexOf('tutelage') === -1,
+      'the starting class grants a training bonus - it would shift the idle economy for everyone');
+    cl.bonuses.forEach(k => ok(!!BONUS_KEYS[k],
+      'the starting class grants ' + k + ', which is not in the doc 3.4 pool'));
+    const fresh = newCharacter('human', 'V', 'T', defaultAccount());
+    ok(maxHpOf(fresh) > FORMULAS.maxHp(fresh.stats.con),
+      'the starting class vigor bonus does not reach maxHpOf');
   })();
   /* --- reduced motion is a JS gate, not only a CSS rule -------
      The CSS block at the top kills every transition and animation, but it
