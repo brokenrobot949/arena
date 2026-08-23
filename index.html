@@ -517,6 +517,17 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 
 .armed{margin:9px 0 0;font-family:var(--font-data);font-size:11px;text-align:center;
   color:var(--ink-soft)}
+/* Equipped weapon and battle class, shown in the arena and on the Champion
+   name card from one helper. */
+.loadout{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 2px}
+.lo{
+  display:flex;align-items:center;gap:5px;font-size:11px;line-height:1;
+  background:var(--paper);border:var(--bd-thin);border-radius:var(--r-pill);
+  padding:4px 9px 4px 7px;
+}
+.lo .icon{width:13px;height:13px}
+.lo .num{font-size:10.5px}
+.champ-head + .loadout{margin-top:9px}
 .pot{display:flex;gap:8px;margin:12px 0}
 .pot .chip{display:flex;align-items:center;gap:5px;background:var(--stone);
   border:var(--bd-thin);border-radius:var(--r-pill);padding:4px 11px 4px 8px;font-size:14px}
@@ -579,7 +590,12 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 }
 .fac-card:active{transform:translateY(3px);box-shadow:0 0 0 var(--ink)}
 .fac-card.is-on{background:var(--gold);border-width:3px}
-.fac-head{display:flex;align-items:center;gap:7px;font-size:15px}
+/* Wraps, and the name is allowed to shrink. A no-wrap row of icon + name +
+   level pill needs 142px for "Blacksmith Forge L1" in a 124px card at 375px,
+   so the pill spilled past the card edge. The page never scrolled sideways,
+   which is why the assertion suite could not see it. */
+.fac-head{display:flex;align-items:center;gap:7px;font-size:15px;flex-wrap:wrap}
+.fac-head strong{min-width:0;overflow-wrap:anywhere}
 .fac-head .icon{width:20px;height:20px}
 .fac-head.big{font-size:18px;margin-bottom:10px}
 .fac-head.big .icon.big{width:28px;height:28px}
@@ -1005,6 +1021,21 @@ const CONST = {
   CRIT_BASE: 0.05,
   PROF_CRIT_PER: 0.01,
   CRIT_MULT: 2,
+
+  /* Sparring TP earned in the arena, credited to the weapon the champion is
+     actually holding. Priced PER EXCHANGE, not per round: a flat per-round
+     award drifts, because rounds cleared grow faster with power than run
+     minutes do - measured, it went from 63%% of what the Sparring Circle pays
+     in the same time at Might 200 to 136%% at Might 2000, which inverts the
+     train-then-fight loop doc 1 is built on. Per exchange it is time in the
+     sand, so the ratio holds flat at every stage by construction, and a deeper
+     round still teaches more because it takes longer to win.
+
+     0.008 x (60000/1100) = 0.436 TP/min, about 41%% of the 1.05 TP/min a
+     level-1 Sparring Circle pays a human with no mentor - the floor a player
+     always has. Against a real trained-up academy it is a much smaller
+     supplement, which is the intent. */
+  ARENA_TP_PER_EXCHANGE: 0.008,
 
   GOLD_BASE: 10,
   /* 1.12, not doc 4's 1.25 (Rob, 2026-08-20). At 1.25 gold income is
@@ -2806,6 +2837,76 @@ function previewLevels(s, key, tp) {
   return out;
 }
 
+/* How long until the session banks its NEXT level, at the rate it is earning
+   right now. Pure, and it reads the same preview the panel does, so the number
+   on screen and the number in the tick can never disagree.
+
+   Deliberately an ESTIMATE and labelled as one. It holds the current rate
+   steady, and the real rate does not hold: crossing a session-bonus tier makes
+   it jump (the whole session re-multiplies), and a mentor decaying makes it
+   fall. Projecting through both would need a root-find over a piecewise
+   function to tell a player something they will watch happen anyway. What it
+   must never do is UNDERSTATE, so it is computed from the current rate rather
+   than an optimistic one.
+
+   Returns null when there is nothing to wait for: the Medic earns no TP, a
+   maxed weapon has nowhere to go, and a rate of zero never arrives. */
+function timeToNextLevel(s, now) {
+  const c = s.character;
+  const p = sessionPreview(s, now);
+  if (!c || !p) return null;
+  const feeds = FACILITIES[p.facility].feeds;
+  if (feeds === 'hp') return null;
+
+  /* Where the next level's cost and the bank already sit. previewLevels tells
+     us how many levels the pending TP ALREADY buys, so the estimate is for the
+     one after those - otherwise it counts a level the player can collect now. */
+  const ready = previewLevels(s, p.facility, p.tp);
+  let level, banked, cost;
+  if (feeds === 'weapon') {
+    const w = trainingTarget(c);
+    if (!w) return null;
+    const gained = ready.filter(x => x.kind === 'weapon').length;
+    level = c.weapons[w].level + gained;
+    if (level >= CONST.WEAPON_MAX_LEVEL) return null;
+    cost = FORMULAS.weaponCost(level);
+    /* TP left over after the levels already bought. */
+    banked = c.weapons[w].tp + p.tp;
+    for (let i = 0; i < gained; i++) banked -= FORMULAS.weaponCost(c.weapons[w].level + i);
+  } else {
+    const gained = ready.filter(x => x.kind === 'stat').length;
+    level = c.stats[feeds] + gained;
+    cost = FORMULAS.statCost(level);
+    banked = c.statTp[feeds] + p.tp;
+    for (let i = 0; i < gained; i++) banked -= FORMULAS.statCost(c.stats[feeds] + i);
+  }
+  if (!isFinite(cost) || cost <= 0) return null;
+
+  /* Always positive: previewLevels has already bought everything the bank can
+     afford, so what is left is always short of the NEXT level. An earlier
+     version had a ready branch here for remaining <= 0 - unreachable, and an
+     unreachable branch is a lie about how the thing works. The assertion that
+     tried to drive it is what found that out. */
+  const remaining = cost - banked;
+  /* The rate the session is actually banking at, bonus included. */
+  const perMin = p.rate * p.bonus;
+  if (!(perMin > 0) || !isFinite(perMin)) return null;
+  /* Nothing accrues past the cap, so a level beyond it never arrives. */
+  const capLeft = CONST.OFFLINE_CAP_MS - p.ms;
+  const ms = (remaining / perMin) * 60000;
+  if (capLeft <= 0 || ms > capLeft) return { ms: ms, level: level + 1, beyondCap: true };
+  return { ms: ms, level: level + 1 };
+}
+
+/* One sentence for the panel, so the markup and the live update never phrase it
+   differently. */
+function etaLine(s, now) {
+  const e = timeToNextLevel(s, now);
+  if (!e) return '';
+  if (e.beyondCap) return 'Next level is beyond the 8h cap — collect and keep going.';
+  return 'Next level in about ' + dur(e.ms) + '.';
+}
+
 /* Parent at WEAPON_UNLOCK_LEVEL opens its children (doc 3.3). */
 function unlockChildren(c, weaponKey) {
   const out = [];
@@ -3519,8 +3620,21 @@ function clearRound(s, events) {
   a.pot.gold += r.gold;
   a.pot.renown += r.renown;
   a.crowd = Math.min(CONST.CROWD_MAX, a.crowd + 1);
+  /* Time in the sand teaches the weapon in your hand. Routed through applyTp
+     so it takes the same level-up path, the same NaN and Infinity guards, and
+     the same child-weapon unlocks the Sparring Circle uses - a second
+     level-up path is a second place for the Phase 3 defects to come back.
+     applyTp resolves the weapon through trainingTarget(), which falls back to
+     the ACTIVE weapon once a run has ended the training session. */
+  const tp = Math.max(0, num(a.exchange, 0)) * CONST.ARENA_TP_PER_EXCHANGE;
+  const taught = tp > 0 ? applyTp(s, 'sparring', tp) : null;
   logLine(a, 'clear', a.enemyName + ' goes down. +' + Math.round(r.gold) + 'g');
-  events.push({ who: 'player', kind: 'roundClear', round: a.round, reward: r });
+  if (taught && taught.levels.length) {
+    taught.levels.forEach(l => logLine(a, 'clear',
+      (WEAPONS[l.key] ? WEAPONS[l.key].label : l.key) + ' reaches level ' + l.level + '.'));
+  }
+  events.push({ who: 'player', kind: 'roundClear', round: a.round, reward: r,
+                tp: tp, levels: taught ? taught.levels : [] });
   beginRound(s, a.round + 1);
   events.push({ who: 'enemy', kind: 'enter', round: a.round, name: a.enemyName });
   return r;
@@ -4759,6 +4873,13 @@ function updateTrainLive() {
     set('sess-bar-label', b.label);
   }
 
+  const etaEl = document.getElementById('sess-eta');
+  if (etaEl) {
+    const txt = etaLine(state, Date.now());
+    if (etaEl.textContent !== txt) etaEl.textContent = txt;
+    etaEl.hidden = !txt;
+  }
+
   const ready = previewLevels(state, p.facility, p.tp);
   const row = document.getElementById('sess-ready-row');
   if (row) {
@@ -4875,6 +4996,7 @@ function activePanel(p, c) {
       '<li' + (levels.length ? '' : ' hidden') + ' id="sess-ready-row"><span class="k">Ready</span>' +
         '<span class="v" id="sess-ready">' + esc(levelSummary(levels)) + '</span></li>' +
     '</ul>' +
+    '<p class="hp-line" id="sess-eta">' + etaLine(state, Date.now()) + '</p>' +
     '<p class="hp-line" id="sess-next">' + nextLine + '</p>' +
     '<button class="btn wide" type="button" id="btn-collect"' + (p.tp > 0 ? '' : ' disabled') + '>Collect</button>' +
     '</div>';
@@ -5578,6 +5700,22 @@ function renderArena() {
   restore();
 }
 
+/* The equipped weapon and battle class, as two small chips. One helper, used
+   by the arena fighter block and the Champion name card, so the two can never
+   describe the same champion differently. */
+function loadoutChips(c) {
+  const w = WEAPONS[c.activeWeapon];
+  const cl = CLASSES[c.battleClass];
+  return '<span class="lo">' + icon(w ? w.icon : 'sword') +
+      esc(w ? w.label : 'No weapon') +
+      (c.weapons[c.activeWeapon] ? ' <span class="num">Lv ' + c.weapons[c.activeWeapon].level + '</span>' : '') +
+    '</span>' +
+    '<span class="lo">' + icon(cl ? cl.icon : 'lock') +
+      esc(cl ? cl.label : 'No class') +
+      (cl && cl.tier > 0 ? ' <span class="num">T' + cl.tier + '</span>' : '') +
+    '</span>';
+}
+
 function hpBar(cur, max, tone) {
   const pct = max > 0 ? Math.max(0, Math.min(1, cur / max)) : 0;
   /* Doc 7: the player's bar runs jade -> vermilion as it drops. */
@@ -5609,6 +5747,11 @@ function runMarkup(a, c) {
       '<div class="fighter">' +
         '<div class="who"><strong>' + esc(c.name) + '</strong>' +
           '<span class="num" id="ar-php">' + Math.round(a.playerHp) + ' / ' + max + '</span></div>' +
+        /* What the champion brought to the fight. The weapon decides the damage
+           and the crit on every exchange and the class decides the bonuses, so
+           a player watching a run should not have to leave it to remember
+           which ones are in play. */
+        '<div class="loadout">' + loadoutChips(c) + '</div>' +
         '<div id="ar-pbar">' + hpBar(a.playerHp, max, 'player') + '</div>' +
       '</div>' +
 
@@ -6183,6 +6326,8 @@ function championMarkup(c) {
         '<span class="epithet">the ' + esc(c.epithet) + ' &middot; ' + esc(race.label) + '</span></div>' +
         '<div class="might"><span class="num">' + might + '</span><small>Might</small></div>' +
       '</div>' +
+      /* Same two chips the arena shows, from the same helper. */
+      '<div class="loadout">' + loadoutChips(c) + '</div>' +
       '<p class="race-special">' + esc(race.special) + '</p>' +
     '</div>' +
     '<div class="panel"><h3 class="sub">Stats</h3><ul class="statlist">' + stats + '</ul>' +
@@ -6779,6 +6924,31 @@ function assertAll() {
        ' ' + Math.round(r.width) + 'x' + Math.round(r.height));
   });
 
+
+  /* --- nothing spills out of its own box --------------------
+     `documentElement.scrollWidth <= innerWidth` has guarded sideways scroll
+     since Phase 1, and it cannot see an element that overflows INSIDE the page:
+     the facility cards forced icon + name + level pill onto one no-wrap row, so
+     "Blacksmith Forge L1" needed 142px in a 124px card and the pill sat over
+     the card edge - with the page still measuring exactly 375 wide.
+
+     Walks the rendered screen for any element whose content is wider than the
+     element while overflow-x is visible, which is precisely "this is spilling
+     and nothing is clipping or scrolling it". Guarded on a laid-out viewport
+     like the other measuring checks. */
+  if (canMeasure) {
+    const sec = document.querySelector('.screen.is-active');
+    if (sec) {
+      const spills = [];
+      sec.querySelectorAll('*').forEach(el => {
+        if (el.scrollWidth <= el.clientWidth + 1) return;
+        if (getComputedStyle(el).overflowX !== 'visible') return;   // clipped or scrolled on purpose
+        if (!el.getBoundingClientRect().height) return;             // not rendered
+        spills.push((el.className || el.tagName) + ' ' + el.scrollWidth + '>' + el.clientWidth);
+      });
+      ok(spills.length === 0, 'content spills out of its box: ' + spills.slice(0, 3).join(' | '));
+    }
+  }
   /* --- nothing in the chrome is ellipsised ------------------
      The Phase 1 assertion covered nav labels because that is where the bug was
      found. The topbar title was not covered, and shipped truncating a champion
@@ -9164,6 +9334,148 @@ function assertAll() {
     ok(a.hall[0].name.trim().length > 0, 'a Hall card kept a blank name');
   })();
 
+
+  /* --- the arena teaches the weapon in your hand -------------
+     Priced per EXCHANGE rather than per round, so the share it represents of
+     what the Sparring Circle pays holds flat at every stage instead of climbing
+     with round depth and inverting the train-then-fight loop. */
+  (function () {
+    const rig = (lvl) => {
+      const s = defaultState();
+      s.character = newCharacter('human', 'Fighter', 'Keen', s.account);
+      s.character.stats.str = 400;              // one-shot the enemy, so rounds are 1 exchange
+      s.character.weapons.daggers.level = lvl == null ? 1 : lvl;
+      s.character.hp = maxHpOf(s.character);
+      return s;
+    };
+    /* Fight until a round actually CLEARS - the award happens on the clear, and
+       even a very strong champion needs a few exchanges to get there. */
+    const clearOneRound = st => {
+      const from = st.arena.round;
+      let g = 0;
+      while (st.arena.active && st.arena.round === from && g++ < 4000) exchange(st, 0);
+      return st.arena.round > from;
+    };
+    let s = rig();
+    const w = s.character.activeWeapon;
+    ok(w === 'daggers', 'the rig is not holding the weapon it thinks it is');
+    startRun(s, 0);
+    const before = s.character.weapons[w].tp;
+    ok(clearOneRound(s), 'the arena rig could not clear a single round');
+    ok(s.character.weapons[w].tp > before || s.character.weapons[w].level > 1,
+      'clearing a round taught the equipped weapon nothing');
+
+    /* It must credit the ACTIVE weapon, not the first one in the list. */
+    s = rig();
+    s.character.weapons.clubs = { level: 1, tp: 0 };
+    s.character.activeWeapon = 'clubs';
+    startRun(s, 0);
+    const dag = s.character.weapons.daggers.tp;
+    ok(clearOneRound(s), 'the active-weapon rig could not clear a round');
+    ok(s.character.weapons.clubs.tp > 0, 'the arena did not teach the ACTIVE weapon');
+    ok(s.character.weapons.daggers.tp === dag, 'the arena taught a weapon that was not equipped');
+
+    /* Longer rounds teach more, because the award is time in the sand. */
+    ok(CONST.ARENA_TP_PER_EXCHANGE > 0, 'the arena teaches nothing at all');
+    const oneEx = 1 * CONST.ARENA_TP_PER_EXCHANGE;
+    const tenEx = 10 * CONST.ARENA_TP_PER_EXCHANGE;
+    ok(tenEx > oneEx * 9.9, 'the arena award is not proportional to exchanges');
+
+    /* A maxed weapon banks nothing - the same as training it would, and the
+       weapon picker is how a player redirects it. */
+    s = rig(CONST.WEAPON_MAX_LEVEL);
+    startRun(s, 0);
+    clearOneRound(s);
+    ok(s.character.weapons[w].level === CONST.WEAPON_MAX_LEVEL,
+      'the arena pushed a weapon past its maximum');
+    ok(s.character.weapons[w].tp === 0, 'a maxed weapon banked arena TP it can never spend');
+
+    /* And it goes through applyTp, so a level-up unlocks children exactly as
+       the Sparring Circle does - no second level-up path. */
+    s = rig(CONST.WEAPON_UNLOCK_LEVEL - 1);
+    s.character.weapons.daggers.tp = FORMULAS.weaponCost(CONST.WEAPON_UNLOCK_LEVEL - 1) - 0.001;
+    startRun(s, 0);
+    clearOneRound(s);
+    ok(s.character.weapons.daggers.level >= CONST.WEAPON_UNLOCK_LEVEL,
+      'the arena did not level the weapon it was about to level');
+    ok(!!s.character.weapons.swords || !!s.character.weapons.axes,
+      'an arena level-up did not unlock the weapon children a training one would');
+
+    /* A boss is one fight outside the endless run, and it clears no rounds -
+       so it teaches nothing, which keeps the ladder from being a TP farm. */
+    const b = defaultState();
+    b.character = newCharacter('human', 'Boss', 'Fight', b.account);
+    b.character.stats.str = 400;
+    b.character.bestRound = 30;
+    b.character.hp = maxHpOf(b.character);
+    const tpB = b.character.weapons[b.character.activeWeapon].tp;
+    startBoss(b, STORIES[0].id, 0, 0);
+    let guard = 0;
+    while (b.arena.active && guard++ < 60000) exchange(b, 0);
+    ok(b.arena.over.how === 'boss', 'the boss rig did not win');
+    ok(b.character.weapons[b.character.activeWeapon].tp === tpB,
+      'a story boss paid weapon TP - it clears no rounds and should teach nothing');
+  })();
+
+  /* --- the training panel estimates the next level ----------- */
+  (function () {
+    const rig = (fac, target) => {
+      const s = defaultState();
+      s.character = newCharacter('human', 'Waiter', 'Patient', s.account);
+      s.character.training = { facility: fac, startedAt: 0, weaponTarget: target || null };
+      return s;
+    };
+    /* The Medic pays in HP, so there is no level to wait for. */
+    ok(timeToNextLevel(rig('medic'), 60000) === null, 'the Medic offered a level estimate');
+    ok(timeToNextLevel({ character: null, account: defaultAccount(), arena: defaultArena() }, 0) === null,
+      'a championless state offered a level estimate');
+
+    let s = rig('forge');
+    const a = timeToNextLevel(s, 60000);
+    ok(a && a.ms > 0 && isFinite(a.ms), 'no estimate for a live stat session');
+    ok(a.level === s.character.stats.str + 1, 'the estimate names the wrong next level');
+    /* It shortens as the bank fills - the one property that makes it useful. */
+    s.character.statTp.str = FORMULAS.statCost(s.character.stats.str) * 0.9;
+    const b = timeToNextLevel(s, 60000);
+    ok(b.ms < a.ms, 'the estimate did not shorten as the bank filled');
+    /* A bank that already covers several levels estimates the one AFTER them,
+       not a countdown to something the player can collect right now. */
+    s.character.statTp.str = FORMULAS.statCost(s.character.stats.str) * 6;
+    const c2 = timeToNextLevel(s, 60000);
+    const readyNow = previewLevels(s, 'forge', sessionPreview(s, 60000).tp).length;
+    ok(readyNow >= 1, 'the rig did not actually make a level payable');
+    ok(c2 && c2.level === s.character.stats.str + readyNow + 1,
+      'the estimate does not skip the levels already payable');
+
+    /* A maxed weapon has nowhere to go. */
+    s = rig('sparring', 'daggers');
+    s.character.weapons.daggers.level = CONST.WEAPON_MAX_LEVEL;
+    ok(timeToNextLevel(s, 60000) === null, 'a maxed weapon offered a next level');
+
+    /* It must never UNDERSTATE - the rate it projects is the rate being earned
+       now, and the tiers only ever make that faster. */
+    s = rig('forge');
+    const est = timeToNextLevel(s, 60000);
+    const p = sessionPreview(s, 60000);
+    /* The bank the estimate works from is the champion's own TP PLUS what the
+       session has already earned but not yet collected. */
+    const need = FORMULAS.statCost(s.character.stats.str) - (s.character.statTp.str + p.tp);
+    ok(Math.abs(est.ms - (need / (p.rate * p.bonus)) * 60000) < 1,
+      'the estimate is not the remaining cost over the current rate');
+    ok(typeof etaLine(s, 60000) === 'string' && etaLine(s, 60000).length > 0,
+      'the estimate has no sentence to render');
+  })();
+
+  /* --- the loadout is shown wherever the champion is -------- */
+  (function () {
+    const c = newCharacter('human', 'Shown', 'Clearly', defaultAccount());
+    const html = loadoutChips(c);
+    ok(/Daggers/.test(html), 'the loadout does not name the equipped weapon');
+    ok(new RegExp(CLASSES[CONST.STARTING_CLASS].label).test(html),
+      'the loadout does not name the equipped battle class');
+    c.battleClass = null;
+    ok(/No class/.test(loadoutChips(c)), 'a classless champion shows no loadout fallback');
+  })();
   /* --- the topbar says what the champion is doing ------------
      championActivity is pure and takes the clock, so the tick and the render
      can never disagree about it. Order is the substance: a knocked-out champion
@@ -9415,6 +9727,7 @@ window.EA = {
   rollName, rollEpithet, newCharacter, newDraft, prologueFor, raceUnlocked, createChampion,
   tpPerMin, facilityLevel, mentorMultFor, sessionElapsed, sessionPreview, previewLevels,
   applyTp, applyRegen, unlockChildren, startTraining, collectSession, resolveOffline, tick,
+  timeToNextLevel, etaLine, loadoutChips, championActivity, updateTopbarLive, purseText,
   ENEMY_GIVEN, ENEMY_BANDS, bandFor, rollEnemyName,
   startRun, beginRound, exchange, settleRun, yieldPreview, roundReward, enemyFor,
   playerDamage, playerCritChance, playerEvadeChance, damageTaken, profOf,
