@@ -235,7 +235,7 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 .namebox{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .name-lines{flex:1;min-width:150px;display:flex;flex-direction:column;gap:2px}
 .name-lines strong{font-family:var(--font-display);font-size:21px;letter-spacing:-.01em}
-.epithet{font-size:13px;color:var(--ink-soft)}
+.rank-title{font-size:13px;color:var(--ink-soft)}
 
 .statlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
 .statlist li{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
@@ -326,6 +326,26 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
   padding:5px 13px 5px 9px;font-size:16px}
 .purse-line .chip .icon{width:17px;height:17px}
 
+/* The renown ladder. Every rung stays visible with what it costs and what it
+   pays - doc 3.8's locked-row rule. Wraps rather than truncating: a title like
+   "Legend of the Sands" needs the room at 375px. */
+.rank-ladder{list-style:none;margin:10px 0 0;padding:0}
+.rank-ladder li{
+  display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+  padding:6px 0;border-bottom:2px dashed var(--ink-faint);
+}
+.rank-ladder li:last-child{border-bottom:0}
+.rank-ladder .rl-n{
+  flex:none;min-width:22px;text-align:center;font-size:12px;
+  border:2px solid var(--ink);border-radius:6px;padding:1px 3px;
+}
+.rank-ladder strong{font-size:13.5px;white-space:nowrap}
+.rank-ladder .rl-b{font-size:11.5px;color:var(--ink-soft);flex:1;min-width:70px}
+.rank-ladder .rl-at{margin-left:auto;font-size:11px;color:var(--ink-soft)}
+.rank-ladder .is-locked{opacity:.55}
+.rank-ladder .is-locked .rl-n{border-style:dashed}
+.rank-ladder .is-now{background:var(--sand);border-radius:8px;padding-left:6px;padding-right:6px}
+.rank-ladder .is-now .rl-n{background:var(--ink);color:var(--paper)}
 .row-buy{
   display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   padding:10px 0;border-bottom:2px dashed var(--ink-faint);
@@ -371,7 +391,7 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 .hall-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .hall-head .icon.big{width:28px;height:28px;flex:none}
 .hall-head strong{display:block;font-family:var(--font-display);font-size:16px;line-height:1.15}
-.hall-head .epithet{font-size:11.5px}
+.hall-head .rank-title{font-size:11.5px}
 .hall-head .might{margin-left:auto;text-align:right}
 .hall-head .might .num{font-size:19px}
 
@@ -643,6 +663,9 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 .chip-btn:active{transform:translateY(3px);box-shadow:0 0 0 var(--ink)}
 .chip-btn.is-on{background:var(--cobalt);color:var(--paper)}
 .away{background:var(--gold)}
+/* The report grew an Arena line, so the list can now run to three rows and
+   the Good button sat flush against the last of them. */
+.away .btn{margin-top:12px}
 
 #flash{
   position:fixed;left:50%;transform:translateX(-50%) translateY(20px);
@@ -881,6 +904,15 @@ const CONST = {
   IDLE_TICK_MS: 1000,
   ARENA_TICK_MS: 1100,
   OFFLINE_CAP_MS: 8 * 60 * 60 * 1000,
+  /* A safety net on the arena catch-up loop, not a game rule. Every run ends
+     on its own - enemy HP and damage both scale exponentially against a player
+     whose damage does not - so this is only reachable if a future retune makes
+     that untrue. 40,000 exchanges is over twelve hours of sand. */
+  ARENA_CATCHUP_MAX_EXCHANGES: 40000,
+  /* The screen a session opens on. Doc 1's loop is train-then-fight and the
+     training session is the thing that has been running while the player was
+     away, so it is also where the "while you were away" card lives. */
+  DEFAULT_SCREEN: 'train',
 
   BASE_HP: 100,
   HP_PER_CON: 8,
@@ -1031,11 +1063,27 @@ const CONST = {
      sand, so the ratio holds flat at every stage by construction, and a deeper
      round still teaches more because it takes longer to win.
 
-     0.008 x (60000/1100) = 0.436 TP/min, about 41%% of the 1.05 TP/min a
+     RAISED 2026-08-23 (Rob) from 0.008. The old value was deliberately timid
+     and it read as stingy in play: 0.436 TP/min, 42%% of the floor, and only
+     1.2 TP for a whole fresh run.
+
+     0.018 x (60000/1100) = 0.982 TP/min, about 94%% of the 1.05 TP/min a
      level-1 Sparring Circle pays a human with no mentor - the floor a player
-     always has. Against a real trained-up academy it is a much smaller
-     supplement, which is the intent. */
-  ARENA_TP_PER_EXCHANGE: 0.008,
+     always has. Against a real trained-up academy it is a far smaller
+     supplement, which is the intent.
+
+     THE CEILING IS THE FLOOR, and it is asserted. Per minute in the sand this
+     must stay strictly below what the weakest possible training facility pays,
+     or doc 1's train-then-fight loop inverts and the arena becomes the way to
+     train. 94%% is close to that line on purpose - the ratio does not drift
+     with run depth (that is what pricing per exchange buys), so only a change
+     to ARENA_TICK_MS or to the facility floor can move it, and the assertion
+     catches either.
+
+     Counting the 25-minute knockout bench, which is the honest way to read it,
+     the arena still only teaches 10-26%% of what the same wall-clock spent
+     training would. */
+  ARENA_TP_PER_EXCHANGE: 0.018,
 
   GOLD_BASE: 10,
   /* 1.12, not doc 4's 1.25 (Rob, 2026-08-20). At 1.25 gold income is
@@ -1588,6 +1636,50 @@ const STORIES = [
 ]
 ;
 
+/* --- the renown ladder --------------------------------------
+   Doc 4 gives the rank THRESHOLDS and doc 9 hangs three unlocks off three of
+   them; between the rungs there was nothing. A champion's NAME is the thing a
+   crowd actually changes, so the ladder is where the title comes from.
+
+   This REPLACES the random epithet rolled at creation. A title handed out
+   before a champion has fought says nothing about the champion wearing it -
+   "the Undefeated" on a level-1 Grunt is the game telling a lie on its own
+   name card. A title that climbs as they fight is the record of what they have
+   actually done, and every successor re-earns it from wherever the account's
+   renown floor drops them.
+
+   Each rung carries a SMALL bonus, and every one of them resolves through the
+   doc 3.4 pool - the same namespace the classes and the augments draw on - so
+   the ladder reaches damage, gold and the bench through consumers that already
+   exist. Doc 10 makes "no special cases in combat code" an acceptance
+   criterion; a rank ladder is exactly the kind of thing that would otherwise
+   grow one.
+
+   They are CUMULATIVE: rank 6 holds every bonus from 1 to 6. That is what
+   makes a rank feel like a career rather than a swap, and it is why each one
+   can be small enough not to disturb the numbers the Phase 5 harness settled.
+
+   Rank 0 carries no bonus on purpose - it is the state of having done nothing.
+   Past the top rung the ladder simply stops while renown keeps counting for
+   prestige and doc 3.8's facility gate: a career has a top, and an unbounded
+   one would compound against every measured figure in this build. */
+const RENOWN_RANKS = [
+  { title: 'Unproven',            bonus: null },
+  { title: 'Sand-Tested',         bonus: { avarice: 0.03 } },
+  { title: 'Blooded',             bonus: { vigor: 0.03 } },
+  { title: 'Crowd-Favoured',      bonus: { avarice: 0.04 } },
+  { title: 'Acclaimed',           bonus: { damage: 0.02 } },
+  { title: 'Renowned',            bonus: { recovery: 0.05 } },
+  { title: 'Laurelled',           bonus: { vigor: 0.04 } },
+  { title: 'Storied',             bonus: { crit: 0.02 } },
+  { title: 'Illustrious',         bonus: { mitigation: 0.02 } },
+  { title: 'Exalted',             bonus: { damage: 0.03 } },
+  { title: 'Peerless',            bonus: { recovery: 0.05 } },
+  { title: 'Legend of the Sands', bonus: { evasion: 0.02 } },
+  { title: 'Undying',             bonus: { avarice: 0.05 } }
+];
+const RENOWN_TOP_RANK = RENOWN_RANKS.length - 1;
+
 /* --- rank unlocks (doc 9's "account/character unlock split") -
    Doc 5 declares `account.unlocks` and `character.unlocks` and Phases 1-8 never
    granted either, so all three flags were permanently false and the two
@@ -2071,7 +2163,11 @@ function defaultArena() {
     /* null for an ordinary run; { story, chapter } while a story boss is up.
        exchange() branches on this alone, so it has to be part of the shape and
        has to survive migration - see migrateArena. */
-    boss: null
+    boss: null,
+    /* When the last exchange was fought. The arena's clock, in the same sense
+       training.startedAt is the session's: what makes the run keep fighting
+       through a throttled tab and a closed one. See catchUpArena. */
+    lastExchangeAt: null
   };
 }
 
@@ -2117,7 +2213,7 @@ function migrateAccount(raw) {
         id: h.id,
         name: str(h.name, '').trim().slice(0, CONST.NAME_MAX_CHARS) || 'Champion',
         race: RACES[h.race] ? h.race : 'human',
-        epithet: str(h.epithet, ''),
+        renownRank: clamp(Math.round(num(h.renownRank, 0)), 0, RENOWN_TOP_RANK),
         born: num(h.born, 0),
         retiredAt: num(h.retiredAt, 0),
         stats: stats, weapons: weapons,
@@ -2272,7 +2368,6 @@ function migrateCharacter(raw) {
        not die with their label. */
     name: str(raw.name, '').trim().slice(0, CONST.NAME_MAX_CHARS) || 'Champion',
     race: raw.race,
-    epithet: str(raw.epithet, ''),
     born: num(raw.born, Date.now()),
     stats: {}, statTp: {}, weapons: {},
     /* Set at the END of this function, once weapons exist: a class must be
@@ -2310,11 +2405,23 @@ function migrateCharacter(raw) {
     weaponTarget: c.weapons[t.weaponTarget] ? t.weaponTarget : null
   };
 
-  const max = maxHpOf(c);
-  c.hp = clamp(num(raw.hp, max), 0, max);
+  /* Deliberately NOT clamped here. maxHpOf() reads `vigor`, and the two things
+     that supply it - the battle class and the renown ladder - are not restored
+     until the end of this function. Clamping against that classless, rankless
+     ceiling silently shaved a champion's own HP off them on EVERY load: a
+     Grunt was born at 172 and came back at 164, every time. There is one clamp
+     now, at the bottom, once the champion is whole. Infinity is the "no stored
+     value, so full health" sentinel, and it survives the max() below. */
+  c.hp = Math.max(0, num(raw.hp, Infinity));
   c.gold = Math.max(0, num(raw.gold, 0));
   c.renown = Math.max(0, num(raw.renown, 0));
-  c.renownRank = Math.max(0, Math.round(num(raw.renownRank, 0)));
+  /* DERIVED, never trusted from the record. Doc 5 stores the rank, so the
+     field is kept truthful - but a stored copy of a derived value is a value
+     that drifts, and this one now pays a bonus and prints a title, so a
+     hand-edited save claiming rank 12 would buy both. It is exactly the
+     mentorSlots rule, and exactly the hole the Phase 9 audit found in the rank
+     UNLOCKS. Renown is what has to be earned; the rank follows from it. */
+  c.renownRank = renownRankFor(c.renown);
   c.bestRound = Math.max(0, Math.round(num(raw.bestRound, 0)));
   c.lifetimeGold = Math.max(0, num(raw.lifetimeGold, 0));
   c.lifetimeRounds = Math.max(0, Math.round(num(raw.lifetimeRounds, 0)));
@@ -2332,7 +2439,11 @@ function migrateCharacter(raw) {
      repaired above, which is why this is the last field set. */
   c.battleClass = (CLASSES[raw.battleClass] && classUnlocked(c, raw.battleClass))
     ? raw.battleClass : null;
-  c.hp = Math.min(c.hp, maxHpOf(c));       // a dropped vigor class lowers the ceiling
+  /* THE clamp, and the only one: the champion is whole here - weapons, class
+     and rank all repaired - so this is the first point maxHpOf() can tell the
+     truth. It also still does its original job of lowering the ceiling when an
+     unearned vigor class was stripped above. */
+  c.hp = Math.min(c.hp, maxHpOf(c));
   return c;
 }
 
@@ -2354,6 +2465,13 @@ function migrateArena(raw, account) {
   a.enemyMaxHp = Math.max(0, num(raw.enemyMaxHp, 0));
   a.enemyName  = str(raw.enemyName, '');
   a.crowd      = clamp(Math.round(num(raw.crowd, 0)), 0, CONST.CROWD_MAX);
+  /* The arena's clock. A record without one - anything written before the run
+     learned to fight on its own - resumes from the moment it is loaded rather
+     than being owed the whole absence, which is what the game did before this
+     field existed. A stamp in the FUTURE owes nothing either; catchUpArena
+     repairs it on sight. */
+  a.lastExchangeAt = (typeof raw.lastExchangeAt === 'number' && isFinite(raw.lastExchangeAt))
+    ? raw.lastExchangeAt : null;
   if (isObj(raw.pot)) {
     a.pot.gold   = Math.max(0, num(raw.pot.gold, 0));
     a.pot.renown = Math.max(0, num(raw.pot.renown, 0));
@@ -2565,14 +2683,6 @@ const NAMES = {
     surname: { kind: 'none' }
   }
 };
-const EPITHETS = [
-  "Unbroken","Iron-Willed","Twice-Buried","Bloodletter","Ironclad","Dauntless","Sandscarred","Crowd-Favored",
-  "Undefeated","Widowmaker","Grim","Merciless","Relentless","Gorewrought","Chain-Broken","Fearless",
-  "Bonecrusher","Silent","Sunscorched","Nine-Lived","Hollow-Eyed","Vengeful","Steadfast","Butcher of Sands",
-  "Arena-Born","Wolf-Hearted","Last Standing","Oathbreaker","Stormcaller","Ashen","Scarred","Unyielding",
-  "Blade-Kissed","Deathless","Ghost of Sands","Crimson-Handed","Skullsplitter","Ever-Marching","Wraithborn","Champion of Nine Trials"
-];
-
 /* ==============================================================
    CHARACTER CREATION (doc 3.1, 3.2, 8)
    ============================================================== */
@@ -2596,8 +2706,6 @@ function rollName(raceKey) {
   }
   return name;
 }
-
-const rollEpithet = () => pick(EPITHETS);
 
 /* --- race unlocks -------------------------------------------
    Account-level and permanent. Locked races stay VISIBLE with their
@@ -2649,7 +2757,13 @@ function prologueFor(account, character) {
 let idSeq = 0;
 function makeId() { return 'c' + Date.now().toString(36) + (idSeq++).toString(36); }
 
-function newCharacter(raceKey, name, epithet, account) {
+/* Doc 4's renown floor, in ONE place. The creation screen has to name the title
+   a champion would be born holding, and re-deriving the floor there by hand is
+   how the shop came to under-report an augment slot in Phase 6. */
+const startingRenownFor = account =>
+  Math.floor(FORMULAS.newCharacterFloor(num(account ? account.prestige : 0, 0)));
+
+function newCharacter(raceKey, name, account) {
   const race = RACES[raceKey];
   /* Bloodline (legacy perk) raises the FLOOR every champion starts from, so it
      stacks with the racial modifiers rather than replacing them. */
@@ -2659,12 +2773,12 @@ function newCharacter(raceKey, name, epithet, account) {
 
   const weapons = {};
   CONST.WEAPON_START.forEach(w => { weapons[w] = { level: CONST.WEAPON_START_LEVEL, tp: 0 }; });
+  const startRenown = startingRenownFor(account);
 
-  return {
+  const c = {
     id: makeId(),
     name: name,
     race: raceKey,
-    epithet: epithet,
     born: Date.now(),
     stats: stats,
     statTp: { str: 0, dex: 0, int: 0, con: 0, cha: 0 },
@@ -2675,13 +2789,23 @@ function newCharacter(raceKey, name, epithet, account) {
        ARE rather than a list of things they are not yet. */
     battleClass: CONST.STARTING_CLASS,
     gear: { weapon: { quality: 0, augments: [] }, armor: { quality: 0, augments: [] } },
-    hp: FORMULAS.maxHp(stats.con),
+    /* Set below from maxHpOf, once the object exists: born at FULL health, and
+       full now folds in the Grunt's vigor and whatever the renown floor buys.
+       Computed from raw CON here, every champion was born a few HP short of
+       their own maximum. */
+    hp: 0,
     /* Inherited Purse (legacy perk). */
     gold: perkValue(account, 'purse'),
     /* Renown floor, doc 4: a new champion does not start from nothing once the
-       account has a rank behind it. Zero on a fresh account. */
-    renown: Math.floor(FORMULAS.newCharacterFloor(account.prestige)),
-    renownRank: 0,
+       account has a rank behind it. Zero on a fresh account.
+
+       So a successor to a storied account is born already carrying a title and
+       the rungs of the ladder beneath it. That is the floor doing exactly what
+       doc 4 asks of it: the crowd remembers the school, not only the fighter.
+       renownRank is doc 5's stored field and it is kept TRUTHFUL rather than
+       trusted - derived here, re-derived on every settle and on every load. */
+    renown: startRenown,
+    renownRank: renownRankFor(startRenown),
     bestRound: 0,
     lifetimeGold: 0,
     /* Per-champion tallies. lifetimeRounds is the dwarf's unlock gate; knockouts
@@ -2697,6 +2821,8 @@ function newCharacter(raceKey, name, epithet, account) {
     knockoutUntil: null,
     unlocks: { earlyAugment: false }
   };
+  c.hp = maxHpOf(c);
+  return c;
 }
 
 /* ==============================================================
@@ -3115,7 +3241,7 @@ const rollEnemyName = round => pick(ENEMY_GIVEN) + ' the ' + pick(bandFor(round)
    from - which is what keeps doc 10's no-special-cases rule enforceable. */
 function bonus(c, key) {
   if (!c) return 0;
-  return augBonus(c, key) + classBonus(c, key);
+  return augBonus(c, key) + classBonus(c, key) + renownBonus(c, key);
 }
 
 /* Doc 3.4 tier scaling: magnitude by tier, and +0.4x on the positives of any
@@ -3282,6 +3408,55 @@ function renownRankFor(renown) {
   let n = 0;
   while (n < 99 && renown >= FORMULAS.rankThreshold(n + 1)) n++;
   return n;
+}
+
+/* ONE home for "what rank is this champion", and it answers for a Hall card as
+   well as a living one.
+
+   A living champion's renown only ever goes UP - a yield forfeits the POT's
+   renown, never the bank's, and nothing else in the game subtracts from it - so
+   the highest rank ever earned IS the current one and there is no high-water
+   mark to store, drift, or forge. There is an assertion on that monotonicity,
+   because the whole "highest title earned" promise rests on it.
+
+   A Hall card has no renown at all, only the snapshot rank it retired holding
+   (the card is a snapshot, never a reference - the champion object is gone).
+   Both shapes therefore come through here rather than calling renownRankFor
+   directly, the same way weaponLevelOf() answers for both. */
+function championRank(c) {
+  if (!c) return 0;
+  return Math.max(Math.round(num(c.renownRank, 0)), renownRankFor(num(c.renown, 0)));
+}
+
+const renownTitleFor = rank =>
+  RENOWN_RANKS[clamp(Math.round(num(rank, 0)), 0, RENOWN_TOP_RANK)].title;
+
+/* The title on the name card. Derived, never stored: a stored copy of a
+   derived value is a value that drifts, and this one would drift the moment a
+   rank threshold moved. */
+const titleOf = c => renownTitleFor(championRank(c));
+
+/* Cumulative down the ladder: every rung up to and including the one held.
+   Folded into bonus() rather than read anywhere directly, so a consumer never
+   has to know a bonus came from fame rather than from a class or an augment. */
+function renownBonus(c, key) {
+  const rank = Math.min(championRank(c), RENOWN_TOP_RANK);
+  let n = 0;
+  for (let r = 1; r <= rank; r++) {
+    const b = RENOWN_RANKS[r].bonus;
+    if (b && typeof b[key] === 'number') n += b[key];
+  }
+  return n;
+}
+
+/* Everything the ladder is currently paying, for the screen that shows it. */
+function renownBonusTotals(c) {
+  const out = {};
+  Object.keys(BONUS_KEYS).forEach(k => {
+    const v = renownBonus(c, k);
+    if (v !== 0) out[k] = v;
+  });
+  return out;
 }
 
 /* Patronage (legacy perk) is doc 4's "reduced facility costs". Applied at the
@@ -3457,12 +3632,13 @@ function startRun(s, now) {
     c.training.startedAt = null;
   }
   const round = startRound(s);
-  s.arena = {
-    active: true, round: round, exchange: 0,
-    playerHp: c.hp, enemyHp: 0, enemyName: '', enemyMaxHp: 0,
-    statuses: [], pot: { gold: 0, renown: 0 }, log: [],
-    crowd: 0, enemy: null, over: null, totalExchanges: 0
-  };
+  /* Built FROM defaultArena so a new field cannot be born missing here. This
+     was written out longhand and had already silently dropped `boss` - the
+     shape held only because undefined is falsy. `lastExchangeAt` would not have
+     been so forgiving: a run that starts without one owes no exchanges. */
+  s.arena = Object.assign(defaultArena(), {
+    active: true, round: round, playerHp: c.hp, lastExchangeAt: now
+  });
   beginRound(s, round);
   return s.arena;
 }
@@ -3503,6 +3679,11 @@ function logLine(a, kind, text) {
 function exchange(s, now) {
   const a = s.arena, c = s.character;
   if (!a.active || a.over) return [];
+  /* The stamp that makes the arena timestamp-derived rather than tick-counted,
+     written HERE so there is one place it can be set and no caller has to
+     remember. catchUpArena() reads it to work out how many exchanges the run
+     is owed; nothing else does. */
+  a.lastExchangeAt = now;
   const events = [];
   a.exchange++;
   /* Counts across the whole RUN. a.exchange resets every round, so a flourish
@@ -3688,6 +3869,10 @@ function settleRun(s, how, now) {
      Rank 8 facility gate were both reading a permanent zero. Settling a run is
      the moment rank can move, so it is the moment prestige is trued up. */
   s.account.prestige = Math.max(num(s.account.prestige, 0), renownRankFor(num(c.renown, 0)));
+  /* Doc 5's stored rank, kept truthful in the same breath. Nothing reads it
+     independently - championRank() takes the higher of it and the renown it
+     came from - so it can never disagree with the renown beside it. */
+  c.renownRank = renownRankFor(num(c.renown, 0));
 
   /* Doc 8's other two oddities, both moments rather than conditions. */
   if (how !== 'knockout' && cleared >= CONST.FEAT_ODDITY_ROUNDS &&
@@ -3717,6 +3902,61 @@ function settleRun(s, how, now) {
     boss: a.boss || null, chapter: chapter, unlocked: unlocked, feats: feats
   };
   return a.over;
+}
+
+/* --- the run fights on while nobody is watching --------------
+   Doc 6's second clock was the last thing in this game still COUNTED rather
+   than derived. setInterval fires the exchange, so a hidden tab - which Chrome
+   throttles to one callback a minute after five minutes - fought a minute of
+   sand in a single exchange, and a closed one fought none at all. Every other
+   accrual in this build reads its elapsed time from a timestamp for exactly
+   that reason; this is that rule finally applied to the arena.
+
+   `lastExchangeAt` is the only new state and exchange() stamps it, so the
+   number of exchanges owed is a division. The SAME function serves the live
+   tick (one exchange), a tab coming back from an hour of throttling, and a
+   reload after a night away - there is no separate offline path that could
+   disagree with the live one, which is the whole point.
+
+   It is deliberately NOT capped at OFFLINE_CAP_MS. The 8h cap is doc 6's rule
+   about ACCRUAL - a player must not bank forty hours of training - and a fight
+   is not accrual: it is a thing that would have finished on its own, minutes
+   after the tab closed. Capping it would strand a run mid-sand and, worse, date
+   the knockout bench from the wrong moment. What bounds this loop is the run
+   itself: enemy HP and damage both scale exponentially against a player whose
+   damage does not, so every run ends. The exchange ceiling is a guard against a
+   future retune making that untrue, not a game rule.
+
+   Times are SIMULATED forward one ARENA_TICK_MS at a time rather than passing
+   `now` to every exchange, because settleRun() dates the 25-minute bench from
+   the moment of the knockout. A run that ended two hours into a three-hour
+   absence has to come back with the bench already served. */
+function catchUpArena(s, now) {
+  const a = s.arena;
+  if (!a || !a.active) return null;
+  const last = num(a.lastExchangeAt, null);
+  /* A run from before this field existed, or one that has never had an
+     exchange: start its clock here rather than owing it the whole absence. */
+  if (last === null) { a.lastExchangeAt = now; return null; }
+  /* A clock that ran backwards - a machine's time being corrected, a save
+     carried between devices - must not owe a negative number of exchanges. */
+  if (last > now) { a.lastExchangeAt = now; return null; }
+
+  const due = Math.floor((now - last) / CONST.ARENA_TICK_MS);
+  if (due <= 0) return null;
+  const run = Math.min(due, CONST.ARENA_CATCHUP_MAX_EXCHANGES);
+  const out = { steps: 0, events: [], settled: null, walked: false, cleared: 0,
+                startRound: a.round, capped: due > run };
+  let t = last;
+  for (let i = 0; i < run; i++) {
+    t += CONST.ARENA_TICK_MS;
+    out.events = exchange(s, t);
+    out.steps++;
+    out.events.forEach(e => { if (e.kind === 'roundClear') out.cleared++; });
+    if (!a.active) { out.settled = a.over; break; }      // knocked out, or a boss down
+    if (autoYieldCheck(s, t)) { out.walked = true; out.settled = a.over; break; }
+  }
+  return out;
 }
 
 /* What yielding right now would cost - doc 7 wants this exact, live, every round. */
@@ -4111,7 +4351,7 @@ function hallCardFor(s, now) {
   const weapons = {};
   Object.keys(c.weapons).forEach(w => { weapons[w] = num(c.weapons[w].level, 0); });
   return {
-    id: c.id, name: c.name, race: c.race, epithet: c.epithet,
+    id: c.id, name: c.name, race: c.race, renownRank: championRank(c),
     born: num(c.born, now), retiredAt: now,
     stats: stats, weapons: weapons,
     might: mightOf(c),
@@ -4315,13 +4555,11 @@ function startBoss(s, storyId, chapter, now) {
   }
 
   const e = bossFor(storyId, chapter);
-  s.arena = {
-    active: true, round: e.round, exchange: 0,
+  s.arena = Object.assign(defaultArena(), {
+    active: true, round: e.round,
     playerHp: c.hp, enemyHp: e.hp, enemyName: e.name, enemyMaxHp: e.maxHp,
-    statuses: [], pot: { gold: 0, renown: 0 }, log: [],
-    crowd: 0, enemy: e, over: null, totalExchanges: 0,
-    boss: { story: storyId, chapter: chapter }
-  };
+    enemy: e, boss: { story: storyId, chapter: chapter }, lastExchangeAt: now
+  });
   logLine(s.arena, 'clear', e.name + ' ' + e.title + ' takes the sand.');
   return { ok: true, arena: s.arena, enemy: e };
 }
@@ -4517,11 +4755,29 @@ function resolveOffline() {
     appliedMs: Math.min(rawMs, CONST.OFFLINE_CAP_MS),
     capped: rawMs > CONST.OFFLINE_CAP_MS,
     tp: 0, hpRestored: 0, levelsReady: [], facility: null, koCleared: false,
-    mentorSpent: false, mentorName: null
+    mentorSpent: false, mentorName: null, arena: null
   };
 
   const c = state.character;
   if (c) {
+    /* The run fought on while the tab was closed, and it is resolved FIRST -
+       before the bench and before the training session, because both of those
+       read what the run did. A knockout landing two hours into a three-hour
+       absence has to be able to serve its own 25 minutes and be over by the
+       time the player gets back, and that is only true if the fight settles at
+       its own timestamps before the cooldown is checked.
+
+       Not capped at 8h: see catchUpArena. A run is not accrual. */
+    const run = catchUpArena(state, now);
+    if (run && run.steps) {
+      offline.arena = {
+        exchanges: run.steps, cleared: run.cleared,
+        round: state.arena.round, capped: run.capped, walked: run.walked,
+        settled: run.settled ? run.settled.how : null,
+        gold: run.settled ? run.settled.gold : 0,
+        renown: run.settled ? run.settled.renown : 0
+      };
+    }
     /* Knockout cooldown resolves on return whether or not they were training. */
     if (c.knockoutUntil && now >= c.knockoutUntil) { c.knockoutUntil = null; offline.koCleared = true; }
 
@@ -4573,7 +4829,7 @@ function resolveOffline() {
    NAVIGATION
    ============================================================== */
 
-let activeScreen = SCREENS[0].id;
+let activeScreen = CONST.DEFAULT_SCREEN;
 
 function buildNav() {
   const nav = document.getElementById('nav');
@@ -4591,7 +4847,7 @@ function buildNav() {
 }
 
 function show(id) {
-  if (!SCREENS.some(s => s.id === id)) id = SCREENS[0].id;
+  if (!SCREENS.some(s => s.id === id)) id = defaultScreen();
   /* Leaving the Champion screen disarms the retire confirm. An armed confirm
      that survives a route change is one press away from destroying a champion
      on a screen the player did not arm it on. */
@@ -4643,8 +4899,21 @@ function focusScreen(id) {
   if (typeof target.focus === 'function') target.focus({ preventScroll: true });
 }
 
+/* Where a session opens when the URL says nothing. TRAIN, because doc 1's loop
+   is train-then-fight and training is the thing that has been running while the
+   player was away - it is where the "while you were away" card lives, and now
+   where the arena's own away report lands too.
+
+   The one exception is having no champion at all. Every screen is an empty
+   state until one exists, and creation IS the game at that point, so a first
+   session opens on the screen that can actually be used rather than on one
+   telling the player to go somewhere else. */
+function defaultScreen() {
+  return state && state.character ? CONST.DEFAULT_SCREEN : 'champion';
+}
+
 function routeFromHash() {
-  show((location.hash || '').replace('#', '') || SCREENS[0].id);
+  show((location.hash || '').replace('#', '') || defaultScreen());
 }
 
 /* ==============================================================
@@ -5029,6 +5298,19 @@ function awayMarkup() {
     Math.round(a.hpRestored) + ' HP</span></li>');
   if (a.levelsReady.length) bits.push('<li><span class="k">Ready</span><span class="v">' +
     esc(levelSummary(a.levelsReady)) + '</span></li>');
+  /* The run kept fighting. Reported before the bench line, because on a
+     knockout the two are the same story in order: the fight ended, then the
+     25 minutes were served. */
+  if (a.arena) {
+    const r = a.arena;
+    const rounds = r.cleared + ' round' + (r.cleared === 1 ? '' : 's');
+    const how = !r.settled ? 'Still fighting &middot; round ' + r.round
+      : (r.settled === 'boss' ? 'Boss beaten' :
+         r.settled === 'knockout' ? 'Knocked out' :
+         r.walked ? 'Auto-Yield walked out' : 'Yielded') +
+        ' after ' + rounds + ' &middot; +' + Math.round(r.gold).toLocaleString() + 'g';
+    bits.push('<li><span class="k">Arena</span><span class="v">' + how + '</span></li>');
+  }
   if (a.koCleared) bits.push('<li><span class="k">Knockout</span><span class="v">Recovered</span></li>');
   /* Doc 6 asks for "mentors that went Emeritus". Nothing is auto-collected on
      return, so the truthful report is the one about to happen, not one that
@@ -5322,7 +5604,7 @@ function hallCardMarkup(h) {
   return '<div class="hall-card' + (teaching ? ' is-teaching' : '') + '">' +
     '<div class="hall-head">' + icon(race.glyph, 'big') +
       '<div><strong>' + esc(h.name) + '</strong>' +
-      '<span class="epithet">the ' + esc(h.epithet) + ' &middot; ' + esc(race.label) + '</span></div>' +
+      '<span class="rank-title">the ' + esc(renownTitleFor(h.renownRank)) + ' &middot; ' + esc(race.label) + '</span></div>' +
       (h.emeritus ? '<span class="emeritus-tag">Emeritus</span>' : '') +
       '<div class="might"><span class="num">' + Math.round(h.might).toLocaleString() +
       '</span><small>Might</small></div>' +
@@ -5661,9 +5943,39 @@ function rankMarkup() {
         (u.scope === 'account' ? 'account, kept forever' : 'each champion earns it') +
         '</span></span></div>';
   }).join('');
+  /* The ladder itself. Doc 3.8's rule that a locked row still shows its
+     information, applied to the titles: every rung is visible with the renown
+     it costs and the bonus it pays, so a player can see what the next name is
+     worth before chasing it. */
+  const held = c ? championRank(c) : 0;
+  const ladder = RENOWN_RANKS.map((r, i) => {
+    const got = i <= held;
+    const bonusLine = r.bonus
+      ? Object.keys(r.bonus).map(k => bonusText(k, r.bonus[k], null)).join(', ')
+      : 'the state of having done nothing yet';
+    return '<li class="' + (got ? 'is-held' : 'is-locked') + (i === held ? ' is-now' : '') + '">' +
+      '<span class="rl-n num">' + i + '</span>' +
+      '<strong>' + esc(r.title) + '</strong>' +
+      '<span class="rl-b">' + esc(bonusLine) + '</span>' +
+      '<span class="rl-at num">' + (i === 0 ? '—' :
+        Math.round(FORMULAS.rankThreshold(i)).toLocaleString()) + '</span></li>';
+  }).join('');
+
+  const totals = c ? renownBonusTotals(c) : {};
+  const totalKeys = Object.keys(totals);
+  const paying = totalKeys.length
+    ? '<p class="hp-line">This ladder is paying <strong>' +
+        esc(totalKeys.map(k => bonusText(k, totals[k], null)).join(', ')) + '</strong></p>'
+    : '<p class="hp-line">The ladder pays nothing until the first rank is earned.</p>';
+
   return '<p class="hp-line">Account rank <span class="num">' + rank + '</span>' +
     (c ? ' &middot; ' + Math.floor(renown).toLocaleString() + ' renown, next rank at ' +
-      Math.round(nextAt).toLocaleString() : '') + '</p>' + rows;
+      Math.round(nextAt).toLocaleString() : '') + '</p>' +
+    (c ? '<p class="hp-line">' + esc(c.name) + ' fights as <strong>the ' +
+      esc(titleOf(c)) + '</strong> &middot; personal rank <span class="num">' +
+      held + '</span></p>' : '') +
+    paying +
+    '<ol class="rank-ladder">' + ladder + '</ol>' + rows;
 }
 
 function wireFeats() {
@@ -5920,23 +6232,32 @@ function stopArenaTick() {
 function arenaStep() {
   const a = state.arena;
   if (!a.active) { stopArenaTick(); return; }
-  const now = Date.now();
-  const events = exchange(state, now);
-  const walked = autoYieldCheck(state, now);
-  events.forEach(ev => {
-    if (ev.kind === 'roundClear') save('round-clear');
-    if (ev.kind === 'enter') roundBanner(ev.round, a.enemyName);
-    if (ev.who === 'enemy' && (ev.kind === 'hit' || ev.kind === 'crit')) floatDamage('#ar-pbar', ev.amount, ev.kind === 'crit');
-    if (ev.who === 'player' && (ev.kind === 'hit' || ev.kind === 'crit')) floatDamage('#ar-ebar', ev.amount, ev.kind === 'crit');
-  });
+  /* The tick no longer decides how much fighting happened - it asks. A hidden
+     tab firing once a minute settles the fifty-four exchanges it owes right
+     here, and the run is where it would have been had anyone been watching. */
+  const res = catchUpArena(state, Date.now());
+  if (!res) { updateTopbarLive(); return; }
+  /* ONE exchange is the live fight, and it gets its flourishes. More than one
+     means the tab was throttled or asleep: firing four hundred round banners
+     and a snowstorm of damage numbers at a player who just came back is not
+     information, it is noise. The events are settled silently and the screen is
+     brought up to date instead. */
+  if (res.steps === 1) {
+    res.events.forEach(ev => {
+      if (ev.kind === 'enter') roundBanner(ev.round, a.enemyName);
+      if (ev.who === 'enemy' && (ev.kind === 'hit' || ev.kind === 'crit')) floatDamage('#ar-pbar', ev.amount, ev.kind === 'crit');
+      if (ev.who === 'player' && (ev.kind === 'hit' || ev.kind === 'crit')) floatDamage('#ar-ebar', ev.amount, ev.kind === 'crit');
+    });
+  }
+  if (res.cleared > 0) save('round-clear');
   /* The topbar health gauge tracks the fight, not the tick that happens to
      follow it. */
   updateTopbarLive();
-  if (!a.active) {                        // settled inside the exchange
+  if (!a.active) {                        // settled inside the catch-up
     stopArenaTick();
-    save(walked ? 'auto-yield' : 'run-end');
+    save(res.walked ? 'auto-yield' : 'run-end');
     renderAll();
-    if (walked) flash('Auto-Yield: walked out at ' + Math.round(num(state.account.autoYieldAt, 0) * 100) + '% health.');
+    if (res.walked) flash('Auto-Yield: walked out at ' + Math.round(num(state.account.autoYieldAt, 0) * 100) + '% health.');
     else if (a.over && a.over.how === 'boss') flash(a.enemyName + ' falls. The chapter closes.');
     else flash('Knocked out. You keep the pot; the bench keeps you.');
     return;
@@ -6098,7 +6419,7 @@ let retireArmed = false;
 let retirementCard = null;
 
 function newDraft(raceKey) {
-  draft = { race: raceKey, name: rollName(raceKey), epithet: rollEpithet() };
+  draft = { race: raceKey, name: rollName(raceKey) };
   return draft;
 }
 
@@ -6132,16 +6453,22 @@ function creationMarkup() {
       '</' + (open ? 'button' : 'div') + '>';
   }).join('');
 
+  /* Previewed by building the champion this screen would actually create,
+     rather than by re-deriving the opening numbers by hand. Hand-derived, it
+     had already dropped the Bloodline legacy perk from the stats and the
+     starting class's vigor from the HP - both of which the created champion
+     gets the instant the button is pressed. Same rule as the shop's augment
+     slot: one derivation, and the preview reads it. */
+  const probe = newCharacter(draft.race, draft.name, a);
   const preview = STAT_KEYS.map(k => {
     const mod = race.mods[k] || 0;
-    const val = CONST.START_STAT + mod;
     return '<li><span class="k">' + STATS[k].label + '</span>' +
-      '<span class="v num">' + val + '</span>' +
+      '<span class="v num">' + probe.stats[k] + '</span>' +
       (mod ? '<span class="mod ' + (mod > 0 ? 'up' : 'down') + '">' + signed(mod) + '</span>' : '') +
       '<span class="fx">' + esc(STATS[k].effect) + '</span></li>';
   }).join('');
 
-  const hp = FORMULAS.maxHp(CONST.START_STAT + (race.mods.con || 0));
+  const hp = maxHpOf(probe);
 
   return '' +
     '<div class="panel">' +
@@ -6152,7 +6479,7 @@ function creationMarkup() {
       '<h3 class="sub">Name</h3>' +
       '<div class="namebox">' +
         '<div class="name-lines"><strong id="draft-name">' + esc(draft.name) + '</strong>' +
-        '<span class="epithet">the ' + esc(draft.epithet) + '</span></div>' +
+        '<span class="rank-title">the ' + esc(titleOf(probe)) + '</span></div>' +
         '<button class="btn" data-tone="quiet" type="button" id="btn-reroll">Reroll</button>' +
       '</div>' +
     '</div>' +
@@ -6323,7 +6650,7 @@ function championMarkup(c) {
     '<div class="panel">' +
       '<div class="champ-head">' + icon(race.glyph, 'big') +
         '<div><strong>' + esc(c.name) + '</strong>' +
-        '<span class="epithet">the ' + esc(c.epithet) + ' &middot; ' + esc(race.label) + '</span></div>' +
+        '<span class="rank-title">the ' + esc(titleOf(c)) + ' &middot; ' + esc(race.label) + '</span></div>' +
         '<div class="might"><span class="num">' + might + '</span><small>Might</small></div>' +
       '</div>' +
       /* Same two chips the arena shows, from the same helper. */
@@ -6430,7 +6757,6 @@ function wireChampion() {
   const reroll = document.getElementById('btn-reroll');
   if (reroll) reroll.addEventListener('click', () => {
     draft.name = rollName(draft.race);
-    draft.epithet = rollEpithet();
     renderChampion();                       // keepFocus() hands the keyboard back
   });
   const create = document.getElementById('btn-create');
@@ -6502,7 +6828,7 @@ function wireChampion() {
 
 function createChampion() {
   if (!draft || !raceUnlocked(draft.race, state.account)) return;
-  state.character = newCharacter(draft.race, draft.name, draft.epithet, state.account);
+  state.character = newCharacter(draft.race, draft.name, state.account);
   retireArmed = false;
   const p = prologueFor(state.account, state.character);
   draft = null;
@@ -6706,9 +7032,17 @@ function harnessState(config) {
   });
   if (cfg.prestige) account.prestige = cfg.prestige;
   const s = { version: CONST.VERSION, account: account, character: null, arena: defaultArena() };
-  s.character = newCharacter(cfg.race || 'human', 'Harness', 'Simulated', account);
+  s.character = newCharacter(cfg.race || 'human', 'Harness', account);
   const c = s.character;
   if (cfg.stats) STAT_KEYS.forEach(k => { if (cfg.stats[k] != null) c.stats[k] = cfg.stats[k]; });
+  /* The renown ladder is part of a champion's power now, so the harness has to
+     be able to set it - a sweep that always measured a rank-0 champion would
+     be measuring somebody who does not exist at Might 2000. == null, not ||:
+     rank 0 is a meaningful setting. */
+  if (cfg.renownRank != null) {
+    c.renown = cfg.renownRank === 0 ? 0 : FORMULAS.rankThreshold(cfg.renownRank);
+    c.renownRank = renownRankFor(c.renown);
+  }
   if (cfg.weaponLevel != null) c.weapons[c.activeWeapon].level = cfg.weaponLevel;
   if (cfg.weaponQuality != null) c.gear.weapon.quality = cfg.weaponQuality;
   if (cfg.armorQuality != null) c.gear.armor.quality = cfg.armorQuality;
@@ -6736,7 +7070,13 @@ function simulateRun(config, seed) {
   const prev = rng;
   rng = makeRng(seed);
   const T = 0;
-  const maxHp = FORMULAS.maxHp(s.character.stats.con);
+  /* maxHpOf, not FORMULAS.maxHp(con): the raw-CON form skips every `vigor`
+     bonus, which is the one thing maxHpOf exists to fold in. This is the fourth
+     place that mistake has been found and the harness is the worst of them -
+     yieldAtHp is a FRACTION of max HP, so an understated max made the simulated
+     player walk out later than the real one would, in a function whose entire
+     job is to report what the real one does. */
+  const maxHp = maxHpOf(s.character);
   const cap = cfg.maxExchanges == null ? 200000 : cfg.maxExchanges;
   let exchanges = 0;
 
@@ -6916,12 +7256,24 @@ function assertAll() {
      tab reports innerWidth 0, where every element measures ~2px and all of
      these fail at once. Fifteen false failures is how a suite gets ignored. */
   const canMeasure = window.innerWidth >= 320;
+  /* SUB-PIXEL EPSILON, and it is load-bearing. `.screen` animates in on a 180ms
+     `translateY(6px)`, and a transformed box sitting on a fractional y reports
+     a rect whose top and bottom are floats - measured mid-animation, a control
+     laid out at exactly 44 comes back as 43.99993896484375. This suite has been
+     one unlucky 90ms sample away from a false failure since Phase 1, and the
+     reasoning is the same one written beside the canMeasure guard above: a
+     suite that cries wolf is a suite that gets ignored.
+
+     0.05px is far below anything a layout can violate on purpose and far above
+     float noise - the genuine failure this check caught in Phase 10 was a chip
+     at 43.56px, twenty times this. Do NOT widen it to hide a real miss. */
+  const TOUCH_EPS = 0.05;
   if (canMeasure) document.querySelectorAll('button, a[href], input, textarea, select').forEach(el => {
     const r = el.getBoundingClientRect();
     if (!r.width || !r.height) return;          // hidden controls have no target
-    ok(r.width >= 44 && r.height >= 44,
+    ok(r.width >= 44 - TOUCH_EPS && r.height >= 44 - TOUCH_EPS,
        'touch target under 44px: ' + (el.id || el.className || el.tagName) +
-       ' ' + Math.round(r.width) + 'x' + Math.round(r.height));
+       ' ' + r.width.toFixed(2) + 'x' + r.height.toFixed(2));
   });
 
 
@@ -7173,16 +7525,17 @@ function assertAll() {
       ok(new Set(pair[1]).size === pair[1].length, k + '.' + pair[0] + ' contains duplicates');
     });
   });
-  ok(EPITHETS.length === 40, 'expected 40 epithets, found ' + EPITHETS.length);
-  ok(new Set(EPITHETS).size === EPITHETS.length, 'EPITHETS contains duplicates');
 
   /* --- creation (doc 3.1, 3.2, 5) --- */
   const freshAccount = defaultAccount();
   Object.keys(RACES).forEach(k => {
-    const c = newCharacter(k, 'Test', 'Tested', freshAccount);
+    const c = newCharacter(k, 'Test', freshAccount);
     STAT_KEYS.forEach(s => ok(c.stats[s] === CONST.START_STAT + (RACES[k].mods[s] || 0),
        k + ' starts with the wrong ' + s));
-    ok(c.hp === FORMULAS.maxHp(c.stats.con), k + ' starts at the wrong HP');
+    /* maxHpOf, not the raw-CON formula. A champion is born at their OWN
+       maximum, which folds in the starting class's vigor and whatever the
+       account's renown floor already buys them. */
+    ok(c.hp === maxHpOf(c), k + ' is not born at full health');
     ok(Object.keys(c.weapons).length === 2, k + ' does not start with exactly two weapons');
     ok(CONST.WEAPON_START.every(w => c.weapons[w] && c.weapons[w].level === 1),
        k + ' does not start both root weapons at level 1');
@@ -7196,11 +7549,18 @@ function assertAll() {
     ok(CLASSES[CONST.STARTING_CLASS].tier === 0, 'the starting class is not tier 0');
     ok(migrateCharacter(JSON.parse(JSON.stringify(c))) !== null, k + ' cannot survive a save round trip');
   });
-  ok(newCharacter('dwarf', 'A', 'B', freshAccount).hp === 164, 'dwarf max HP != 164');
-  ok(newCharacter('elf', 'A', 'B', freshAccount).hp === 124, 'elf max HP != 124');
-  ok(newCharacter('human', 'A', 'B', freshAccount).renown === 0, 'fresh account grants a renown floor');
+  /* Doc 3.1's racial HP, which is the FORMULA's number - the bonuses that
+     sit on top of it belong to the class and the ladder, not to the bloodline,
+     so this pins the base and maxHpOf is checked separately above. */
+  ok(FORMULAS.maxHp(newCharacter('dwarf', 'A', freshAccount).stats.con) === 164, 'dwarf base max HP != 164');
+  ok(FORMULAS.maxHp(newCharacter('elf', 'A', freshAccount).stats.con) === 124, 'elf base max HP != 124');
+  /* And the champion actually created is tougher than that base, because the
+     starting class carries vigor - the one line that would have caught HP
+     being clamped against a classless ceiling on load. */
+  ok(newCharacter('dwarf', 'A', freshAccount).hp > 164, 'a dwarf is born at the bare formula HP, with no class bonus');
+  ok(newCharacter('human', 'A', freshAccount).renown === 0, 'fresh account grants a renown floor');
   const prestiged = Object.assign(defaultAccount(), { prestige: 4 });
-  ok(newCharacter('human', 'A', 'B', prestiged).renown ===
+  ok(newCharacter('human', 'A', prestiged).renown ===
      Math.floor(FORMULAS.newCharacterFloor(4)), 'renown floor not applied from prestige');
 
   /* --- race unlocks --- */
@@ -7212,7 +7572,7 @@ function assertAll() {
   /* --- prologue (doc 8) --- */
   ok(PROLOGUES[PROLOGUES.length - 1].when(freshAccount) === true,
      'the bare prologue fallback is not last');
-  const testChar = newCharacter('human', 'Test Name', 'Tested', freshAccount);
+  const testChar = newCharacter('human', 'Test Name', freshAccount);
   ok(prologueFor(freshAccount, testChar).id === 'first', 'a fresh account does not get the first-champion prologue');
   const midAccount = defaultAccount();
   midAccount.story = { told: [], currentStory: 'ashes', chapter: 3, attribution: [] };
@@ -7229,7 +7589,7 @@ function assertAll() {
      or writes localStorage or the real champion. */
   const rig = (over) => {
     const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
-    s.character = newCharacter('human', 'Rig', 'Tested', s.account);
+    s.character = newCharacter('human', 'Rig', s.account);
     if (over) over(s);
     return s;
   };
@@ -7239,9 +7599,9 @@ function assertAll() {
   const rHuman = rig();
   ok(Math.abs(tpPerMin(rHuman, 'forge') - 1.05) < 1e-9,
      'human L1 forge rate is ' + tpPerMin(rHuman, 'forge') + ', expected 1.05');
-  const rOrc = rig(s => { s.character = newCharacter('orc', 'R', 'T', s.account); });
+  const rOrc = rig(s => { s.character = newCharacter('orc', 'R', s.account); });
   ok(Math.abs(tpPerMin(rOrc, 'forge') - 1.0) < 1e-9, 'non-human L1 rate is not 1.0');
-  const rL10 = rig(s => { s.account.facilities.forge = 10; s.character = newCharacter('orc', 'R', 'T', s.account); });
+  const rL10 = rig(s => { s.account.facilities.forge = 10; s.character = newCharacter('orc', 'R', s.account); });
   ok(Math.abs(tpPerMin(rL10, 'forge') - 3.0) < 0.01, 'L10 forge is not ~3.0 TP/min');
   ok(tpPerMin(rHuman, 'medic') === 0, 'the Medic pays TP - it should pay HP only');
   ok(mentorMultFor(rHuman, 'forge') === 1, 'an unstaffed facility still applies a mentor multiplier');
@@ -7409,8 +7769,35 @@ function assertAll() {
      'an unearned class still conferred its bonuses after migration');
   ok(migrateCharacter({ id: 'x', name: 'N', race: 'notarace', stats: { str: 5, dex: 5, int: 5, con: 5, cha: 5 } }) === null,
      'a character of an unknown race was kept');
+  /* HP is clamped ONCE, at the end, after the class and the rank are restored.
+     Clamping earlier used the classless, rankless ceiling, so every champion
+     came back from a save a few HP short of their own maximum - silently, on
+     every load, since the day the starting class shipped. */
+  (function () {
+    const full = newCharacter('human', 'Full', defaultAccount());
+    full.renown = FORMULAS.rankThreshold(RENOWN_TOP_RANK);
+    full.renownRank = renownRankFor(full.renown);
+    full.hp = maxHpOf(full);
+    const back = migrateCharacter(JSON.parse(JSON.stringify(full)));
+    ok(back.hp === maxHpOf(back),
+      'a champion at full health came back from migration at ' + back.hp + ' of ' + maxHpOf(back) +
+      ' - HP was clamped before the class and rank that raise the ceiling were restored');
+    ok(maxHpOf(back) > FORMULAS.maxHp(back.stats.con),
+      'the rig has no vigor at all, so it cannot detect the clamp it exists to detect');
+    /* A record with no stored HP means "full", not "none" - and the sentinel
+       that carries that must never reach the save file. */
+    const noHp = JSON.parse(JSON.stringify(full)); delete noHp.hp;
+    const filled = migrateCharacter(noHp);
+    ok(filled.hp === maxHpOf(filled), 'a champion with no stored HP did not come back full');
+    ok(isFinite(filled.hp), 'the full-health sentinel survived into a real champion');
+    const overHp = migrateCharacter(Object.assign(JSON.parse(JSON.stringify(full)), { hp: 1e9 }));
+    ok(overHp.hp === maxHpOf(overHp), 'an over-stated HP was not clamped to the maximum');
+    const negHp = migrateCharacter(Object.assign(JSON.parse(JSON.stringify(full)), { hp: -5 }));
+    ok(negHp.hp === 0, 'a negative HP was not floored');
+  })();
+
   /* A freshly made champion must survive its own migration unchanged. */
-  const fresh = newCharacter('dwarf', 'Round Trip', 'Tested', defaultAccount());
+  const fresh = newCharacter('dwarf', 'Round Trip', defaultAccount());
   const back = migrateCharacter(JSON.parse(JSON.stringify(fresh)));
   ok(JSON.stringify(back.stats) === JSON.stringify(fresh.stats) &&
      JSON.stringify(back.weapons) === JSON.stringify(fresh.weapons) &&
@@ -7445,7 +7832,7 @@ function assertAll() {
   /* --- arena core (doc 4) --- */
   const arig = (over) => {
     const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
-    s.character = newCharacter('human', 'Fighter', 'Tested', s.account);
+    s.character = newCharacter('human', 'Fighter', s.account);
     if (over) over(s);
     return s;
   };
@@ -7459,16 +7846,16 @@ function assertAll() {
   ok(Math.abs(playerEvadeChance(a1.character) - 5 * 0.008) < 1e-9, 'evade chance drifted');
   ok(playerEvadeChance(arig(s => { s.character.stats.dex = 1000; }).character) === CONST.EVASION_CAP,
      'evasion is not capped at 45% for a non-elf');
-  const aElf = arig(s => { s.character = newCharacter('elf', 'E', 'T', s.account); s.character.stats.dex = 1000; });
+  const aElf = arig(s => { s.character = newCharacter('elf', 'E', s.account); s.character.stats.dex = 1000; });
   ok(playerEvadeChance(aElf.character) === CONST.EVASION_CAP_ELF, 'the elf evasion cap is not 55%');
-  const aOrc = arig(s => { s.character = newCharacter('orc', 'O', 'T', s.account); s.character.stats.str = 5; });
+  const aOrc = arig(s => { s.character = newCharacter('orc', 'O', s.account); s.character.stats.str = 5; });
   ok(Math.abs(playerDamage(aOrc.character, false) - 10 * 1.10 * 1.03 * 1.10) < 1e-9,
      'the orc +10% damage is not applied');
   /* Armour: 6% per tier, capped at 30%; the dwarf multiplies quality by 1.25. */
   ok(Math.abs(damageTaken(a1.character, 100) - 100) < 1e-9, 'Crude armour reduced damage');
   const aArm = arig(s => { s.character.gear.armor.quality = 2; });
   ok(Math.abs(damageTaken(aArm.character, 100) - 88) < 1e-9, 'armour DR is not 6% per tier');
-  const aDwarf = arig(s => { s.character = newCharacter('dwarf', 'D', 'T', s.account); s.character.gear.armor.quality = 2; });
+  const aDwarf = arig(s => { s.character = newCharacter('dwarf', 'D', s.account); s.character.gear.armor.quality = 2; });
   ok(Math.abs(damageTaken(aDwarf.character, 100) - 85) < 1e-9, 'the dwarf armour x1.25 is not applied');
   const aCap = arig(s => { s.character.gear.armor.quality = 4; s.character = Object.assign(s.character, {}); });
   aCap.character.gear.armor.quality = 4;
@@ -7500,9 +7887,9 @@ function assertAll() {
   ok(Math.abs(rw.gold - CONST.GOLD_BASE * CONST.GOLD_SCALE * 1.10) < 1e-9,
      'round 1 gold does not follow the gold curve: ' + rw.gold);
   ok(Math.abs(rw.renown - 2 * 1.15 * 1.10) < 1e-9, 'round 1 renown drifted: ' + rw.renown);
-  const rwHalf = roundReward(arig(s => { s.character = newCharacter('halfling', 'H', 'T', s.account); }), 1);
+  const rwHalf = roundReward(arig(s => { s.character = newCharacter('halfling', 'H', s.account); }), 1);
   ok(rwHalf.gold > rw.gold, 'the halfling +20% gold is not applied');
-  const rwOrcR = roundReward(arig(s => { s.character = newCharacter('orc', 'O', 'T', s.account); }), 1);
+  const rwOrcR = roundReward(arig(s => { s.character = newCharacter('orc', 'O', s.account); }), 1);
   ok(rwOrcR.gold < CONST.GOLD_BASE * CONST.GOLD_SCALE * 1.10, 'the orc -15% gold is not applied');
 
   /* --- the economy's shape, pinned ---
@@ -7674,7 +8061,7 @@ function assertAll() {
   /* --- gear, augments and the shop (doc 3.7, 3.8) --- */
   const shopRig = () => {
     const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
-    s.character = newCharacter('orc', 'Buyer', 'Tested', s.account);   // orc: no racial slot
+    s.character = newCharacter('orc', 'Buyer', s.account);   // orc: no racial slot
     s.character.gold = 1e9;
     return s;
   };
@@ -7721,7 +8108,7 @@ function assertAll() {
   buyGearUpgrade(sa, 'weapon'); ok(augmentSlots(sa.character, 'weapon', sa.account) === 2, 'Master does not grant 2 slots');
   buyGearUpgrade(sa, 'weapon'); ok(augmentSlots(sa.character, 'weapon', sa.account) === 3, 'Legendary does not grant 3 slots');
   const human = shopRig();
-  human.character = newCharacter('human', 'H', 'T', human.account);
+  human.character = newCharacter('human', 'H', human.account);
   human.character.gold = 1e9;
   human.character.gear.weapon.quality = 2;
   ok(augmentSlots(human.character, 'weapon', human.account) === 2, 'the human extra augment slot is not applied');
@@ -7828,7 +8215,7 @@ function assertAll() {
   /* Doc 4's Might includes a classTier term, and the RENDER must supply it.
      The formula's own unit test passed while the screen hardcoded 0. */
   const mightRig = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
-  mightRig.character = newCharacter('orc', 'Might', 'Tested', mightRig.account);
+  mightRig.character = newCharacter('orc', 'Might', mightRig.account);
   mightRig.character.weapons.scythe = { level: CLASS_TIERS[1].prof, tp: 0 };
   const mightArgs = c2 => ({
     str: c2.stats.str, dex: c2.stats.dex, int: c2.stats.int, con: c2.stats.con, cha: c2.stats.cha,
@@ -7852,7 +8239,7 @@ function assertAll() {
   ok(byTier[0] === 1, 'there is not exactly one starting class');
   /* A tier-0 class must be wearable by a champion who has done nothing, or
      newCharacter hands out something migrateCharacter will strip on load. */
-  ok(classUnlocked(newCharacter('human', 'A', 'B', defaultAccount()), CONST.STARTING_CLASS),
+  ok(classUnlocked(newCharacter('human', 'A', defaultAccount()), CONST.STARTING_CLASS),
      'the starting class is not unlocked for a brand new champion');
 
   /* Doc 10's acceptance criterion, made mechanical: a class is a data row, and
@@ -7877,7 +8264,7 @@ function assertAll() {
      formula parameters that nothing ever supplied. */
   const poolRig = (id) => {
     const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
-    s.character = newCharacter('orc', 'Pool', 'Tested', s.account);
+    s.character = newCharacter('orc', 'Pool', s.account);
     CLASS_KEYS.forEach(k => { if (CLASSES[k].bonuses.indexOf(id) !== -1) s.character.battleClass = k; });
     Object.keys(CLASSES[s.character.battleClass] ? CLASSES[s.character.battleClass] : {}).length;
     CLASSES[s.character.battleClass].weapons.forEach(w => { s.character.weapons[w] = { level: 10, tp: 0 }; });
@@ -7917,7 +8304,7 @@ function assertAll() {
   /* tutelage is facility-scoped: the Monk's dex tutelage must speed the
      Obstacle Course and NOT the Forge. */
   const monkRig = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
-  monkRig.character = newCharacter('orc', 'Monk', 'Tested', monkRig.account);
+  monkRig.character = newCharacter('orc', 'Monk', monkRig.account);
   monkRig.character.weapons.battlestaff = { level: 10, tp: 0 };
   const forgeBefore = tpPerMin(monkRig, 'forge');
   const dexBefore = tpPerMin(monkRig, 'obstacle');
@@ -7941,7 +8328,7 @@ function assertAll() {
 
   /* Unlocks: tier N needs its N weapons at the tier's proficiency. */
   const cu = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
-  cu.character = newCharacter('orc', 'Climber', 'Tested', cu.account);
+  cu.character = newCharacter('orc', 'Climber', cu.account);
   ok(!classUnlocked(cu.character, 'thief'), 'a class unlocked at proficiency 1');
   cu.character.weapons.daggers.level = 3;
   ok(!classUnlocked(cu.character, 'thief'), 'Thief unlocked one level early');
@@ -7959,7 +8346,7 @@ function assertAll() {
   ok(prog.parts.length === 3 && prog.fraction >= 0 && prog.fraction <= 1, 'class progress is malformed');
   /* Equipping a vigor class must not leave HP above the new maximum. */
   const vg = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
-  vg.character = newCharacter('orc', 'Vig', 'Tested', vg.account);
+  vg.character = newCharacter('orc', 'Vig', vg.account);
   vg.character.weapons.mace = { level: 4, tp: 0 };
   equipClass(vg, 'paladin');
   vg.character.hp = maxHpOf(vg.character);
@@ -8007,7 +8394,7 @@ function assertAll() {
   /* A flourish must actually fire during a normal run. Keyed on the per-round
      counter it never did, because rounds end before the fourth exchange. */
   const flRig = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
-  flRig.character = newCharacter('orc', 'Voice', 'Tested', flRig.account);
+  flRig.character = newCharacter('orc', 'Voice', flRig.account);
   flRig.character.weapons.axes = { level: 10, tp: 0 };
   flRig.character.activeWeapon = 'axes';
   flRig.character.battleClass = 'marauder';
@@ -8023,7 +8410,7 @@ function assertAll() {
 
   /* Statuses belong to a fight, not a champion - a new run starts clean. */
   const runClean = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
-  runClean.character = newCharacter('orc', 'Clean', 'Tested', runClean.account);
+  runClean.character = newCharacter('orc', 'Clean', runClean.account);
   runClean.arena.statuses = [{ type: 'bleed', left: 3, perExchange: 5, age: 0 }];
   startRun(runClean, 0);
   ok(runClean.arena.statuses.length === 0, 'statuses carried over into a new run');
@@ -8160,11 +8547,11 @@ function assertAll() {
      for six phases because nothing walked them. */
   (function () {
     const base = { account: defaultAccount(), character: null, arena: defaultArena() };
-    base.character = newCharacter('human', 'Perk', 'Test', base.account);
+    base.character = newCharacter('human', 'Perk', base.account);
     const rich = { account: defaultAccount(), character: null, arena: defaultArena() };
     LEGACY_PERK_KEYS.forEach(id => { rich.account.legacyPerks[id] = LEGACY_PERKS[id].max; });
     rich.account.mentorSlots = mentorSlotsFor(rich.account);
-    rich.character = newCharacter('human', 'Perk', 'Test', rich.account);
+    rich.character = newCharacter('human', 'Perk', rich.account);
 
     ok(rich.character.gold > base.character.gold, 'Inherited Purse does not reach a new champion');
     ok(rich.character.stats.str > base.character.stats.str, 'Bloodline does not reach a new champion');
@@ -8263,7 +8650,7 @@ function assertAll() {
   /* --- mentor assignment --- */
   (function () {
     const s = { account: defaultAccount(), character: null, arena: defaultArena() };
-    const card = a => ({ id: a, name: 'M' + a, race: 'human', epithet: 'Wise', born: 0, retiredAt: 0,
+    const card = a => ({ id: a, name: 'M' + a, race: 'human', renownRank: 3, born: 0, retiredAt: 0,
       stats: { str: 40, dex: 40, int: 40, con: 40, cha: 40 }, weapons: {}, might: 100,
       battleClass: null, bestRound: 5, lifetimeGold: 0, lifetimeRounds: 0, knockouts: 0,
       yields: 0, highestProf: 1, chapters: 0, lp: 0, emeritus: false, taught: null });
@@ -8296,11 +8683,11 @@ function assertAll() {
   /* --- drain, decay and Emeritus through the real training path --- */
   (function () {
     const s = { account: defaultAccount(), character: null, arena: defaultArena() };
-    s.account.hall.push({ id: 'm', name: 'Mentor', race: 'human', epithet: 'Wise', born: 0, retiredAt: 0,
+    s.account.hall.push({ id: 'm', name: 'Mentor', race: 'human', renownRank: 3, born: 0, retiredAt: 0,
       stats: { str: 40, dex: 5, int: 5, con: 5, cha: 5 }, weapons: {}, might: 0, battleClass: null,
       bestRound: 0, lifetimeGold: 0, lifetimeRounds: 0, knockouts: 0, yields: 0,
       highestProf: 0, chapters: 0, lp: 0, emeritus: false, taught: null });
-    s.character = newCharacter('human', 'Pupil', 'Keen', s.account);
+    s.character = newCharacter('human', 'Pupil', s.account);
 
     const noMentor = tpPerMin(s, 'forge');
     ok(assignMentor(s, 'forge', 'm').ok, 'the drain rig could not seat its mentor');
@@ -8341,7 +8728,7 @@ function assertAll() {
     s.account.facilities.forge = 5;
     s.account.legacyPoints = 7;
     s.account.lifetime.gold = 1234;
-    s.character = newCharacter('human', 'Ender', 'Bold', s.account);
+    s.character = newCharacter('human', 'Ender', s.account);
     s.character.bestRound = 12;
     s.character.lifetimeGold = 30000;
     s.character.lifetimeRounds = 140;
@@ -8407,7 +8794,7 @@ function assertAll() {
      the same rule entering the arena follows. */
   (function () {
     const s = { account: defaultAccount(), character: null, arena: defaultArena() };
-    s.character = newCharacter('human', 'Banker', 'Thrifty', s.account);
+    s.character = newCharacter('human', 'Banker', s.account);
     s.character.training = { facility: 'forge', startedAt: 0, weaponTarget: null };
     const r = retire(s, 60 * 60 * 1000);
     ok(r.ok && r.banked && r.banked.tp > 0, 'retiring discarded the training session in progress');
@@ -8443,7 +8830,7 @@ function assertAll() {
   /* --- legacy efficiency (doc 7) --- */
   (function () {
     const s = { account: defaultAccount(), character: null, arena: defaultArena() };
-    s.character = newCharacter('human', 'Rate', 'Swift', s.account);
+    s.character = newCharacter('human', 'Rate', s.account);
     s.character.born = 0;
     ok(legacyRate(s, CONST.LEGACY_MIN_AGE_MS - 1).young === true, 'a brand-new champion is already being rated');
     s.character.bestRound = 20;
@@ -8511,7 +8898,7 @@ function assertAll() {
   /* A Hall card and its perks must survive a save round trip intact. */
   (function () {
     const s = defaultState();
-    s.account.hall.push({ id: 'rt', name: 'Round Trip', race: 'elf', epithet: 'Quick',
+    s.account.hall.push({ id: 'rt', name: 'Round Trip', race: 'elf', renownRank: 3,
       born: 1, retiredAt: 2, stats: { str: 11, dex: 12, int: 13, con: 14, cha: 15 },
       weapons: { daggers: 7 }, might: 321, battleClass: null, bestRound: 17, lifetimeGold: 8888,
       lifetimeRounds: 40, knockouts: 3, yields: 4, highestProf: 7, chapters: 2, lp: 55,
@@ -8534,7 +8921,7 @@ function assertAll() {
       lifetimeRounds: 'many', knockouts: -4, yields: null, lpPeak: Infinity });
     ok(c && c.lifetimeRounds === 0 && c.knockouts === 0 && c.yields === 0 && c.lpPeak === 0,
       'the Phase 8 champion tallies have no migration fallback');
-    const fresh = newCharacter('human', 'N', 'E', defaultAccount());
+    const fresh = newCharacter('human', 'N', defaultAccount());
     ['lifetimeRounds', 'knockouts', 'yields', 'lpPeak'].forEach(k =>
       ok(typeof fresh[k] === 'number', 'newCharacter has no default for ' + k));
   })();
@@ -8542,7 +8929,7 @@ function assertAll() {
   /* --- prestige and race gates --- */
   (function () {
     const s = defaultState();
-    s.character = newCharacter('human', 'Ranker', 'Bold', s.account);
+    s.character = newCharacter('human', 'Ranker', s.account);
     s.character.renown = FORMULAS.rankThreshold(5);
     s.arena = defaultArena();
     s.arena.active = true; s.arena.round = 21;
@@ -8605,7 +8992,7 @@ function assertAll() {
     ok(chapterBlocked(s, st.id, 1), 'chapter 2 was open before chapter 1');
     ok(chapterBlocked(s, st.id, 99), 'a chapter beyond the ladder was accepted');
     ok(chapterBlocked(s, 'no-such-tale', 0), 'an unknown tale was accepted');
-    s.character = newCharacter('human', 'Teller', 'Bold', s.account);
+    s.character = newCharacter('human', 'Teller', s.account);
     ok(/round 5/.test(chapterBlocked(s, st.id, 0)),
       'the block on chapter 1 does not name the round it wants');
     s.character.bestRound = CONST.STORY_GATES[0];
@@ -8616,7 +9003,7 @@ function assertAll() {
     const s2 = defaultState();
     s2.account.hall.push({ id: 'h', name: 'Gone', race: 'human', bestRound: 30,
       stats: { str: 5, dex: 5, int: 5, con: 5, cha: 5 }, weapons: {} });
-    s2.character = newCharacter('human', 'Heir', 'New', s2.account);
+    s2.character = newCharacter('human', 'Heir', s2.account);
     ok(chapterBlocked(s2, st.id, 0) === null,
       'a dead champion best round did not open a chapter - the gate is reading the living one');
   })();
@@ -8640,7 +9027,7 @@ function assertAll() {
   (function () {
     const s = defaultState();
     s.account.legacyPoints = 0;
-    s.character = newCharacter('human', 'Closer', 'Bold', s.account);
+    s.character = newCharacter('human', 'Closer', s.account);
     const c = s.character;
     c.bestRound = 30; c.stats.str = 200; c.stats.con = 90;
     c.gear.weapon.quality = 4;
@@ -8692,7 +9079,7 @@ function assertAll() {
   /* Losing to a boss leaves the chapter open and costs the normal bench. */
   (function () {
     const s = defaultState();
-    s.character = newCharacter('human', 'Loser', 'Rash', s.account);
+    s.character = newCharacter('human', 'Loser', s.account);
     s.character.bestRound = 30;                 // opens the gate, trains nothing
     const st = STORIES[1];
     /* An UNTRAINED champion against the last boss on the ladder. A chapter-1
@@ -8720,12 +9107,12 @@ function assertAll() {
     /* Each key must exist on the holder it claims, or it is granted into thin air. */
     const holder = u.scope === 'account'
       ? defaultAccount().unlocks
-      : newCharacter('human', 'A', 'B', defaultAccount()).unlocks;
+      : newCharacter('human', 'A', defaultAccount()).unlocks;
     ok(u.key in holder, u.key + ' is granted onto a holder that has no such field');
   });
   (function () {
     const s = defaultState();
-    s.character = newCharacter('human', 'Ranker', 'Keen', s.account);
+    s.character = newCharacter('human', 'Ranker', s.account);
     ok(evaluateRankUnlocks(s).length === 0, 'a rank unlock fired at rank 0');
     s.character.renown = FORMULAS.rankThreshold(CONST.RANK_SEEDED_ENTRY);
     s.account.prestige = CONST.RANK_SEEDED_ENTRY;
@@ -8740,7 +9127,7 @@ function assertAll() {
        champion starts without the character one and has to earn it again. */
     s.character.bestRound = 1;
     retire(s, 1000);
-    s.character = newCharacter('human', 'Heir', 'New', s.account);
+    s.character = newCharacter('human', 'Heir', s.account);
     ok(s.account.unlocks.seededEntry, 'an ACCOUNT unlock was lost on retirement');
     ok(!s.character.unlocks.earlyAugment, 'a CHARACTER unlock survived onto the next champion');
     ok(rankFor(s, 'account') >= CONST.RANK_SEEDED_ENTRY,
@@ -8752,7 +9139,7 @@ function assertAll() {
        promises is that the FLAG does not carry over, which is asserted above.
        On a fresh account, where there is no floor, the rank really is zero. */
     const fresh = defaultState();
-    fresh.character = newCharacter('human', 'First', 'Ever', fresh.account);
+    fresh.character = newCharacter('human', 'First', fresh.account);
     ok(rankFor(fresh, 'character') === 0,
       'a champion on a fresh account starts above rank 0');
     ok(evaluateRankUnlocks(fresh).length === 0,
@@ -8763,13 +9150,13 @@ function assertAll() {
      nothing read them, so they were inert twice over. */
   (function () {
     const s = defaultState();
-    s.character = newCharacter('human', 'Seed', 'Deep', s.account);
+    s.character = newCharacter('human', 'Seed', s.account);
     s.character.bestRound = 20;
     ok(startRound(s) === 1, 'a run started deep without Seeded Entry');
     s.account.unlocks.seededEntry = true;
     ok(startRound(s) > 1, 'Seeded Entry did not start the run deeper');
 
-    const plain = newCharacter('human', 'Plain', 'Slow', s.account);
+    const plain = newCharacter('human', 'Plain', s.account);
     plain.gear.weapon.quality = 1;                       // Sturdy: no slot normally
     ok(augmentSlots(plain, 'weapon', s.account) === 1, 'the human racial slot is missing from the rig');
     plain.unlocks.earlyAugment = true;
@@ -8784,7 +9171,7 @@ function assertAll() {
   /* --- auto-yield --- */
   (function () {
     const s = defaultState();
-    s.character = newCharacter('human', 'Walker', 'Wise', s.account);
+    s.character = newCharacter('human', 'Walker', s.account);
     s.character.bestRound = 0;
     startRun(s, 0);
     s.arena.playerHp = maxHpOf(s.character) * 0.10;
@@ -8797,7 +9184,7 @@ function assertAll() {
     ok(!s.character.knockoutUntil, 'Auto-Yield imposed a knockout cooldown');
     /* Above the threshold it must stay out of the way. */
     const s2 = defaultState();
-    s2.character = newCharacter('human', 'Stay', 'Bold', s2.account);
+    s2.character = newCharacter('human', 'Stay', s2.account);
     s2.account.unlocks.autoYield = true;
     s2.account.autoYieldAt = 0.25;
     startRun(s2, 0);
@@ -8806,7 +9193,7 @@ function assertAll() {
     ok(s2.arena.active, 'Auto-Yield ended a run it should not have touched');
     /* A story boss is not a purse to protect. */
     const s3 = defaultState();
-    s3.character = newCharacter('human', 'Brave', 'Sure', s3.account);
+    s3.character = newCharacter('human', 'Brave', s3.account);
     s3.character.bestRound = 30;
     s3.account.unlocks.autoYield = true;
     s3.account.autoYieldAt = 0.60;
@@ -8851,7 +9238,7 @@ function assertAll() {
   (function () {
     const rig = () => {
       const s = defaultState();
-      s.character = newCharacter('human', 'Rig', 'Test', s.account);
+      s.character = newCharacter('human', 'Rig', s.account);
       return s;
     };
     let s;
@@ -8888,7 +9275,7 @@ function assertAll() {
      with no champion - it runs from settleRun, retire and closeChapter. */
   (function () {
     const s = defaultState();
-    s.character = newCharacter('human', 'Sweep', 'Wide', s.account);
+    s.character = newCharacter('human', 'Sweep', s.account);
     s.character.bestRound = 20;
     const first = evaluateFeats(s, 1);
     ok(first.length > 0, 'the feat sweep granted nothing on a qualifying record');
@@ -8908,7 +9295,7 @@ function assertAll() {
   /* Doc 8's three oddities, each driven at the moment it happens. */
   (function () {
     const s = defaultState();
-    s.character = newCharacter('human', 'Thread', 'Fine', s.account);
+    s.character = newCharacter('human', 'Thread', s.account);
     startRun(s, 0);
     s.arena.playerHp = maxHpOf(s.character) * 0.02;
     s.arena.enemyHp = 0.0001;
@@ -8916,14 +9303,14 @@ function assertAll() {
     ok(featEarned(s.account, 'oddity-thread'), 'winning a round on 2% health earned nothing');
 
     const s2 = defaultState();
-    s2.character = newCharacter('human', 'Crude', 'Bare', s2.account);
+    s2.character = newCharacter('human', 'Crude', s2.account);
     startRun(s2, 0);
     s2.arena.round = CONST.FEAT_ODDITY_ROUNDS + 1;
     settleRun(s2, 'yield', 0);
     ok(featEarned(s2.account, 'oddity-crude'), 'clearing ten rounds in Crude gear earned nothing');
 
     const s3 = defaultState();
-    s3.character = newCharacter('human', 'Nerve', 'Held', s3.account);
+    s3.character = newCharacter('human', 'Nerve', s3.account);
     s3.character.gear.armor.quality = 2;
     startRun(s3, 0);
     s3.arena.playerHp = maxHpOf(s3.character) * 0.03;
@@ -9024,7 +9411,7 @@ function assertAll() {
     s.account.story.attribution.push(
       { story: STORIES[0].id, chapter: 0, championId: 'PRIOR', championName: 'Prior', at: 1 });
     s.account.achievements = { 'depth-10': 1, 'depth-20': 2 };
-    s.character = newCharacter('human', 'Idle', 'Nothing', s.account);
+    s.character = newCharacter('human', 'Idle', s.account);
     s.character.born = 100;                       // created AFTER those feats
     const p = legacyPreview(s);
     ok(p.record.chapters === 0,
@@ -9059,7 +9446,7 @@ function assertAll() {
        play does with Date.now() - a shared born would let a later champion
        count feats granted during an earlier one's retirement. */
     for (let i = 0; i < 5; i++) {
-      s2.character = newCharacter('human', 'Idle' + i, 'Nothing', s2.account);
+      s2.character = newCharacter('human', 'Idle' + i, s2.account);
       s2.character.born = 10000 + i * 1000;
       retire(s2, 10500 + i * 1000);
     }
@@ -9101,7 +9488,7 @@ function assertAll() {
     /* Earned unlocks must survive a round trip, or the fix costs real progress. */
     const earned = defaultState();
     earned.account.prestige = CONST.RANK_SEEDED_ENTRY;
-    earned.character = newCharacter('human', 'Real', 'Earned', earned.account);
+    earned.character = newCharacter('human', 'Real', earned.account);
     earned.character.renown = FORMULAS.rankThreshold(CONST.RANK_EARLY_AUGMENT);
     earned.account.unlocks.seededEntry = true;
     earned.account.unlocks.autoYield = true;
@@ -9155,7 +9542,7 @@ function assertAll() {
     ok(pm.active && pm.boss === null, 'an ordinary run was damaged by the boss check');
     /* And a resumed boss must still settle AS a boss - the whole point. */
     const s = defaultState();
-    s.character = newCharacter('human', 'Resumer', 'Steady', s.account);
+    s.character = newCharacter('human', 'Resumer', s.account);
     s.character.stats.str = 200; s.character.stats.con = 90;
     s.character.gear.weapon.quality = 4;
     s.character.weapons.daggers.level = CONST.WEAPON_MAX_LEVEL;
@@ -9170,7 +9557,7 @@ function assertAll() {
   /* --- the tiefling gate (doc 3.1) --- */
   (function () {
     const s = defaultState();
-    s.character = newCharacter('human', 'Teller', 'Bold', s.account);
+    s.character = newCharacter('human', 'Teller', s.account);
     ok(s.account.unlockedRaces.indexOf('tiefling') === -1, 'the tiefling was open from the start');
     for (let i = 0; i < CONST.STORY_CHAPTERS - 1; i++)
       s.account.story.attribution.push({ story: STORIES[0].id, chapter: i,
@@ -9199,7 +9586,7 @@ function assertAll() {
   (function () {
     const rig = () => {
       const s = defaultState();
-      s.character = newCharacter('human', 'Sweeper', 'Wide', s.account);
+      s.character = newCharacter('human', 'Sweeper', s.account);
       return s;
     };
 
@@ -9256,7 +9643,7 @@ function assertAll() {
      retirement could claim them either - the LP was gone for good. */
   (function () {
     const s = { account: defaultAccount(), character: null, arena: defaultArena() };
-    s.character = newCharacter('human', 'Ender', 'Bold', s.account);
+    s.character = newCharacter('human', 'Ender', s.account);
     s.character.born = 100;
     s.character.bestRound = 12;
     s.character.lifetimeGold = 30000;
@@ -9342,7 +9729,7 @@ function assertAll() {
   (function () {
     const rig = (lvl) => {
       const s = defaultState();
-      s.character = newCharacter('human', 'Fighter', 'Keen', s.account);
+      s.character = newCharacter('human', 'Fighter', s.account);
       s.character.stats.str = 400;              // one-shot the enemy, so rounds are 1 exchange
       s.character.weapons.daggers.level = lvl == null ? 1 : lvl;
       s.character.hp = maxHpOf(s.character);
@@ -9381,6 +9768,26 @@ function assertAll() {
     const tenEx = 10 * CONST.ARENA_TP_PER_EXCHANGE;
     ok(tenEx > oneEx * 9.9, 'the arena award is not proportional to exchanges');
 
+    /* THE CEILING, and the reason the award has one. Doc 1's loop is
+       train-then-fight: the arena SUPPLEMENTS training, it does not replace it.
+       Per minute in the sand the award must therefore stay strictly under what
+       the weakest facility a player can ever have - a level-1 Sparring Circle,
+       no mentor, no session bonus - pays for the same minute. Cross that line
+       and the fastest way to train a weapon is to stop training.
+
+       Pinned as a RATIO rather than as the constant, so raising the award,
+       shortening the exchange or weakening the facility floor are all caught by
+       the same check. It sat at 42% for one build and is 94% now; the assertion
+       is what makes raising it further a decision rather than an accident. */
+    const floorRig = defaultState();
+    floorRig.character = newCharacter('human', 'Floor', floorRig.account);
+    const floorTpMin = baseTpPerMin(floorRig, 'sparring');
+    const arenaTpMin = CONST.ARENA_TP_PER_EXCHANGE * (60000 / CONST.ARENA_TICK_MS);
+    ok(floorTpMin > 0, 'the training floor pays nothing, so the arena ceiling means nothing');
+    ok(arenaTpMin < floorTpMin,
+      'the arena teaches ' + arenaTpMin.toFixed(3) + ' TP/min against a training floor of ' +
+      floorTpMin.toFixed(3) + ' - fighting now out-trains training and doc 1\'s loop is inverted');
+
     /* A maxed weapon banks nothing - the same as training it would, and the
        weapon picker is how a player redirects it. */
     s = rig(CONST.WEAPON_MAX_LEVEL);
@@ -9404,7 +9811,7 @@ function assertAll() {
     /* A boss is one fight outside the endless run, and it clears no rounds -
        so it teaches nothing, which keeps the ladder from being a TP farm. */
     const b = defaultState();
-    b.character = newCharacter('human', 'Boss', 'Fight', b.account);
+    b.character = newCharacter('human', 'Boss', b.account);
     b.character.stats.str = 400;
     b.character.bestRound = 30;
     b.character.hp = maxHpOf(b.character);
@@ -9421,7 +9828,7 @@ function assertAll() {
   (function () {
     const rig = (fac, target) => {
       const s = defaultState();
-      s.character = newCharacter('human', 'Waiter', 'Patient', s.account);
+      s.character = newCharacter('human', 'Waiter', s.account);
       s.character.training = { facility: fac, startedAt: 0, weaponTarget: target || null };
       return s;
     };
@@ -9468,7 +9875,7 @@ function assertAll() {
 
   /* --- the loadout is shown wherever the champion is -------- */
   (function () {
-    const c = newCharacter('human', 'Shown', 'Clearly', defaultAccount());
+    const c = newCharacter('human', 'Shown', defaultAccount());
     const html = loadoutChips(c);
     ok(/Daggers/.test(html), 'the loadout does not name the equipped weapon');
     ok(new RegExp(CLASSES[CONST.STARTING_CLASS].label).test(html),
@@ -9484,7 +9891,7 @@ function assertAll() {
   (function () {
     const rig = () => {
       const s = defaultState();
-      s.character = newCharacter('human', 'Doer', 'Busy', s.account);
+      s.character = newCharacter('human', 'Doer', s.account);
       return s;
     };
     ok(championActivity({ character: null, arena: defaultArena(), account: defaultAccount() }, 0) === null,
@@ -9532,14 +9939,14 @@ function assertAll() {
     ok(cl.weapons.length === 0, 'the starting class demands a weapon a new champion cannot have');
     ok(MIGHT_UNCHANGED(), 'the starting class moves Might on a brand new champion');
     function MIGHT_UNCHANGED() {
-      const c = newCharacter('human', 'A', 'B', defaultAccount());
+      const c = newCharacter('human', 'A', defaultAccount());
       const withClass = mightOf(c);
       c.battleClass = null;
       return mightOf(c) === withClass;
     }
     /* It survives a save round trip rather than being stripped as unearned. */
     const s = defaultState();
-    s.character = newCharacter('human', 'Keeper', 'Steady', s.account);
+    s.character = newCharacter('human', 'Keeper', s.account);
     const back = migrate(JSON.parse(JSON.stringify(s)));
     ok(back.character.battleClass === CONST.STARTING_CLASS,
       'the starting class was stripped on load - creation and migration disagree');
@@ -9550,7 +9957,7 @@ function assertAll() {
       'the starting class grants a training bonus - it would shift the idle economy for everyone');
     cl.bonuses.forEach(k => ok(!!BONUS_KEYS[k],
       'the starting class grants ' + k + ', which is not in the doc 3.4 pool'));
-    const fresh = newCharacter('human', 'V', 'T', defaultAccount());
+    const fresh = newCharacter('human', 'V', defaultAccount());
     ok(maxHpOf(fresh) > FORMULAS.maxHp(fresh.stats.con),
       'the starting class vigor bonus does not reach maxHpOf');
   })();
@@ -9645,6 +10052,383 @@ function assertAll() {
     });
   })();
 
+
+  /* --- the renown ladder: titles and their bonuses ------------
+     The title replaces the epithet rolled at creation, so it is now DERIVED
+     state on the most-looked-at line in the game, and it pays a bonus. Both
+     halves need holding down. */
+  (function () {
+    ok(RENOWN_RANKS.length >= 5, 'the renown ladder is too short to be a career');
+    ok(RENOWN_TOP_RANK === RENOWN_RANKS.length - 1, 'RENOWN_TOP_RANK is not the top rung');
+    ok(!RENOWN_RANKS[0].bonus, 'rank 0 pays a bonus - it is the state of having done nothing');
+    const titles = RENOWN_RANKS.map(r => r.title);
+    ok(new Set(titles).size === titles.length, 'two rungs of the ladder share a title');
+    titles.forEach((t, i) => ok(typeof t === 'string' && t.trim().length > 0,
+      'rung ' + i + ' has no title'));
+
+    RENOWN_RANKS.forEach((r, i) => {
+      if (i === 0) return;
+      /* Reported and then skipped, not walked into: a suite that throws on the
+         first broken row stops testing everything after it, which is how one
+         defect hides the next. */
+      if (!r.bonus || Object.keys(r.bonus).length === 0) {
+        ok(false, 'rank ' + i + ' is a rung that pays nothing');
+        return;
+      }
+      /* Doc 10's no-special-cases rule, made mechanical for the ladder exactly
+         as it already is for the classes: every effect a rung names must
+         already exist in the doc 3.4 pool. */
+      Object.keys(r.bonus).forEach(k => {
+        ok(!!BONUS_KEYS[k], 'rank ' + i + ' grants "' + k + '", which is not a doc 3.4 pool key');
+        ok(typeof r.bonus[k] === 'number' && isFinite(r.bonus[k]) && r.bonus[k] > 0,
+          'rank ' + i + ' grants a non-positive "' + k + '"');
+      });
+    });
+
+    /* Out of range in either direction reads as a title, never as undefined -
+       a Hall card from a build with a longer ladder must not blank the name. */
+    ok(renownTitleFor(-5) === RENOWN_RANKS[0].title, 'a negative rank has no title');
+    ok(renownTitleFor(999) === RENOWN_RANKS[RENOWN_TOP_RANK].title, 'a rank past the top has no title');
+    ok(renownTitleFor(null) === RENOWN_RANKS[0].title, 'a missing rank has no title');
+
+    /* Cumulative down the ladder: rank N holds everything rank N-1 did, and
+       strictly more. This is what makes a rank feel like a career. */
+    const totalAt = n => {
+      let sum = 0;
+      Object.keys(BONUS_KEYS).forEach(k => { sum += renownBonus({ renownRank: n }, k); });
+      return sum;
+    };
+    for (let n = 1; n <= RENOWN_TOP_RANK; n++) {
+      ok(totalAt(n) > totalAt(n - 1), 'rank ' + n + ' is worth no more than rank ' + (n - 1));
+      Object.keys(BONUS_KEYS).forEach(k => {
+        ok(renownBonus({ renownRank: n }, k) >= renownBonus({ renownRank: n - 1 }, k),
+          'rank ' + n + ' pays LESS ' + k + ' than the rank below it - the ladder is not cumulative');
+      });
+    }
+    /* And it stops at the top rather than compounding forever. */
+    ok(totalAt(RENOWN_TOP_RANK + 50) === totalAt(RENOWN_TOP_RANK),
+      'the ladder keeps paying past its top rung');
+
+    /* EVERY key the ladder grants must measurably reach the game - the same
+       check the class pool carries, applied to the new namespace before it can
+       rot. Phase 7 found four pool keys that had been dangling formula
+       parameters since Phase 1 for want of exactly this. */
+    const granted = {};
+    RENOWN_RANKS.forEach(r => { if (r.bonus) Object.keys(r.bonus).forEach(k => { granted[k] = true; }); });
+    ok(Object.keys(granted).length >= 3, 'the ladder draws on too few pool keys to be interesting');
+    /* `recovery` is only ever spent in settleRun, so the honest probe for it is
+       an actual knockout: comparing bonus() to bonus() would pass even if the
+       cooldown never read the pool at all. */
+    const benchMs = (rank) => {
+      const t = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+      t.character = newCharacter('orc', 'Bench', t.account);
+      t.character.battleClass = null;
+      t.character.renownRank = rank;
+      t.character.hp = maxHpOf(t.character);
+      startRun(t, 0);
+      t.arena.playerHp = 0;
+      settleRun(t, 'knockout', 1000);
+      return t.character.knockoutUntil - 1000;
+    };
+    Object.keys(granted).forEach(key => {
+      const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+      s.character = newCharacter('orc', 'Ladder', s.account);
+      const c = s.character;
+      c.battleClass = null;                       // isolate the ladder from the class pool
+      const read = () => ({
+        dmg: playerDamage(c, false), crit: playerCritChance(c), ev: playerEvadeChance(c),
+        hp: maxHpOf(c), taken: damageTaken(c, 100), gold: roundReward(s, 5).gold
+      });
+      c.renown = 0; c.renownRank = 0;
+      const before = read();
+      c.renownRank = RENOWN_TOP_RANK;
+      const after = read();
+      const moved =
+        key === 'damage'     ? after.dmg > before.dmg :
+        key === 'crit'       ? after.crit > before.crit :
+        key === 'evasion'    ? after.ev > before.ev :
+        key === 'vigor'      ? after.hp > before.hp :
+        key === 'mitigation' ? after.taken < before.taken :
+        key === 'avarice'    ? after.gold > before.gold :
+        key === 'recovery'   ? benchMs(RENOWN_TOP_RANK) < benchMs(0) :
+        false;
+      ok(moved, 'the ladder grants "' + key + '" and it changes nothing measurable');
+    });
+
+    /* It arrives through bonus(), not beside it - so every existing consumer
+       inherits it and none of them needs to know fame is a source. */
+    const plain = newCharacter('human', 'Plain', defaultAccount());
+    const famed = newCharacter('human', 'Famed', defaultAccount());
+    famed.renown = FORMULAS.rankThreshold(RENOWN_TOP_RANK);
+    famed.renownRank = renownRankFor(famed.renown);
+    ok(bonus(famed, 'vigor') > bonus(plain, 'vigor'), 'the ladder does not resolve through bonus()');
+    ok(maxHpOf(famed) > maxHpOf(plain), 'a famous champion is no tougher than an unknown one');
+    ok(classBonus(famed, 'vigor') === classBonus(plain, 'vigor'),
+      'the ladder leaked into classBonus - it must be its own term');
+  })();
+
+  /* --- the title is the highest one EARNED --------------------
+     Which is only equal to the current one because renown never goes down. A
+     yield forfeits the POT's renown, not the bank's. If that ever changes,
+     championRank() needs a real high-water mark and this is the check that
+     will say so. */
+  (function () {
+    const rig = () => {
+      const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+      s.character = newCharacter('human', 'Monotone', s.account);
+      s.character.stats.str = 60;
+      s.character.hp = maxHpOf(s.character);
+      return s;
+    };
+    let s = rig();
+    startRun(s, 0);
+    let guard = 0;
+    while (s.arena.active && guard++ < 200) exchange(s, guard * CONST.ARENA_TICK_MS);
+    const afterKo = s.character.renown;
+    ok(afterKo >= 0, 'a settled run left renown negative');
+
+    /* Yield from a live pot, and the banked renown must not fall. */
+    s = rig();
+    startRun(s, 0);
+    for (let i = 0; i < 40 && s.arena.active; i++) exchange(s, (i + 1) * CONST.ARENA_TICK_MS);
+    const held = s.character.renown;
+    if (s.arena.active) {
+      settleRun(s, 'yield', 100000);
+      ok(s.character.renown >= held,
+        'yielding REDUCED banked renown - the highest title earned can now be lost, and championRank() needs a high-water mark');
+    }
+
+    /* Settling trues up doc 5's stored rank rather than leaving it stale. */
+    s = rig();
+    s.character.renown = FORMULAS.rankThreshold(3);
+    s.character.renownRank = 0;
+    startRun(s, 0);
+    settleRun(s, 'yield', 1000);
+    ok(s.character.renownRank === renownRankFor(s.character.renown),
+      'settling a run left the stored rank disagreeing with the renown beside it');
+
+    /* A Hall card carries the rank it retired holding - it is a snapshot, and
+       the champion object it came from is destroyed. */
+    const h = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+    h.character = newCharacter('human', 'Retiree', h.account);
+    h.character.renown = FORMULAS.rankThreshold(4);
+    h.character.renownRank = 4;
+    const card = hallCardFor(h, 1000);
+    ok(card.renownRank === 4, 'the Hall card did not keep the rank its champion retired holding');
+    ok(championRank(card) === 4, 'championRank cannot read a Hall card');
+    ok(renownTitleFor(card.renownRank) === RENOWN_RANKS[4].title, 'the Hall shows the wrong title');
+    ok(typeof titleOf(h.character) === 'string' && titleOf(h.character).length > 0,
+      'a living champion has no title');
+  })();
+
+  /* --- a rank cannot be forged into the record ----------------
+     The rank now prints a title AND pays a bonus, so it is worth forging. It is
+     re-derived from renown on load, exactly as the Phase 9 audit had to make
+     the rank UNLOCKS re-derive rather than trust. */
+  (function () {
+    const forged = {
+      version: CONST.VERSION,
+      account: Object.assign(defaultAccount(), { prestige: 0 }),
+      character: Object.assign(newCharacter('human', 'Forger', defaultAccount()),
+        { renown: 0, renownRank: 99 }),
+      arena: defaultArena()
+    };
+    const m = migrate(JSON.parse(JSON.stringify(forged)));
+    ok(m.character.renownRank === 0, 'a hand-edited rank survived migration');
+    ok(championRank(m.character) === 0, 'a forged rank still reads as earned');
+    /* The EFFECT, not just the flag - the lesson from the Phase 9 unlock hole. */
+    ok(Math.abs(bonus(m.character, 'avarice') - 0) < 1e-9,
+      'a forged rank was still paying its bonus after migration');
+    ok(renownTitleFor(m.character.renownRank) === RENOWN_RANKS[0].title,
+      'a forged rank still prints its title');
+
+    /* And a rank the record UNDER-states is granted, not withheld: a save from
+       before the ladder existed earns its title on load. */
+    const stale = {
+      version: CONST.VERSION, account: defaultAccount(),
+      character: Object.assign(newCharacter('human', 'Stale', defaultAccount()),
+        { renown: FORMULAS.rankThreshold(4), renownRank: 0 }),
+      arena: defaultArena()
+    };
+    const sm = migrate(JSON.parse(JSON.stringify(stale)));
+    ok(sm.character.renownRank === 4, 'a save predating the ladder did not earn the title its renown bought');
+
+    /* Doc 4's renown floor means a successor to a storied account is BORN
+       holding a title. That is the floor working, not the ladder failing. */
+    const prest = Object.assign(defaultAccount(), { prestige: 8 });
+    const heir = newCharacter('human', 'Heir', prest);
+    ok(heir.renown === startingRenownFor(prest), 'the creation floor is derived twice and disagrees');
+    ok(heir.renownRank === renownRankFor(heir.renown), 'a new champion is born with a stale rank');
+    ok(heir.renownRank > 0, 'a successor on a rank-8 account was born unproven');
+    ok(newCharacter('human', 'First', defaultAccount()).renownRank === 0,
+      'the first champion of an account was born with a title');
+  })();
+
+  /* --- the run fights on while nobody is watching -------------
+     Doc 6's second clock, made timestamp-derived like the other two. */
+  (function () {
+    const rig = (str) => {
+      const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+      s.character = newCharacter('human', 'Absent', s.account);
+      s.character.stats.str = str == null ? 40 : str;
+      s.character.stats.con = 40;
+      s.character.hp = maxHpOf(s.character);
+      return s;
+    };
+    const T = CONST.ARENA_TICK_MS;
+
+    /* Nothing owed, nothing fought. */
+    let s = rig();
+    startRun(s, 0);
+    ok(s.arena.lastExchangeAt === 0, 'startRun did not stamp the arena clock');
+    ok(catchUpArena(s, 0) === null, 'an arena with no elapsed time still fought');
+    ok(catchUpArena(s, T - 1) === null, 'a partial exchange was paid out early');
+    ok(s.arena.totalExchanges === 0, 'exchanges happened with no time to pay for them');
+
+    /* Exactly the number of exchanges the clock owes. */
+    s = rig(400);                                  // far too strong to be knocked out in ten
+    startRun(s, 0);
+    const r10 = catchUpArena(s, 10 * T);
+    ok(r10 && r10.steps === 10, 'ten ticks of absence bought ' + (r10 ? r10.steps : 0) + ' exchanges');
+    ok(s.arena.totalExchanges === 10, 'the run did not fight the exchanges it was paid for');
+    ok(s.arena.lastExchangeAt === 10 * T, 'the arena clock did not advance with the fight');
+
+    /* ADDITIVE: two halves must equal the whole. The offline path and the live
+       tick are the same function called with different gaps, so if this is not
+       true they disagree - the same property mentorRun() is asserted for, and
+       for the same reason. Seeded so both runs get identical luck. */
+    const twoHalves = rig(30), oneGo = rig(30);
+    rng = makeRng(1234);
+    startRun(twoHalves, 0); catchUpArena(twoHalves, 25 * T); catchUpArena(twoHalves, 50 * T);
+    rng = makeRng(1234);
+    startRun(oneGo, 0); catchUpArena(oneGo, 50 * T);
+    ok(twoHalves.arena.totalExchanges === oneGo.arena.totalExchanges,
+      'catching a run up in two goes fought a different number of exchanges than one');
+    ok(Math.abs(twoHalves.arena.playerHp - oneGo.arena.playerHp) < 1e-9 &&
+       twoHalves.arena.round === oneGo.arena.round,
+      'catching a run up in two goes left it in a different state than one');
+    ok(Math.abs(twoHalves.character.renown - oneGo.character.renown) < 1e-9,
+      'catch-up is not additive in what it pays');
+    rng = Math.random;
+
+    /* A run ENDS on its own. That is what bounds the loop, and it is why the
+       catch-up is not capped at the 8h accrual cap. */
+    s = rig(10);
+    startRun(s, 0);
+    const long = catchUpArena(s, 40 * 60 * 60 * 1000);
+    ok(!s.arena.active, 'a run left alone for forty hours never ended - the catch-up loop is unbounded');
+    ok(long.settled && long.steps < CONST.ARENA_CATCHUP_MAX_EXCHANGES,
+      'the run only stopped because it hit the safety guard');
+    ok(long.steps > 0 && s.arena.over, 'a forty-hour absence settled nothing');
+    /* And it stops AT the settle rather than fighting on past it. */
+    const stamped = s.arena.lastExchangeAt;
+    ok(catchUpArena(s, 80 * 60 * 60 * 1000) === null, 'a settled run kept fighting');
+    ok(s.arena.lastExchangeAt === stamped, 'a settled run advanced its clock');
+
+    /* THE ordering that matters: the 25-minute bench is dated from the moment
+       of the knockout, not from the moment the player came back. A run that
+       ended two hours into a three-hour absence has served its bench. */
+    s = rig(10);
+    startRun(s, 0);
+    const koAt = 3 * 60 * 60 * 1000;
+    catchUpArena(s, koAt);
+    ok(s.character.knockoutUntil != null, 'the forty-hour rig did not end in a knockout');
+    ok(s.character.knockoutUntil < koAt,
+      'the bench was dated from the moment the player returned, not from the knockout');
+
+    /* A clock that ran backwards owes nothing and repairs itself. */
+    s = rig(400);
+    startRun(s, 10000);
+    ok(catchUpArena(s, 5000) === null, 'a backwards clock owed exchanges');
+    ok(s.arena.lastExchangeAt === 5000, 'a backwards clock was not repaired');
+
+    /* A record from before the arena had a clock resumes rather than being
+       owed its whole absence. */
+    s = rig(400);
+    startRun(s, 0);
+    s.arena.lastExchangeAt = null;
+    ok(catchUpArena(s, 9 * 60 * 60 * 1000) === null,
+      'a run with no clock was owed the entire absence at once');
+    ok(s.arena.lastExchangeAt === 9 * 60 * 60 * 1000, 'a clockless run did not start its clock');
+
+    /* Both ways into the sand build the full arena shape. Written longhand,
+       startRun had already lost `boss` this way; lastExchangeAt would not have
+       been so forgiving. */
+    const shape = Object.keys(defaultArena()).sort().join(',');
+    const runS = rig(); startRun(runS, 500);
+    ok(Object.keys(runS.arena).sort().join(',') === shape, 'startRun builds an arena of the wrong shape');
+    ok(runS.arena.lastExchangeAt === 500, 'startRun did not set the arena clock');
+    const bossS = rig();
+    bossS.character.bestRound = 60;
+    bossS.account.prestige = 6;
+    const started = startBoss(bossS, STORIES[0].id, 0, 700);
+    ok(started.ok, 'the boss rig could not open chapter 1: ' + started.msg);
+    ok(Object.keys(bossS.arena).sort().join(',') === shape, 'startBoss builds an arena of the wrong shape');
+    ok(bossS.arena.lastExchangeAt === 700, 'startBoss did not set the arena clock');
+    /* And a boss fights on through an absence exactly as a run does. */
+    catchUpArena(bossS, 700 + 5 * T);
+    ok(bossS.arena.totalExchanges === 5, 'a story boss did not fight through an absence');
+
+    /* The clock survives a save. */
+    const mig = migrateArena({ active: true, round: 3, playerHp: 50, enemyHp: 50, enemyMaxHp: 90,
+      enemy: { name: 'X', round: 3, maxHp: 90, hp: 50, dmg: 4 }, lastExchangeAt: 4242 }, defaultAccount());
+    ok(mig.lastExchangeAt === 4242, 'the arena clock did not survive migration');
+    ok(migrateArena({ active: false, lastExchangeAt: 'soon' }, defaultAccount()).lastExchangeAt === null,
+      'a junk arena clock was not repaired');
+  })();
+
+  /* --- the away card reports the fight ------------------------ */
+  (function () {
+    const keepState = state, keepOffline = offline, keepAway = awayCard;
+    try {
+      const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+      s.character = newCharacter('human', 'Gone', s.account);
+      s.character.stats.str = 10;
+      s.character.hp = maxHpOf(s.character);
+      state = s;
+      startRun(state, Date.now() - 60 * 60 * 1000);
+      state.account.lastSeen = Date.now() - 60 * 60 * 1000;
+      const o = resolveOffline();
+      ok(!!o.arena, 'an hour away with a run in progress reported no arena at all');
+      ok(o.arena.exchanges > 0, 'the away report claims no exchanges were fought');
+      ok(o.arena.settled === 'knockout', 'an hour-long run did not settle');
+      ok(!state.arena.active, 'the run was still going after an hour away');
+      ok(state.character.knockoutUntil === null,
+        'the bench outlasted an hour of absence - it was dated from the wrong moment');
+      ok(o.koCleared === true, 'the away card did not report the bench as served');
+      awayCard = o;
+      const html = awayMarkup();
+      ok(/Arena/.test(html), 'the away card does not mention the arena');
+      ok(/Knocked out/.test(html), 'the away card does not say how the run ended');
+    } finally {
+      state = keepState; offline = keepOffline; awayCard = keepAway;
+      renderAll();
+    }
+  })();
+
+  /* --- the session opens on TRAIN ----------------------------- */
+  (function () {
+    ok(SCREENS.some(sc => sc.id === CONST.DEFAULT_SCREEN),
+      'CONST.DEFAULT_SCREEN names a screen that does not exist');
+    const keep = state;
+    try {
+      state = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+      ok(defaultScreen() === 'champion',
+        'a session with no champion opens on a screen that cannot be used');
+      state.character = newCharacter('human', 'Opener', state.account);
+      ok(defaultScreen() === CONST.DEFAULT_SCREEN, 'a session with a champion does not open on Train');
+      ok(defaultScreen() === 'train', 'the default screen is not the Train tab');
+    } finally { state = keep; }
+    /* An unknown route lands somewhere real rather than nowhere. */
+    const keepScreen = activeScreen, keepHash = location.hash;
+    show('not-a-screen');
+    ok(activeScreen === defaultScreen(), 'an unknown route did not fall back to the default screen');
+    ok(document.querySelectorAll('.screen.is-active').length === 1,
+      'an unknown route left more or fewer than one screen showing');
+    show(keepScreen);
+    location.hash = keepHash;
+  })();
+
   /* --- focus survives a route change -------------------------
      keepFocus() covers a screen re-rendering under the player; it cannot cover
      an action that also NAVIGATES, because the element it restores is then
@@ -9691,7 +10475,8 @@ function assertAll() {
 function boot() {
   state = load();
   resolveOffline();
-  if (offline.rawMs >= CONST.AWAY_MIN_REPORT_MS && (offline.facility || offline.koCleared)) {
+  if (offline.rawMs >= CONST.AWAY_MIN_REPORT_MS &&
+      (offline.facility || offline.koCleared || offline.arena)) {
     awayCard = offline;
   }
 
@@ -9702,7 +10487,14 @@ function boot() {
   renderAll();
 
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') save('visibilitychange');
+    if (document.visibilityState === 'hidden') { save('visibilitychange'); return; }
+    /* Coming back. The interval would catch the run up on its own within a
+       beat, but a tab under intensive throttling fires once a MINUTE - so
+       without this the player watches a stale round number for up to sixty
+       seconds and reasonably concludes the fight stopped without them. */
+    if (state.arena.active) arenaStep();
+    lastTickAt = Date.now();
+    renderAll();
   });
   window.addEventListener('pagehide', () => save('pagehide'));
 
@@ -9723,15 +10515,15 @@ window.EA = {
   get saveBlockedReason() { return saveBlockedReason; },
   get draft() { return draft; },
   CONST, FORMULAS, SCREENS, FACILITIES, ICON_NAMES, STAT_KEYS, UPGRADES,
-  RACES, STATS, WEAPONS, QUALITY, NAMES, EPITHETS, PROLOGUES,
-  rollName, rollEpithet, newCharacter, newDraft, prologueFor, raceUnlocked, createChampion,
+  RACES, STATS, WEAPONS, QUALITY, NAMES, PROLOGUES, RENOWN_RANKS,
+  rollName, newCharacter, newDraft, championRank, renownTitleFor, titleOf, renownBonus, renownBonusTotals, prologueFor, raceUnlocked, createChampion,
   tpPerMin, facilityLevel, mentorMultFor, sessionElapsed, sessionPreview, previewLevels,
   applyTp, applyRegen, unlockChildren, startTraining, collectSession, resolveOffline, tick,
   timeToNextLevel, etaLine, loadoutChips, championActivity, updateTopbarLive, purseText,
   ENEMY_GIVEN, ENEMY_BANDS, bandFor, rollEnemyName,
   startRun, beginRound, exchange, settleRun, yieldPreview, roundReward, enemyFor,
   playerDamage, playerCritChance, playerEvadeChance, damageTaken, profOf,
-  startArenaTick, stopArenaTick, arenaStep,
+  startArenaTick, stopArenaTick, arenaStep, catchUpArena, defaultScreen, startingRenownFor, RENOWN_TOP_RANK,
   AUGMENTS, AUGMENT_KEYS, augBonus, augmentSlots, gearUpgradeCost, buyGearUpgrade,
   buyAugment, removeAugment, buyFacility, facilityUpgradeCost, facilityLocked, renownRankFor,
   BONUS_KEYS, CLASSES, CLASS_KEYS, CLASS_TIERS, STATUSES, FLOURISHES,
