@@ -2850,6 +2850,22 @@ function newCharacter(raceKey, name, account) {
    for it. The default is null, so the type check is the honest one. */
 const hasSession = t => !!t && !!t.facility && typeof t.startedAt === 'number' && isFinite(t.startedAt);
 
+/* ONE home for doc 4's knockout bench. This was hand-rolled as
+   `c.knockoutUntil && now < c.knockoutUntil` in six places, and the seventh and
+   eighth sites - training and HP regen - simply did not have it, so a knocked
+   out champion could walk straight to the Sparring Circle and start healing.
+   The bench is the entire cost of a knockout; a check that has to be remembered
+   at every new call site is a check that will be forgotten at one.
+
+   Takes `now` rather than reading the clock, like everything else in the core.
+   `benchLeft` is what the countdown renders, so the text and the gate can never
+   disagree about whether the bench is over. */
+const benchLeft = (c, now) => {
+  const until = c ? num(c.knockoutUntil, 0) : 0;
+  return Math.max(0, until - now);
+};
+const benched = (c, now) => benchLeft(c, now) > 0;
+
 function facilityLevel(s, key) {
   return clamp(Math.round(num(s.account.facilities[key], 1)), 1, CONST.FACILITY_MAX_LEVEL);
 }
@@ -2898,7 +2914,30 @@ function tpPerMin(s, key) {
 function sessionElapsed(s, now) {
   const t = s.character && s.character.training;
   if (!hasSession(t)) return 0;
-  return Math.max(0, Math.min(now - t.startedAt, CONST.OFFLINE_CAP_MS));
+  /* A session earns from whichever came later: when it started, or when the
+     bench it is sitting under ends. Benched time is not training time.
+
+     After the startTraining gate a session can never BEGIN under a bench, and a
+     bench can never begin under a session (entering the arena banks and ends
+     one), so the two are mutually exclusive by construction and this max() is
+     dormant - there is an assertion on that exclusion. It exists for the save
+     written by an older build, where the two DID overlap: such a session keeps
+     every hour it legitimately earned and simply starts paying again when the
+     bench lifts, rather than being repaired away underneath the player.
+
+     Still a pure function of stored timestamps and `now`, which is the whole
+     reason a throttled tab loses nothing. */
+  return Math.max(0, Math.min(now - sessionOrigin(s), CONST.OFFLINE_CAP_MS));
+}
+
+/* The moment a session actually starts earning. Its own home because
+   resolveOffline needs the SAME origin to take its difference of two previews
+   from - it computed `now - startedAt` by hand, which is how a re-derivation
+   silently disagrees with the thing it copied. */
+function sessionOrigin(s) {
+  const t = s.character && s.character.training;
+  if (!hasSession(t)) return 0;
+  return Math.max(t.startedAt, num(s.character.knockoutUntil, 0));
 }
 
 function nextTier(ms) {
@@ -3026,7 +3065,34 @@ function timeToNextLevel(s, now) {
 
 /* One sentence for the panel, so the markup and the live update never phrase it
    differently. */
+/* The Medic banks no TP, so it has no next level to count down to - and it was
+   therefore the one facility whose panel said nothing about what it was doing.
+   What it is doing is healing, so the honest readout is time to FULL.
+
+   Pure, and it reads regenPctFor() rather than the constants, so the facility
+   level, the Standing Vigil perk and the racial multiplier are all folded in by
+   the same function the tick uses. Returns null when there is nothing to wait
+   for: no session, the wrong facility, already full, or a rate of zero.
+
+   Benched time is added on rather than ignored. A knocked-out champion does not
+   heal (applyRegen refuses), so an estimate that started counting from now
+   would be short by the whole bench and would tick down while nothing moved. */
+function timeToFullHp(s, now) {
+  const c = s.character;
+  const p = sessionPreview(s, now);
+  if (!c || !p) return null;
+  if (FACILITIES[p.facility].feeds !== 'hp') return null;
+  const max = maxHpOf(c);
+  const missing = max - c.hp;
+  if (!(missing > 0)) return { ms: 0, full: true };
+  const perMin = max * regenPctFor(s, p.facility);
+  if (!(perMin > 0) || !isFinite(perMin)) return null;
+  return { ms: (missing / perMin) * 60000 + benchLeft(c, now), full: false };
+}
+
 function etaLine(s, now) {
+  const hp = timeToFullHp(s, now);
+  if (hp) return hp.full ? 'At full health.' : 'Full health in about ' + dur(hp.ms) + '.';
   const e = timeToNextLevel(s, now);
   if (!e) return '';
   if (e.beyondCap) return 'Next level is beyond the 8h cap — collect and keep going.';
@@ -3116,9 +3182,17 @@ function regenPctFor(s, key) {
   return CONST.MEDIC_REGEN_PCT_MIN * FORMULAS.facilityRate(facilityLevel(s, key)) * vigil;
 }
 
-function applyRegen(s, minutes, key) {
+/* `now` is threaded so the bench can be honoured here rather than at each call
+   site. It is optional ONLY because the harness drives regen on its own clock;
+   omitting it means "no bench", which is true for every harness champion. */
+function applyRegen(s, minutes, key, now) {
   const c = s.character;
   if (!c || !(minutes > 0)) return 0;
+  /* A knocked-out champion does not heal. This is the second half of the bench
+     gate: blocking startTraining stops a NEW session, and this stops the one
+     path that could still tick HP up underneath a bench - a session that
+     predates it in a save written by an older build. */
+  if (typeof now === 'number' && benched(c, now)) return 0;
   const max = maxHpOf(c);
   const pct = regenPctFor(s, key);
   const before = c.hp;
@@ -3129,6 +3203,16 @@ function applyRegen(s, minutes, key) {
 function startTraining(key, weaponTarget) {
   const c = state.character;
   if (!c || !FACILITIES[key]) return null;
+  /* Doc 4: a knockout costs TIME. The bench had no bearing on training at all,
+     so a champion could be carried off the sand and start a session in the same
+     second - which made the whole penalty a 25-minute lock on the arena door
+     and nothing else, while the idle half of the game ran on untouched.
+     Entering the arena is already gated this way (startRun, startBoss); this is
+     the same gate on the other activity. */
+  if (benched(c, Date.now())) {
+    flash('Still on the bench — back in ' + dur(benchLeft(c, Date.now())) + '.');
+    return null;
+  }
   /* Switching facilities banks what is owed first - nothing is ever discarded. */
   let carried = null;
   if (c.training.facility && c.training.facility !== key) carried = collectSession(Date.now());
@@ -3622,7 +3706,7 @@ function bossReward(s, chapter) {
 function startRun(s, now) {
   const c = s.character;
   if (!c) return null;
-  if (c.knockoutUntil && now < c.knockoutUntil) return null;   // still on the bench
+  if (benched(c, now)) return null;                            // still on the bench
   /* A run ends training: you cannot be in the sand and at the forge. Banking
      first means entering the arena never costs the player a session. */
   if (hasSession(c.training)) {
@@ -4538,7 +4622,7 @@ function startBoss(s, storyId, chapter, now) {
   const c = s.character;
   if (!c) return { ok: false, msg: 'No champion.' };
   if (s.arena && s.arena.active) return { ok: false, msg: 'Finish your run first.' };
-  if (c.knockoutUntil && now < c.knockoutUntil) return { ok: false, msg: 'Still on the bench.' };
+  if (benched(c, now)) return { ok: false, msg: 'Still on the bench.' };
   const blocked = chapterBlocked(s, storyId, chapter);
   if (blocked) return { ok: false, msg: blocked };
 
@@ -4779,7 +4863,7 @@ function resolveOffline() {
       };
     }
     /* Knockout cooldown resolves on return whether or not they were training. */
-    if (c.knockoutUntil && now >= c.knockoutUntil) { c.knockoutUntil = null; offline.koCleared = true; }
+    if (c.knockoutUntil != null && !benched(c, now)) { c.knockoutUntil = null; offline.koCleared = true; }
 
     const t = c.training;
     if (hasSession(t)) {
@@ -4789,8 +4873,12 @@ function resolveOffline() {
          previews is what makes the tier jump fall out for free: cross 4h while
          away and the whole session re-multiplies at x1.20. */
       const lastSeen = num(state.account.lastSeen, now);
-      const nowMs  = Math.max(0, Math.min(now - t.startedAt, CONST.OFFLINE_CAP_MS));
-      const thenMs = Math.max(0, Math.min(lastSeen - t.startedAt, CONST.OFFLINE_CAP_MS));
+      /* Both ends measured from sessionOrigin(), not from startedAt - the same
+         origin sessionElapsed() uses, so the difference cannot disagree with
+         the preview it is subtracting. */
+      const origin = sessionOrigin(state);
+      const nowMs  = Math.max(0, Math.min(now - origin, CONST.OFFLINE_CAP_MS));
+      const thenMs = Math.max(0, Math.min(lastSeen - origin, CONST.OFFLINE_CAP_MS));
       /* Both ends of the difference walk the mentor from the SAME stored pool,
          because the pool has not been spent yet - it is only charged when the
          session is collected. That is what keeps the subtraction honest. */
@@ -4811,7 +4899,7 @@ function resolveOffline() {
       /* HP regen IS applied on return - it is not banked, and capping it with
          the same 8h window keeps it consistent with the TP rule. */
       const regenMs = Math.max(0, nowMs - thenMs);
-      offline.hpRestored = applyRegen(state, regenMs / 60000, t.facility);
+      offline.hpRestored = applyRegen(state, regenMs / 60000, t.facility, now);
 
       /* Not applied: what the pending bank would buy if collected now. */
       offline.levelsReady = previewLevels(state, t.facility, sessionPreview(state, now).tp);
@@ -4929,9 +5017,9 @@ function routeFromHash() {
 function championActivity(s, now) {
   const c = s.character;
   if (!c) return null;
-  if (c.knockoutUntil && now < c.knockoutUntil) {
+  if (benched(c, now)) {
     return { kind: 'down', icon: 'hourglass',
-             text: 'Knocked out · back in ' + dur(c.knockoutUntil - now) };
+             text: 'Knocked out · back in ' + dur(benchLeft(c, now)) };
   }
   const a = s.arena;
   if (a && a.active) {
@@ -6107,7 +6195,7 @@ const logMarkup = log => log.map(l =>
 
 function idleArenaMarkup(a, c) {
   const now = Date.now();
-  const ko = c.knockoutUntil && now < c.knockoutUntil;
+  const ko = benched(c, now);
   const over = a.over;
 
   const result = over ? '<div class="panel prologue">' +
@@ -6125,7 +6213,7 @@ function idleArenaMarkup(a, c) {
   const gate = ko
     ? '<div class="panel empty">' + icon('hourglass') + '<h3>Still on the bench</h3>' +
       '<p>A knockout costs time, not money. You kept the whole pot.</p>' +
-      '<p class="hp-line">Back in <span class="num" id="ar-ko">' + dur(c.knockoutUntil - now) + '</span></p></div>'
+      '<p class="hp-line">Back in <span class="num" id="ar-ko">' + dur(benchLeft(c, now)) + '</span></p></div>'
     : '<div class="panel empty">' + icon('sword') + '<h3>The gate is open</h3>' +
       '<p>Gold and renown come from here and nowhere else. Every round is harder than the last, ' +
       'and the pot rides on all of them.</p>' +
@@ -6664,7 +6752,7 @@ function championMarkup(c) {
         '<span class="v num" id="champ-hp">' + Math.round(c.hp) + ' / ' + maxHpOf(c) + '</span>' +
         '<span class="sbar hp" id="champ-hpbar"><span style="width:' +
           (maxHpOf(c) > 0 ? clamp(c.hp / maxHpOf(c), 0, 1) * 100 : 0).toFixed(1) + '%"></span></span>' +
-        '<span class="fx">' + (c.knockoutUntil && Date.now() < c.knockoutUntil
+        '<span class="fx">' + (benched(c, Date.now())
           ? 'On the bench' : 'Recovers while training') + '</span></li></ul></div>' +
     /* Doc 7 asks for a gear summary on this screen, not only in the Shop -
        this is where a player checks what their champion is carrying. */
@@ -6962,12 +7050,12 @@ function tick(dtMs) {
   if (!c) return;
   let dirty = false;
 
-  if (c.knockoutUntil && Date.now() >= c.knockoutUntil) { c.knockoutUntil = null; dirty = true; }
+  if (c.knockoutUntil != null && !benched(c, Date.now())) { c.knockoutUntil = null; dirty = true; }
 
   const t = c.training;
   if (hasSession(t)) {
     const elapsed = Date.now() - t.startedAt;
-    if (elapsed <= CONST.OFFLINE_CAP_MS && applyRegen(state, dtMs / 60000, t.facility) > 0) dirty = true;
+    if (elapsed <= CONST.OFFLINE_CAP_MS && applyRegen(state, dtMs / 60000, t.facility, Date.now()) > 0) dirty = true;
   }
   /* Doc 7's Legacy Efficiency measures against the champion's OWN peak, so the
      peak is state and has to be advanced by the clock. A render must never do
@@ -6979,7 +7067,29 @@ function tick(dtMs) {
   updateTopbarLive();
   updateTrainLive();
   updateChampionLive();
-  if (dirty && activeScreen === 'train') renderTrain();   // structure changed (KO cleared)
+  updateArenaIdleLive();
+  /* Structure changed - the bench lifted, so the Train facility buttons and the
+     Arena gate both have to come back. Whichever screen is up gets rebuilt;
+     before this the Arena kept showing a dead bench card until the player
+     navigated away and back. */
+  if (dirty) {
+    if (activeScreen === 'train') renderTrain();
+    if (activeScreen === 'arena') renderArena();
+  }
+}
+
+/* The bench countdown on the ARENA screen, which is not a run and therefore
+   never reached updateArenaLive() - that returns early unless a fight is
+   active. So `#ar-ko` was written once by the render and then FROZE: it read
+   "Back in 24m 51s" for as long as you looked at it, which is worse than
+   showing nothing, because a stopped clock reads as a broken game. */
+function updateArenaIdleLive() {
+  const c = state.character;
+  if (!c || activeScreen !== 'arena' || state.arena.active) return;
+  const el = document.getElementById('ar-ko');
+  if (!el) return;
+  const txt = dur(benchLeft(c, Date.now()));
+  if (el.textContent !== txt) el.textContent = txt;
 }
 
 function startIdleTick() {
@@ -10053,6 +10163,157 @@ function assertAll() {
   })();
 
 
+
+  /* --- the knockout bench actually costs something ------------
+     Doc 4 prices a knockout in TIME. It gated the arena door and nothing else,
+     so a champion carried off the sand could start a training session in the
+     same second and heal through the whole penalty - the idle half of the game
+     ran on untouched. Reported from a real save on 2026-08-24. */
+  (function () {
+    const rig = (koAt) => {
+      const s = defaultState();
+      s.character = newCharacter('human', 'Downed', s.account);
+      s.character.hp = 1;
+      s.character.knockoutUntil = koAt;
+      return s;
+    };
+    /* The predicate itself, and the epoch-0 trap this file has now paid for
+       three times: a knockoutUntil of 0 is NO bench, not a falsy one. */
+    ok(benched(rig(60000).character, 0) === true, 'a live bench does not read as benched');
+    ok(benched(rig(60000).character, 60000) === false, 'the bench does not end at its own timestamp');
+    ok(benched(rig(60000).character, 99999) === false, 'an expired bench still reads as benched');
+    ok(benched(rig(0).character, 0) === false, 'a bench of 0 reads as a bench');
+    ok(benched(rig(null).character, 0) === false, 'no bench at all reads as a bench');
+    ok(benched(null, 0) === false, 'a missing champion reads as benched');
+    ok(benchLeft(rig(60000).character, 10000) === 50000, 'the bench countdown is wrong');
+    ok(benchLeft(rig(60000).character, 99999) === 0, 'an expired bench counts down past zero');
+
+    /* HP REGEN. A knocked-out champion does not heal. */
+    const hurt = () => {
+      const s = rig(60000);
+      s.character.training = { facility: 'medic', startedAt: 0, weaponTarget: null };
+      s.character.hp = 1;
+      return s;
+    };
+    let s = hurt();
+    ok(applyRegen(s, 10, 'medic', 0) === 0, 'a benched champion healed at the Medic');
+    ok(s.character.hp === 1, 'a benched champion gained HP');
+    ok(applyRegen(s, 10, 'medic', 99999) > 0, 'a champion off the bench did not heal');
+    /* Omitting `now` means "no bench" - the harness drives regen on its own
+       clock. If that ever silently became "always benched", every simulated
+       champion would stop healing and this says so. */
+    ok(applyRegen(hurt(), 10, 'medic') > 0, 'regen with no clock passed refused to heal');
+
+    /* TP ACCRUAL. Benched time is not training time, and the rule is applied at
+       the one place elapsed is computed rather than at each consumer. */
+    s = hurt();
+    ok(sessionOrigin(s) === 60000, 'the session origin ignored the bench sitting over it');
+    ok(sessionElapsed(s, 60000) === 0, 'a session banked time it spent on the bench');
+    ok(sessionElapsed(s, 60000 + 3600000) === 3600000,
+      'a session did not start earning when the bench lifted');
+    const clear = hurt(); clear.character.knockoutUntil = null;
+    ok(sessionElapsed(clear, 3600000) === 3600000, 'the bench rule changed an unbenched session');
+    ok(sessionPreview(s, 60000).ms === 0, 'the preview paid for benched time');
+
+    /* THE EXCLUSION the max() above relies on: a bench can never BEGIN under a
+       running session, because entering the arena banks and ends one. If that
+       ever stops being true the overlap stops being a legacy-save case. */
+    const ko = defaultState();
+    ko.character = newCharacter('human', 'Fighter', ko.account);
+    ko.character.stats.str = 10;
+    ko.character.hp = maxHpOf(ko.character);
+    ko.character.training = { facility: 'forge', startedAt: 0, weaponTarget: null };
+    startRun(ko, 60000);
+    ok(!hasSession(ko.character.training), 'entering the arena left the training session running');
+    let guard = 0;
+    while (ko.arena.active && guard++ < 200000) exchange(ko, 60000 + guard * CONST.ARENA_TICK_MS);
+    ok(benched(ko.character, 60000), 'the exclusion rig did not end in a knockout');
+    ok(!hasSession(ko.character.training),
+      'a knockout landed on top of a live training session - the bench and a session can now overlap');
+
+    /* And the gate on the UI action itself, which is where the defect was.
+       startTraining touches the live globals and calls save(), so saving is
+       disarmed around it: assertAll must never write a record. */
+    const keepState = state, keepArmed = savesArmed;
+    try {
+      savesArmed = false;
+      state = rig(Date.now() + 600000);
+      startTraining('forge');
+      ok(!hasSession(state.character.training),
+        'a benched champion started a training session - the bench costs nothing but the arena door');
+      state.character.knockoutUntil = Date.now() - 1;
+      startTraining('forge');
+      ok(hasSession(state.character.training),
+        'a champion off the bench could not start training');
+      ok(state.character.training.facility === 'forge', 'startTraining picked the wrong facility');
+    } finally { state = keepState; savesArmed = keepArmed; renderAll(); }
+
+    /* The bench card names the same number the countdown ticks, so the two can
+       never disagree about whether it is over. */
+    const card = idleArenaMarkup(rig(Date.now() + 90000).arena, rig(Date.now() + 90000).character);
+    ok(/Still on the bench/.test(card), 'a benched champion is not told they are benched');
+    ok(/id="ar-ko"/.test(card), 'the bench card has no countdown element to update');
+    ok(!/btn-enter/.test(card), 'the arena gate was open to a benched champion');
+    const open = idleArenaMarkup(rig(null).arena, rig(null).character);
+    ok(/btn-enter/.test(open), 'the arena gate stayed shut for a champion off the bench');
+    ok(!/id="ar-ko"/.test(open), 'an unbenched champion was shown a bench countdown');
+  })();
+
+  /* --- the Medic estimates time to full ----------------------
+     It banks no TP, so it had no next level to count down to and was the one
+     facility whose panel said nothing about what it was doing. */
+  (function () {
+    const rig = (fac, hp, level) => {
+      const s = defaultState();
+      s.character = newCharacter('human', 'Patient', s.account);
+      if (level) s.account.facilities.medic = level;
+      s.character.training = { facility: fac, startedAt: 0, weaponTarget: fac === 'sparring' ? 'daggers' : null };
+      s.character.hp = hp == null ? 1 : hp;
+      return s;
+    };
+    ok(timeToFullHp(rig('forge', 1), 60000) === null, 'a stat facility offered a heal estimate');
+    ok(timeToFullHp(rig('sparring', 1), 60000) === null, 'a weapon facility offered a heal estimate');
+    ok(timeToFullHp({ character: null, account: defaultAccount(), arena: defaultArena() }, 0) === null,
+      'a championless state offered a heal estimate');
+
+    const s = rig('medic', 1);
+    const e = timeToFullHp(s, 60000);
+    /* Reported and then skipped, not walked into. The renown ladder taught this
+       the hard way: an assertion that THROWS on the thing it is checking stops
+       the suite, and one defect then hides every check after it. */
+    if (!e) { ok(false, 'no heal estimate at the Medic at all'); return; }
+    ok(e.ms > 0 && isFinite(e.ms) && !e.full, 'no heal estimate at the Medic');
+    /* It must SHORTEN as HP fills - the one property that makes it useful. */
+    const half = rig('medic', maxHpOf(rig('medic', 1).character) * 0.5);
+    ok(timeToFullHp(half, 60000).ms < e.ms, 'the heal estimate did not shorten as HP filled');
+    /* Already full reads as full rather than as a countdown to zero. */
+    const done = rig('medic', maxHpOf(rig('medic', 1).character));
+    ok(timeToFullHp(done, 60000).full === true, 'a champion at full health was still counting down');
+
+    /* Read through regenPctFor, so the facility level and the Standing Vigil
+       perk both reach it - the raw constants would skip both. */
+    const l10 = rig('medic', 1, 10);
+    ok(timeToFullHp(l10, 60000).ms < e.ms, 'a level-10 Medic heals no faster than a level-1 one');
+    const vigil = rig('medic', 1);
+    vigil.account.legacyPerks.vigil = LEGACY_PERKS.vigil.max;
+    ok(timeToFullHp(vigil, 60000).ms < e.ms, 'the Standing Vigil perk does not reach the heal estimate');
+
+    /* Benched time is ADDED, not ignored: a knocked-out champion does not heal,
+       so an estimate counting from now would be short by the whole bench and
+       would tick down while nothing moved. */
+    const down = rig('medic', 1);
+    down.character.knockoutUntil = 60000 + 300000;
+    const withBench = timeToFullHp(down, 60000);
+    ok(Math.abs(withBench.ms - (e.ms + 300000)) < 1,
+      'the heal estimate ignored the bench it is waiting behind');
+
+    /* And it has a sentence to render, distinct from the level one. */
+    ok(/Full health in about/.test(etaLine(s, 60000)), 'the Medic has no heal sentence');
+    ok(/At full health/.test(etaLine(done, 60000)), 'a full champion is not told so');
+    ok(/Next level in about/.test(etaLine(rig('forge', 1), 60000)),
+      'the heal estimate displaced the level estimate on a stat facility');
+  })();
+
   /* --- the renown ladder: titles and their bonuses ------------
      The title replaces the epithet rolled at creation, so it is now DERIVED
      state on the most-looked-at line in the game, and it pays a bonus. Both
@@ -10519,7 +10780,8 @@ window.EA = {
   rollName, newCharacter, newDraft, championRank, renownTitleFor, titleOf, renownBonus, renownBonusTotals, prologueFor, raceUnlocked, createChampion,
   tpPerMin, facilityLevel, mentorMultFor, sessionElapsed, sessionPreview, previewLevels,
   applyTp, applyRegen, unlockChildren, startTraining, collectSession, resolveOffline, tick,
-  timeToNextLevel, etaLine, loadoutChips, championActivity, updateTopbarLive, purseText,
+  timeToNextLevel, timeToFullHp, etaLine, loadoutChips, championActivity, updateTopbarLive, purseText,
+  benched, benchLeft, sessionOrigin, updateArenaIdleLive,
   ENEMY_GIVEN, ENEMY_BANDS, bandFor, rollEnemyName,
   startRun, beginRound, exchange, settleRun, yieldPreview, roundReward, enemyFor,
   playerDamage, playerCritChance, playerEvadeChance, damageTaken, profOf,
