@@ -132,6 +132,12 @@ h1,h2,h3{font-family:var(--font-display);text-transform:uppercase;letter-spacing
   .purse .chip{font-size:10.5px;padding:3px 6px 3px 4px;gap:3px}
   .purse .chip .icon{width:12px;height:12px}
   #topbar{gap:6px;padding:10px 9px}
+  /* The header's decorative laurel goes at narrow widths. Adding the guide
+     button took 44px off the title and the longest name the syllable tables can
+     build stopped fitting - caught by the assertion that computes that exact
+     name rather than sampling. The glyph is the one thing up there that says
+     nothing the title does not, so it is what gives way. */
+  #topbar>.icon{display:none}
 }
 .purse .chip[data-kind="gold"]{background:var(--gold)}
 
@@ -304,6 +310,8 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 .prog{height:8px;background:var(--paper);border:var(--bd-thin);border-radius:var(--r-pill);overflow:hidden}
 .prog span{display:block;height:100%;background:var(--cobalt)}
 .class-card .btn.small{width:100%;text-align:center}
+.cc-lvl{margin:4px 0 0;font-size:11.5px;color:var(--ink-soft)}
+.cc-head .tier.lv{background:var(--cobalt);color:var(--paper);border-color:var(--ink)}
 
 .sbar{
   flex:1;min-width:60px;max-width:110px;height:8px;
@@ -364,6 +372,20 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 .lock-note{display:block;color:var(--vermilion-deep);font-weight:700}
 .btn.small{font-size:13px;padding:9px 15px;min-height:44px;
   font-family:var(--font-data);white-space:nowrap}
+.aug-group{border:2px dashed var(--ink-faint);border-radius:12px;padding:10px 12px;margin:12px 0}
+.aug-head{display:flex;align-items:center;gap:8px;font-size:13.5px;margin:0 0 8px}
+.aug-head .icon{width:20px;height:20px;flex:none}
+.aug-head .num{margin-left:auto;font-size:12px;color:var(--ink-soft)}
+.aug-group .row-buy:last-of-type{border-bottom:0}
+.commission h3.sub{display:flex;align-items:center;gap:8px}
+.commission h3.sub .icon{width:20px;height:20px;flex:none}
+.com-task{margin:2px 0 10px;font-size:13px;line-height:1.5;color:var(--ink-soft)}
+.com-task strong{color:var(--ink)}
+.com-pips{display:inline-flex;gap:4px;margin-left:auto;vertical-align:middle}
+.com-pips i{width:10px;height:10px;border:2px solid var(--ink);border-radius:50%;display:inline-block}
+.com-pips i.on{background:var(--gold)}
+.com-pips i.next{border-style:dashed}
+.commission .hp-line{display:flex;align-items:center;gap:4px}
 .aug-slot{margin-bottom:12px}
 .aug-slot strong{display:block;font-size:13px;margin-bottom:6px}
 
@@ -742,6 +764,11 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 }
 #modal h2{font-size:19px;margin-bottom:4px}
 #modal p.hint{margin:0 0 12px;font-size:13px;color:var(--ink-soft);line-height:1.5}
+.guide{max-height:52vh;overflow-y:auto;padding-right:4px}
+.guide h3{font-size:14px;margin:14px 0 4px}
+.guide h3:first-child{margin-top:2px}
+.guide p{font-size:13px;line-height:1.55;color:var(--ink-soft);margin:0}
+.guide strong,.guide em{color:var(--ink)}
 #modal textarea{
   width:100%;min-height:132px;resize:vertical;
   font-family:var(--font-data);font-size:11.5px;line-height:1.45;
@@ -792,6 +819,9 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
   <symbol id="icon-flame" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a5.5 5.5 0 0 0 5.5-5.5c0-4-3-5.5-3.5-9-2 1.5-3 3.5-3 5.5 0 1-1 1.5-1.5.5-.3-.6-.5-1.3-.5-2-1.5 1.5-2.5 3.1-2.5 5A5.5 5.5 0 0 0 12 21z"/></symbol>
   <symbol id="icon-drop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.4 6 10.4A6 6 0 0 1 6 13.4C6 9.4 12 3 12 3z"/></symbol>
   <symbol id="icon-hourglass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3v3c0 2 5 4 5 6s-5 4-5 6v3"/><path d="M17 3v3c0 2-5 4-5 6s5 4 5 6v3"/></symbol>
+  <!-- Help. A ring with a question mark: the universal affordance, and it reads
+       as a question at 18px because the stroke of the hook is the only busy part. -->
+  <symbol id="icon-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.2 9a2.9 2.9 0 0 1 5.6 1c0 2-2.8 2.4-2.8 4.2"/><path d="M12 17.6h.01"/></symbol>
   <!-- Weapon glyphs for the proficiency tree. Doc 2 lists 20 icons "needed";
        that is a floor, not a cap, and fourteen nodes drawn with one sword
        between them is not a tree anyone can read. -->
@@ -811,6 +841,10 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
       <span class="chip num" data-kind="gold"><svg class="icon" aria-hidden="true"><use href="#icon-coin"/></svg><span id="purse-gold">0</span></span>
       <span class="chip num" data-kind="renown"><svg class="icon" aria-hidden="true"><use href="#icon-laurel"/></svg><span id="purse-renown">0</span></span>
     </div>
+    <button class="iconbtn" id="btn-guide" type="button" aria-haspopup="dialog">
+      <svg class="icon" aria-hidden="true"><use href="#icon-help"/></svg>
+      <span class="sr">How to play: an overview of the game's systems</span>
+    </button>
     <button class="iconbtn" id="btn-records" type="button" aria-haspopup="dialog">
       <svg class="icon" aria-hidden="true"><use href="#icon-scroll"/></svg>
       <span class="sr">Records: export or import your save</span>
@@ -870,18 +904,54 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
   <nav id="nav" aria-label="Screens"></nav>
 </div>
 
+<!-- ONE dialog, two modes. A second dialog would mean a second focus trap to
+     keep correct, and the first one shipped broken (Phase 1 audit) - the same
+     reason the prologue is an in-screen panel. The trap already filters on
+     offsetParent, so whichever mode is hidden is excluded from it for free. -->
 <div id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
   <div class="sheet">
     <h2 id="modal-title">Records</h2>
-    <p class="hint">Your save lives in this browser only. Copy the record out before you clear site data &mdash; you will be rebalancing a lot, and a lost ledger is a lost account.</p>
-    <label class="sr" for="save-text">Save record JSON</label>
-    <textarea id="save-text" spellcheck="false" autocomplete="off"></textarea>
-    <div class="row">
-      <button class="btn" data-tone="quiet" type="button" id="btn-export">Export</button>
-      <button class="btn" type="button" id="btn-import">Import</button>
+    <div id="modal-records">
+      <p class="hint">Your save lives in this browser only. Copy the record out before you clear site data &mdash; you will be rebalancing a lot, and a lost ledger is a lost account.</p>
+      <label class="sr" for="save-text">Save record JSON</label>
+      <textarea id="save-text" spellcheck="false" autocomplete="off"></textarea>
+      <div class="row">
+        <button class="btn" data-tone="quiet" type="button" id="btn-export">Export</button>
+        <button class="btn" type="button" id="btn-import">Import</button>
+      </div>
+      <div class="row">
+        <button class="btn" data-tone="danger" type="button" id="btn-wipe">Wipe Save</button>
+      </div>
+    </div>
+    <div id="modal-guide" hidden>
+      <p class="hint">A gladiator fights, trains, and eventually retires. Champions are meant to end &mdash; the academy they leave behind is what lasts.</p>
+      <div class="guide">
+        <h3>The loop</h3>
+        <p><strong>Fight</strong> a run in the arena for gold and renown, then <strong>train</strong> through the cooldown, <strong>spend</strong> what you earned, and go again. A run is five to twelve minutes; training runs for hours while the tab is closed.</p>
+
+        <h3>Training</h3>
+        <p>Pick a facility and leave it. Training banks TP the whole time you are away, up to <strong>eight hours</strong>, and the longer one session runs the better the rate &mdash; so checking in less often is rewarded, not punished. Press Collect to turn banked TP into stat and weapon levels. The Medic heals instead of teaching.</p>
+
+        <h3>The arena</h3>
+        <p>Rounds get harder and pay more, forever. You choose when to walk: <strong>yielding</strong> keeps 70% of the pot and your health, a <strong>knockout</strong> keeps the whole pot but costs you 25 minutes on the bench &mdash; during which you cannot train or heal either. The run keeps fighting while the tab is closed.</p>
+
+        <h3>Gear and augments</h3>
+        <p>Quality tiers sit on the <em>slot</em>, so switching weapon type costs you nothing. Augments fit into weapon and armour separately; the same augment cannot go on both. Healing from all sources is capped per exchange, so stacking sustain does not stack.</p>
+
+        <h3>Battle classes</h3>
+        <p>Earned by weapon proficiency, not bought. Each grants two or three bonuses and some carry a drawback in exchange for stronger ones. A class gains <strong>levels 1&ndash;4</strong> as you clear rounds wearing it, and its bonuses grow with the level.</p>
+
+        <h3>Renown and rank</h3>
+        <p>Renown is fame, and it only ever goes up. Each rank gives your champion a new title and a small permanent bonus, and the highest rank you reach raises the floor every <em>future</em> champion starts from.</p>
+
+        <h3>Retirement</h3>
+        <p>Retiring is not losing. Your champion joins the Hall, pays out <strong>Legacy Points</strong> for permanent account perks, and can be seated as a <strong>mentor</strong> to speed the training of everyone after them. Mentors wear out, so you always need the next champion.</p>
+
+        <h3>Daily commission</h3>
+        <p>One small task a day, on the Arena screen. Completing it pays gold, and consecutive days pay more &mdash; up to five. Miss a day and the streak starts over.</p>
+      </div>
     </div>
     <div class="row">
-      <button class="btn" data-tone="danger" type="button" id="btn-wipe">Wipe Save</button>
       <button class="btn" data-tone="quiet" type="button" id="btn-close">Close</button>
     </div>
     <div class="status" id="modal-status" role="status" aria-live="polite"></div>
@@ -1084,6 +1154,35 @@ const CONST = {
      the arena still only teaches 10-26%% of what the same wall-clock spent
      training would. */
   ARENA_TP_PER_EXCHANGE: 0.018,
+
+  /* The ceiling on ALL in-run healing in one exchange, as a fraction of max
+     HP - lifesteal and regen share it. See applySustain() for why this exists:
+     flat sustain against an exponentially growing threat is the one shape that
+     breaks this game, and it broke it through four classes and two augments at
+     once. Swept 2026-08-24 against the whole class list. */
+  SUSTAIN_CAP_PCT_MAXHP: 0.002,
+
+  /* Class levels 1-4 (Rob, 2026-08-24). Rounds cleared with that class
+     equipped, and the multiplier its bonuses are scaled by. Index 0 is level 1,
+     so the first entry of each must be 0 rounds and x1.0 - a class is level 1
+     the moment it is worn. Swept against the whole class list before shipping. */
+  CLASS_LEVEL_ROUNDS: [0, 40, 120, 300],
+  CLASS_LEVEL_MULT: [1.0, 1.2, 1.45, 1.75],
+
+  /* Daily commission (Rob, 2026-08-24). One task a real day, easily done in a
+     day's play, paying gold that grows with consecutive days and stops growing
+     after five. A missed day resets the streak to the first rung.
+
+     The reward is a MULTIPLE OF ONE ROUND'S PAY at the champion's best depth,
+     not a flat number of coins: a flat reward is generous at hour one and
+     insulting at hour fifty, and this game's gold curve spans four orders of
+     magnitude. Capped in round terms so it can never rival a run. */
+  COMMISSION_STREAK_MAX: 5,
+  COMMISSION_STREAK_MULT: [1.0, 1.35, 1.7, 2.1, 2.5],
+  /* Reward = this many rounds' worth of gold at the account's best depth,
+     floored at a figure that still means something to a brand new champion. */
+  COMMISSION_ROUNDS_WORTH: 3,
+  COMMISSION_MIN_GOLD: 60,
 
   GOLD_BASE: 10,
   /* 1.12, not doc 4's 1.25 (Rob, 2026-08-20). At 1.25 gold income is
@@ -1433,9 +1532,15 @@ const AUGMENTS = {
                effect: { avarice: 0.15 } },
   stalwart:  { label: 'Stalwart',  icon: 'shield', cost: 1500, text: '−20% knockout cooldown',
                effect: { recovery: 0.20 } },
-  resilient: { label: 'Resilient', icon: 'heart',  cost: 2000, text: 'Regain 0.5% max HP per exchange',
-               effect: { regen: 0.005 } },
-  vampiric:  { label: 'Vampiric',  icon: 'drop',   cost: 2500, text: 'Heal 8% of damage dealt',
+  /* Both of these are SUSTAIN and both are held by the shared per-exchange
+     ceiling in applySustain(). Resilient is set to sit exactly at that ceiling
+     on its own, so the number in this text is the number the player gets;
+     before the cap it read 0.5% and, once capped, would have been a lie on the
+     shop row. Vampiric's 8% is still 8% of damage dealt but reaches the ceiling
+     almost immediately, so the row says so rather than implying it scales. */
+  resilient: { label: 'Resilient', icon: 'heart',  cost: 2000, text: 'Regain 0.2% max HP per exchange',
+               effect: { regen: 0.002 } },
+  vampiric:  { label: 'Vampiric',  icon: 'drop',   cost: 2500, text: 'Heal 8% of damage dealt, up to the sustain cap',
                effect: { lifesteal: 0.08 } }
 };
 const AUGMENT_KEYS = Object.keys(AUGMENTS);
@@ -1635,6 +1740,172 @@ const STORIES = [
 {"title":"The God Collects Itself","boss":"The Forgotten God","bossTitle":"the Due That Was Owed","hook":"The forgotten god steps onto the sand it was promised centuries ago, wearing every offering ever made to it as armour.","close":"The god's due is paid in full with one great match, and every feast day after is freely given, not owed."}]}
 ]
 ;
+
+/* --- daily commissions (Rob, 2026-08-24) --------------------
+   One task per real-life day, drawn deterministically from the DATE rather than
+   from rng - so it is the same task all day, survives a reload, and needs no
+   stored "which one did we pick" that could drift from what is on screen.
+
+   Every commission is a counter that resets each day, so `progress` is plain
+   account state advanced at the point the thing happens, never re-derived from
+   lifetime totals. That matters: deriving "rounds today" from a lifetime figure
+   would need a snapshot of yesterday's total, which is a second source of truth
+   for the same fact.
+
+   `test` is deliberately absent. A commission is DONE when its counter reaches
+   its target, and the counter is the only thing that decides it. */
+const COMMISSIONS = [
+  { id: 'rounds',   icon: 'sword',    label: 'Sand and Sweat',
+    text: n => 'Clear ' + n + ' rounds in the arena', target: 12, unit: 'rounds' },
+  { id: 'runs',     icon: 'laurel',   label: 'Answer the Bell',
+    text: n => 'Finish ' + n + ' arena runs', target: 2, unit: 'runs' },
+  { id: 'gold',     icon: 'coin',     label: 'Purse Strings',
+    text: n => 'Earn ' + n.toLocaleString() + ' gold from the arena', target: 400, unit: 'gold', scales: true },
+  { id: 'levels',   icon: 'dumbbell', label: 'Honest Work',
+    text: n => 'Gain ' + n + ' levels from training', target: 3, unit: 'levels' },
+  { id: 'collect',  icon: 'hourglass', label: 'Diligence',
+    text: n => 'Collect ' + n + ' training sessions', target: 2, unit: 'sessions' },
+  { id: 'crits',    icon: 'flame',    label: 'Find the Gap',
+    text: n => 'Land ' + n + ' critical hits', target: 15, unit: 'crits' },
+  { id: 'yield',    icon: 'shield',   label: 'Live to Fight',
+    text: n => 'Walk out of ' + n + ' run' + (n === 1 ? '' : 's') + ' before being knocked out', target: 1, unit: 'runs' }
+];
+const COMMISSION_BY_ID = {};
+COMMISSIONS.forEach(x => { COMMISSION_BY_ID[x.id] = x; });
+
+/* The local calendar day, as a sortable string. LOCAL on purpose: a player's
+   "new day" is the one their clock shows, not UTC's. */
+function dayKey(now) {
+  const d = new Date(typeof now === 'number' ? now : Date.now());
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
+    '-' + String(d.getDate()).padStart(2, '0');
+}
+
+/* Days between two day keys, or null if either is unparseable. Computed at
+   NOON to sidestep daylight saving: a 23-hour day would otherwise floor to 0
+   and a 25-hour one could round to 2, either of which breaks a streak the
+   player did not break. */
+function daysBetween(a, b) {
+  const parse = k => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(k || ''));
+    return m ? new Date(+m[1], +m[2] - 1, +m[3], 12, 0, 0).getTime() : null;
+  };
+  const ta = parse(a), tb = parse(b);
+  if (ta === null || tb === null) return null;
+  return Math.round((tb - ta) / 86400000);
+}
+
+/* Which commission today is. Hashed from the day key so it is stable for the
+   whole day and identical on every device, and offset by the account's own
+   creation day so two players do not get lockstep tasks. */
+function commissionFor(dayk) {
+  return COMMISSIONS[hashStr(String(dayk)) % COMMISSIONS.length];
+}
+
+/* Doc-style scaling: the gold target has to mean something at every stage, so
+   it is expressed in rounds of pay like the reward is. The others are counts
+   and stay flat, which is what makes them "easily attainable within a day". */
+function commissionTarget(s, com) {
+  if (!com.scales) return com.target;
+  return Math.max(com.target, Math.round(commissionRoundGold(s) * 6));
+}
+
+/* One round's gold at the account's best depth - the unit both the target and
+   the reward are denominated in. Reads roundReward so every racial, augment,
+   crowd and renown term is folded in by the function the arena itself uses. */
+function commissionRoundGold(s) {
+  const depth = Math.max(1, Math.min(60, accountBestRound(s)));
+  const r = s.character ? roundReward(s, depth) : null;
+  return r ? Math.max(1, r.gold) : CONST.GOLD_BASE;
+}
+
+function commissionReward(s, streak) {
+  const rung = clamp(Math.round(num(streak, 1)), 1, CONST.COMMISSION_STREAK_MAX);
+  const mult = CONST.COMMISSION_STREAK_MULT[rung - 1];
+  /* The floor applies to the BASE, not to the finished reward. Applied at the
+     end it swallowed the streak entirely for a new champion - every rung paid
+     the same 60g - which is exactly the player the streak is meant to hook.
+     Caught by the assertion that day two must pay more than day one. */
+  const base = Math.max(CONST.COMMISSION_MIN_GOLD,
+                        commissionRoundGold(s) * CONST.COMMISSION_ROUNDS_WORTH);
+  return Math.floor(base * mult);
+}
+
+/* Rolls the day over if it has changed, and settles the streak while doing it.
+   Called from every place that could advance a commission plus the render, so
+   a tab left open across midnight picks up the new task without a reload.
+
+   Pure apart from the state it is handed; `now` is an argument like everywhere
+   else in the core. */
+function refreshCommission(s, now) {
+  const cm = s.account.commission;
+  const today = dayKey(now);
+
+  /* The streak is settled on EVERY refresh, not only when the day rolls over.
+     Checking it only on the roll left it standing whenever the record already
+     named today - which is every call after the first each day, and is also
+     what a hand-edited save looks like. A streak has to be justified by a
+     recent completion whenever anyone asks.
+
+     Measured from `doneOn`, never from `day`: a player who opened the game
+     yesterday and did not finish the task has not kept the streak alive.
+     Claiming sets doneOn to today, so a claim today reads as a gap of 0. */
+  const gap = daysBetween(cm.doneOn, today);
+  if (gap === null || gap > 1) cm.streak = 0;
+
+  if (cm.day === today) return cm;
+
+  cm.day = today;
+  cm.id = commissionFor(today).id;
+  cm.progress = 0;
+  cm.claimed = false;
+  return cm;
+}
+
+/* The one place a commission counter moves. `kind` is the commission id, so a
+   commission that is not today's simply does not tick - no consumer needs to
+   know which task is live. */
+function commissionAdvance(s, kind, amount, now) {
+  if (!s.account || !s.account.commission) return 0;
+  const cm = refreshCommission(s, now);
+  if (cm.id !== kind || cm.claimed) return 0;
+  const add = Math.max(0, num(amount, 0));
+  if (!(add > 0)) return 0;
+  cm.progress = Math.min(commissionTarget(s, COMMISSION_BY_ID[cm.id]) , cm.progress + add);
+  return add;
+}
+
+function commissionState(s, now) {
+  const cm = refreshCommission(s, now);
+  const com = COMMISSION_BY_ID[cm.id] || COMMISSIONS[0];
+  const target = commissionTarget(s, com);
+  const done = cm.progress >= target;
+  const nextStreak = clamp(num(cm.streak, 0) + 1, 1, CONST.COMMISSION_STREAK_MAX);
+  return {
+    com: com, target: target, progress: Math.min(cm.progress, target),
+    done: done, claimed: !!cm.claimed,
+    streak: clamp(num(cm.streak, 0), 0, CONST.COMMISSION_STREAK_MAX),
+    nextStreak: nextStreak,
+    reward: commissionReward(s, nextStreak),
+    atMax: num(cm.streak, 0) >= CONST.COMMISSION_STREAK_MAX
+  };
+}
+
+function claimCommission(s, now) {
+  const v = commissionState(s, now);
+  if (!v.done) return { ok: false, msg: 'That commission is not finished yet.' };
+  if (v.claimed) return { ok: false, msg: 'Already claimed today.' };
+  if (!s.character) return { ok: false, msg: 'No champion to pay.' };
+  const cm = s.account.commission;
+  cm.claimed = true;
+  cm.streak = v.nextStreak;
+  cm.doneOn = cm.day;
+  const gold = v.reward;
+  s.character.gold += gold;
+  s.character.lifetimeGold += gold;
+  s.account.lifetime.gold += gold;
+  return { ok: true, gold: gold, streak: cm.streak };
+}
 
 /* --- the renown ladder --------------------------------------
    Doc 4 gives the rank THRESHOLDS and doc 9 hangs three unlocks off three of
@@ -2115,7 +2386,9 @@ const STATUSES = {
 const ICON_NAMES = ['sword','shield','heart','coin','laurel','anvil','book','dumbbell','mug',
   'cross-medic','hurdle','skull','star','lock','chevron','trophy','scroll','flame','drop','hourglass',
   /* weapon glyphs added in Phase 7 for the proficiency tree */
-  'dagger','axe','hammer','staff','scythe'];
+  'dagger','axe','hammer','staff','scythe',
+  /* Phase-post: the guide button in the topbar. */
+  'help'];
 
 /* ==============================================================
    STATE  (BUILD doc 5)
@@ -2150,6 +2423,12 @@ function defaultAccount() {
        is also what an unlocked-but-unset player has - the unlock grants the
        control, not the behaviour. */
     autoYieldAt: 0,
+    /* Daily commission. `day` is the local calendar day this record describes,
+       `doneOn` the last day actually completed - the streak is measured from
+       doneOn, so opening the game without finishing does not keep it alive.
+       Account-level: a commission outlives the champion who happens to be
+       working on it, like everything else in this block. */
+    commission: { day: null, id: null, progress: 0, claimed: false, streak: 0, doneOn: null },
     lastSeen: Date.now()
   };
 }
@@ -2219,6 +2498,7 @@ function migrateAccount(raw) {
         stats: stats, weapons: weapons,
         might: Math.max(0, Math.round(num(h.might, 0))),
         battleClass: CLASSES[h.battleClass] ? h.battleClass : null,
+        classLevel: clamp(Math.round(num(h.classLevel, 1)), 1, CONST.CLASS_LEVEL_ROUNDS.length),
         bestRound: Math.max(0, Math.round(num(h.bestRound, 0))),
         lifetimeGold: Math.max(0, num(h.lifetimeGold, 0)),
         lifetimeRounds: Math.max(0, Math.round(num(h.lifetimeRounds, 0))),
@@ -2336,6 +2616,30 @@ function migrateAccount(raw) {
      as the game being broken rather than as a setting they chose. */
   a.autoYieldAt = CONST.AUTO_YIELD_STEPS.indexOf(num(raw.autoYieldAt, 0)) === -1
     ? 0 : num(raw.autoYieldAt, 0);
+  /* Commission, repaired field by field like everything else in the account.
+     An unknown or missing task id, or a day key that is not a day key, simply
+     rolls a fresh commission on the next refresh - the streak survives that,
+     because the streak is the player's record and the task is not.
+     `doneOn` in the FUTURE is dropped: it would otherwise let a hand-edited
+     save hold a streak open indefinitely. */
+  if (isObj(raw.commission)) {
+    const rc = raw.commission;
+    const validDay = k => /^\d{4}-\d{2}-\d{2}$/.test(String(k || ''));
+    const today = dayKey(Date.now());
+    a.commission = {
+      day: validDay(rc.day) ? rc.day : null,
+      id: COMMISSION_BY_ID[rc.id] ? rc.id : null,
+      progress: Math.max(0, num(rc.progress, 0)),
+      claimed: bool(rc.claimed, false),
+      streak: clamp(Math.round(num(rc.streak, 0)), 0, CONST.COMMISSION_STREAK_MAX),
+      doneOn: (validDay(rc.doneOn) && daysBetween(rc.doneOn, today) >= 0) ? rc.doneOn : null
+    };
+    /* A claimed flag with no day to belong to is meaningless, and a streak with
+       no completed day behind it cannot be verified - both reset rather than
+       being trusted. */
+    if (!a.commission.day || !a.commission.id) { a.commission.claimed = false; a.commission.progress = 0; }
+    if (!a.commission.doneOn) a.commission.streak = 0;
+  }
   a.lastSeen = num(raw.lastSeen, Date.now());
   return a;
 }
@@ -2428,6 +2732,14 @@ function migrateCharacter(raw) {
   c.knockouts = Math.max(0, Math.round(num(raw.knockouts, 0)));
   c.yields = Math.max(0, Math.round(num(raw.yields, 0)));
   c.lpPeak = Math.max(0, num(raw.lpPeak, 0));
+  /* Rounds fought per class. Repaired key by key and unknown class ids dropped,
+     so a hand-edited save cannot invent a class to be level 4 in. The level
+     itself is derived from these, never stored, so there is nothing else to
+     forge - the same shape as renownRank and battleClass. */
+  c.classRounds = {};
+  if (isObj(raw.classRounds)) Object.keys(raw.classRounds).forEach(k => {
+    if (CLASSES[k]) c.classRounds[k] = Math.max(0, Math.round(num(raw.classRounds[k], 0)));
+  });
   c.unlocks = {
     earlyAugment: bool(isObj(raw.unlocks) ? raw.unlocks.earlyAugment : false, false)
   };
@@ -2817,6 +3129,9 @@ function newCharacter(raceKey, name, account) {
     knockouts: 0,
     yields: 0,
     lpPeak: 0,
+    /* Rounds cleared per battle class - the only thing stored; the LEVEL is
+       derived from it by classLevelOf. Matching fallback in migrateCharacter. */
+    classRounds: {},
     training: { facility: null, startedAt: null, weaponTarget: null },
     knockoutUntil: null,
     unlocks: { earlyAugment: false }
@@ -3200,9 +3515,16 @@ function applyRegen(s, minutes, key, now) {
   return c.hp - before;
 }
 
+/* Returns { ok, msg, carried } - the same shape buyFacility, startBoss,
+   equipClass and buyPerk use, and it is NOT decoration. This function used to
+   call flash() itself, which made it impossible to test without writing to the
+   live page: the boot suite drives a benched champion through here, so every
+   single page load raised a "Still on the bench" toast at the player. A core
+   action that talks to the DOM is a core action that cannot be asserted.
+   The refusal path now returns before touching save, render or the screen. */
 function startTraining(key, weaponTarget) {
   const c = state.character;
-  if (!c || !FACILITIES[key]) return null;
+  if (!c || !FACILITIES[key]) return { ok: false, msg: 'No such facility.' };
   /* Doc 4: a knockout costs TIME. The bench had no bearing on training at all,
      so a champion could be carried off the sand and start a session in the same
      second - which made the whole penalty a 25-minute lock on the arena door
@@ -3210,8 +3532,7 @@ function startTraining(key, weaponTarget) {
      Entering the arena is already gated this way (startRun, startBoss); this is
      the same gate on the other activity. */
   if (benched(c, Date.now())) {
-    flash('Still on the bench — back in ' + dur(benchLeft(c, Date.now())) + '.');
-    return null;
+    return { ok: false, msg: 'Still on the bench — back in ' + dur(benchLeft(c, Date.now())) + '.' };
   }
   /* Switching facilities banks what is owed first - nothing is ever discarded. */
   let carried = null;
@@ -3222,7 +3543,7 @@ function startTraining(key, weaponTarget) {
   c.training.startedAt = Date.now();
   save('train-start');
   renderAll();
-  return carried;
+  return { ok: true, carried: carried };
 }
 
 /* State-parameterised so retire() and the harness can bank a session without
@@ -3250,6 +3571,11 @@ function collectSessionOn(s, now) {
      sweep that only runs on run settlement would hold a level-10 weapon feat
      until the next fight, or forever for a player who trains and retires. */
   const feats = evaluateFeats(s, now);
+  /* A collect is a collect, and the levels it bought are levels. Both counted
+     here rather than at the two call sites, so the Train button and the
+     offline path cannot disagree about what the player did. */
+  if (settled) commissionAdvance(s, 'collect', 1, now);
+  if (applied.levels.length) commissionAdvance(s, 'levels', applied.levels.length, now);
   return {
     tp: settled ? p.tp : 0, bonus: p.bonus, ms: p.ms,
     levels: applied.levels, unlocked: applied.unlocked, settled: settled,
@@ -3330,15 +3656,67 @@ function bonus(c, key) {
 
 /* Doc 3.4 tier scaling: magnitude by tier, and +0.4x on the positives of any
    class that carries a drawback. The drawback itself is always 1.0x. */
+/* --- class levels (Rob, 2026-08-24) -------------------------
+   A class gets better the more you fight in it. Levels run 1-4 and are earned
+   by ROUNDS CLEARED with that class equipped - the same currency the arena
+   already pays in, so nothing new has to be tracked in combat.
+
+   Only the rounds are stored; the level is DERIVED from them. That is the rule
+   this project has had to apply four times now (battleClass, the rank unlocks,
+   renownRank, mentorSlots): a stored copy of a derived value drifts, and a
+   level that pays a bonus is a level worth forging. `classRounds` is repaired
+   field by field on load and unknown class ids are dropped.
+
+   A story boss levels nothing, because it clears no rounds. That falls out of
+   the boss-is-not-arena-depth rule rather than needing its own guard, exactly
+   as arena weapon TP does. */
+function classLevelFor(rounds) {
+  const t = CONST.CLASS_LEVEL_ROUNDS;
+  let n = 1;
+  for (let i = 1; i < t.length; i++) if (num(rounds, 0) >= t[i]) n = i + 1;
+  return n;
+}
+
+/* Answers for a Hall card as well as a living champion: the card is a snapshot
+   and carries the level its champion retired holding, the same way it carries
+   renownRank and might. One accessor, both shapes. */
+function classLevelOf(c, id) {
+  if (!c) return 1;
+  const key = id || c.battleClass;
+  if (!key) return 1;
+  if (isObj(c.classRounds)) return classLevelFor(c.classRounds[key]);
+  if (key === c.battleClass && c.classLevel != null) return clamp(Math.round(num(c.classLevel, 1)), 1, CONST.CLASS_LEVEL_ROUNDS.length);
+  return 1;
+}
+
+const classRoundsOf = (c, id) =>
+  (c && isObj(c.classRounds)) ? Math.max(0, num(c.classRounds[id || c.battleClass], 0)) : 0;
+
+/* Rounds still to fight before the next level, or null at the top. */
+function classLevelProgress(c, id) {
+  const key = id || (c && c.battleClass);
+  if (!key) return null;
+  const lvl = classLevelOf(c, key);
+  const t = CONST.CLASS_LEVEL_ROUNDS;
+  if (lvl >= t.length) return null;
+  const have = classRoundsOf(c, key);
+  return { level: lvl, next: lvl + 1, have: have, need: t[lvl], left: Math.max(0, t[lvl] - have) };
+}
+
 function classBonus(c, key) {
   const cl = c && CLASSES[c.battleClass];
   if (!cl) return 0;
   const tier = CLASS_TIERS[cl.tier];
   if (!tier) return 0;
-  const mult = tier.magnitude * (cl.drawback ? 1 + CLASS_DRAWBACK_BONUS : 1);
+  /* The level multiplies the tier magnitude rather than being a separate term,
+     so it rides the ONE path every class bonus already takes and no consumer
+     learns that levels exist. The drawback scales with it too: a Dark Knight
+     who has fought into level 4 is more of everything they are, good and bad. */
+  const lvlMult = CONST.CLASS_LEVEL_MULT[classLevelOf(c) - 1];
+  const mult = tier.magnitude * lvlMult * (cl.drawback ? 1 + CLASS_DRAWBACK_BONUS : 1);
   let n = 0;
   if (cl.bonuses.indexOf(key) !== -1) n += BONUS_KEYS[key].base * mult;
-  if (cl.drawback === key) n -= BONUS_KEYS[key].base;
+  if (cl.drawback === key) n -= BONUS_KEYS[key].base * lvlMult;
   return n;
 }
 
@@ -3777,11 +4155,10 @@ function exchange(s, now) {
 
   /* --- player strikes --- */
   const maxHp = maxHpOf(c);
-  /* Resilient: in-run recovery, applied every exchange (doc 3.7). Along with
-     Vampiric below, this is the sustain the Phase 5 harness identified as the
-     missing piece of the early game. */
-  const recover = bonus(c, 'regen');
-  if (recover > 0) a.playerHp = Math.min(maxHp, a.playerHp + maxHp * recover);
+  /* Resilient's flat regen used to be applied HERE, before the strike, and
+     Vampiric's lifesteal separately after it. Both now go through
+     applySustain() below, once, against one shared ceiling - see the comment
+     there for why they cannot be two independent heals. */
 
   /* Statuses resolve first: damage-over-time lands, and a stunned or slowed
      enemy loses this exchange's attack. */
@@ -3800,6 +4177,7 @@ function exchange(s, now) {
   const dmg = playerDamage(c, crit);
   a.enemyHp = Math.max(0, a.enemyHp - dmg);
   events.push({ who: 'player', kind: crit ? 'crit' : 'hit', amount: dmg });
+  if (crit) commissionAdvance(s, 'crits', 1, now);
 
   /* One affliction roll per landed hit, fed by class, race and augment alike. */
   const aff = afflictionChance(c);
@@ -3811,14 +4189,7 @@ function exchange(s, now) {
     }
   }
 
-  const steal = bonus(c, 'lifesteal');
-  if (steal > 0 && a.playerHp > 0) {
-    const healed = Math.min(maxHp - a.playerHp, dmg * steal);
-    if (healed > 0) {
-      a.playerHp += healed;
-      events.push({ who: 'player', kind: 'heal', amount: healed });
-    }
-  }
+  applySustain(s, dmg, maxHp, events);
   logLine(a, crit ? 'crit' : 'hit',
     (crit ? 'Critical! ' : '') + 'You hit ' + a.enemyName + ' for ' + Math.round(dmg) + '.');
 
@@ -3879,6 +4250,44 @@ function exchange(s, now) {
   return events;
 }
 
+/* ALL in-run healing, in one place, against ONE ceiling. This is the whole
+   balance of sustain and it is worth the paragraph.
+
+   Measured 2026-08-24, after Rob reported that adding a Paladin let him clear
+   20 rounds without losing much HP. Uncapped, the four lifesteal classes took
+   the top four places in the game and it was not close: a TIER 1 Paladin
+   cleared 41 rounds where the tier-3 Juggernaut capstone cleared 31, and Dark
+   Knight produced a 37-minute run against doc 10's 5-12 minute criterion.
+
+   THE CAUSE IS NOT LIFESTEAL. It is flat sustain against an exponential threat.
+   Enemy damage grows 1.05^round; a player's damage is flat within a run, and so
+   is a percentage of their max HP. A constant beating an exponential does not
+   lose for a very long time, and round rewards compound 1.12^round the whole
+   while. Every other bonus in the doc 3.4 pool is a PERCENTAGE of something
+   that scales - damage, mitigation, vigor, evasion - so none of them does this.
+
+   Which is why the fix could not be "nerf lifesteal": the same sweep found
+   Resilient, a 2,000g augment with no class at all, taking a 24-round baseline
+   to 37 rounds, and Vampiric to 38. Fixing only the classes would have made
+   those two the new mandatory pick. One confirmed instance is evidence of a
+   class - so lifesteal and regen now draw from a single shared budget, which
+   also means stacking a lifesteal class WITH Vampiric WITH Resilient buys
+   nothing over any one of them. That stacking case was the real degenerate
+   state and it is now structurally impossible rather than merely expensive. */
+function applySustain(s, dmgDealt, maxHp, events) {
+  const a = s.arena, c = s.character;
+  if (a.playerHp <= 0) return 0;
+  const want = maxHp * Math.max(0, bonus(c, 'regen')) +
+               Math.max(0, dmgDealt) * Math.max(0, bonus(c, 'lifesteal'));
+  if (!(want > 0)) return 0;
+  const ceiling = maxHp * CONST.SUSTAIN_CAP_PCT_MAXHP;
+  const healed = Math.min(maxHp - a.playerHp, want, ceiling);
+  if (!(healed > 0)) return 0;
+  a.playerHp += healed;
+  if (events) events.push({ who: 'player', kind: 'heal', amount: healed });
+  return healed;
+}
+
 function clearRound(s, events) {
   const a = s.arena;
   const r = roundReward(s, a.round);
@@ -3918,6 +4327,13 @@ function settleRun(s, how, now) {
   c.renown += renown;
   c.lifetimeGold += gold;
   s.account.lifetime.gold += gold;
+  /* Daily commissions, advanced where the thing actually happens. A settle is
+     one run, its gold, and its rounds; the yield commission is credited only
+     for genuinely walking out, which is the same distinction the Hall's
+     inscriptions already draw. */
+  commissionAdvance(s, 'runs', 1, now);
+  commissionAdvance(s, 'gold', gold, now);
+  if (how === 'yield') commissionAdvance(s, 'yield', 1, now);
   /* A BOSS IS NOT ARENA DEPTH. It reuses the arena core, and `a.round` on a
      boss holds the round that GATES its chapter - so the shared settle would
      otherwise credit a chapter-5 boss with clearing 25 rounds nobody fought,
@@ -3927,6 +4343,14 @@ function settleRun(s, how, now) {
      spent in the one place it is easy to lose. */
   const cleared = a.boss ? 0 : a.round - 1;
   s.account.lifetime.rounds += Math.max(0, cleared);
+  /* Class levels are bought with rounds cleared while wearing the class. A boss
+     clears none, so the story ladder cannot be used to level a class - the same
+     way it cannot be used to farm weapon TP, and for the same reason. */
+  if (cleared > 0 && c.battleClass && CLASSES[c.battleClass]) {
+    if (!isObj(c.classRounds)) c.classRounds = {};
+    c.classRounds[c.battleClass] = Math.max(0, num(c.classRounds[c.battleClass], 0)) + cleared;
+  }
+  if (cleared > 0) commissionAdvance(s, 'rounds', cleared, now);
   /* bestRound is the deepest round actually CLEARED, not the one you died in. */
   if (cleared > c.bestRound) c.bestRound = cleared;
   c.lifetimeRounds = Math.max(0, num(c.lifetimeRounds, 0)) + Math.max(0, cleared);
@@ -4440,6 +4864,9 @@ function hallCardFor(s, now) {
     stats: stats, weapons: weapons,
     might: mightOf(c),
     battleClass: c.battleClass,
+    /* The level they retired holding. A card is a snapshot; classRounds belongs
+       to a champion who no longer exists. */
+    classLevel: classLevelOf(c),
     bestRound: Math.max(0, num(c.bestRound, 0)),
     lifetimeGold: Math.max(0, num(c.lifetimeGold, 0)),
     lifetimeRounds: Math.max(0, num(c.lifetimeRounds, 0)),
@@ -5483,40 +5910,69 @@ function gearRows(c) {
   }).join('');
 }
 
-function augmentSection(c) {
-  const slots = ['weapon', 'armor'].map(slot => {
-    const max = augmentSlots(c, slot, state.account);
-    const fitted = c.gear[slot].augments;
-    if (max === 0) {
-      return '<div class="aug-slot"><strong>' + (slot === 'weapon' ? 'Weapon' : 'Armour') +
-        '</strong><span class="rb-now">No slots until ' + QUALITY[2] + ' quality</span></div>';
-    }
-    const chips = fitted.map(id =>
-      '<button class="chip-btn is-on" type="button" data-unfit="' + slot + '|' + id + '" ' +
-      'title="Remove">' + esc(AUGMENTS[id].label) + ' ×</button>').join('') ||
-      '<span class="rb-now">Empty</span>';
-    return '<div class="aug-slot"><strong>' + (slot === 'weapon' ? 'Weapon' : 'Armour') +
-      ' <span class="num">' + fitted.length + '/' + max + '</span></strong>' +
-      '<div class="picker">' + chips + '</div></div>';
-  }).join('');
+/* TWO sections, one per gear piece, each complete in itself.
 
-  const free = ['weapon', 'armor'].filter(s => c.gear[s].augments.length < augmentSlots(c, s, state.account));
-  const shelf = AUGMENT_KEYS.map(id => {
+   There used to be one shared shelf whose buy button silently picked a target
+   with `free.find(...)` - the first slot that happened to have room - so a
+   player could not tell which piece they were buying for, and could not choose.
+   Rob reported exactly that. Every row now sits under the piece it fits and
+   names it in the button's own aria-label, so the target is never inferred.
+
+   The eight augments remain available to BOTH pieces. Splitting the pool into
+   weapon-only and armour-only sets is a real design option, but it would strand
+   augments already fitted to the "wrong" piece on existing saves, and the
+   complaint here was legibility rather than choice. Noted for Rob. */
+const SLOT_LABEL = { weapon: 'Weapon', armor: 'Armour' };
+
+function augmentSlotSection(c, slot) {
+  const max = augmentSlots(c, slot, state.account);
+  const fitted = c.gear[slot].augments;
+  const head = '<h4 class="aug-head">' + icon(slot === 'weapon' ? 'sword' : 'shield') +
+    SLOT_LABEL[slot] + ' augments <span class="num">' + fitted.length + '/' + max + '</span></h4>';
+
+  if (max === 0) {
+    return '<div class="aug-group">' + head +
+      '<p class="rb-now">No slots on this piece until ' + esc(QUALITY[2]) +
+      ' quality. Upgrade it above.</p></div>';
+  }
+
+  const chips = fitted.map(id =>
+    '<button class="chip-btn is-on" type="button" data-unfit="' + slot + '|' + id + '" ' +
+    'aria-label="Remove ' + esc(AUGMENTS[id].label) + ' from ' + SLOT_LABEL[slot].toLowerCase() + '">' +
+    esc(AUGMENTS[id].label) + ' ×</button>').join('') ||
+    '<span class="rb-now">Nothing fitted</span>';
+
+  const rows = AUGMENT_KEYS.map(id => {
     const a = AUGMENTS[id];
-    const target = free.find(s => c.gear[s].augments.indexOf(id) === -1);
-    const can = !!target && c.gold >= a.cost;
+    const here = fitted.indexOf(id) !== -1;
+    const room = fitted.length < max;
+    const afford = c.gold >= a.cost;
+    /* Uniqueness is per champion, not per slot (Phase 6 audit): the same
+       augment on both pieces was double value for double gold. */
+    const elsewhere = c.gear[slot === 'weapon' ? 'armor' : 'weapon'].augments.indexOf(id) !== -1;
+    const why = here ? 'Fitted' : elsewhere ? 'On ' + SLOT_LABEL[slot === 'weapon' ? 'armor' : 'weapon'].toLowerCase()
+      : !room ? 'No slot' : !afford ? gp(a.cost) : gp(a.cost);
+    const can = !here && !elsewhere && room && afford;
     return '<div class="row-buy">' +
       '<div class="rb-main">' + icon(a.icon) +
         '<div><strong>' + esc(a.label) + '</strong>' +
         '<span class="rb-now">' + esc(a.text) + '</span></div></div>' +
       '<div class="rb-buy"><button class="btn small" type="button" ' +
-      'data-buy-aug="' + (target || 'weapon') + '|' + id + '"' +
-      ' aria-label="Fit ' + esc(a.label) + ' for ' + gp(a.cost) + '"' + (can ? '' : ' disabled') + '>' +
-      gp(a.cost) + '</button></div></div>';
+      'data-buy-aug="' + slot + '|' + id + '"' +
+      ' aria-label="Fit ' + esc(a.label) + ' to ' + SLOT_LABEL[slot].toLowerCase() +
+      ' for ' + gp(a.cost) + '"' + (can ? '' : ' disabled') + '>' +
+      esc(why) + '</button></div></div>';
   }).join('');
 
-  return slots + '<p class="hp-line">Augments swap freely — removing one costs nothing ' +
-    'and refunds nothing.</p>' + shelf;
+  return '<div class="aug-group">' + head +
+    '<div class="picker">' + chips + '</div>' + rows + '</div>';
+}
+
+function augmentSection(c) {
+  return '<p class="hp-line">Augments swap freely — removing one costs nothing ' +
+    'and refunds nothing. The same augment cannot go on both pieces.</p>' +
+    augmentSlotSection(c, 'weapon') +
+    augmentSlotSection(c, 'armor');
 }
 
 function facilityRows() {
@@ -6113,6 +6569,7 @@ function loadoutChips(c) {
     '<span class="lo">' + icon(cl ? cl.icon : 'lock') +
       esc(cl ? cl.label : 'No class') +
       (cl && cl.tier > 0 ? ' <span class="num">T' + cl.tier + '</span>' : '') +
+      (cl ? ' <span class="num">Lv ' + classLevelOf(c) + '</span>' : '') +
     '</span>';
 }
 
@@ -6220,7 +6677,7 @@ function idleArenaMarkup(a, c) {
       '<p class="hp-line">Entering ends the current training session — it banks first.</p>' +
       '<button class="btn wide" type="button" id="btn-enter">Enter the arena</button></div>';
 
-  return result + gate + autoYieldMarkup(c);
+  return result + gate + autoYieldMarkup(c) + commissionMarkup();
 }
 
 /* Doc 7: "Auto-Yield threshold control once unlocked." Hidden entirely until
@@ -6379,7 +6836,47 @@ function updateArenaLive() {
     (_, i) => '<i' + (i < a.crowd ? ' class="on"' : '') + '></i>').join('');
 }
 
+/* Sits under the arena card on both of its states - a commission is something
+   you work on whether or not a run is up, and hiding it during a fight would
+   hide the one screen that shows your progress toward it. */
+function commissionMarkup() {
+  const v = commissionState(state, Date.now());
+  const pct = v.target > 0 ? Math.min(1, v.progress / v.target) * 100 : 0;
+  /* Five pips, filled to the streak. The rung being EARNED by today's claim is
+     outlined rather than filled, so the reward figure below has something on
+     screen that explains it. */
+  const pips = Array.from({ length: CONST.COMMISSION_STREAK_MAX }, (_, i) =>
+    '<i class="' + (i < v.streak ? 'on' : (!v.claimed && i === v.streak ? 'next' : '')) + '"></i>').join('');
+
+  const status = v.claimed
+    ? '<p class="hp-line">Claimed. A new commission arrives tomorrow.</p>'
+    : v.done
+      ? '<button class="btn wide" type="button" id="btn-commission">Claim ' + gp(v.reward) + '</button>'
+      : '<p class="hp-line">Reward <span class="num">' + gp(v.reward) + '</span>' +
+        (v.atMax ? ' &middot; streak at its maximum' :
+          v.streak > 0 ? ' &middot; day ' + v.nextStreak + ' of a streak'
+                       : ' &middot; more each day running') + '</p>';
+
+  return '<div class="panel commission"><h3 class="sub">' + icon(v.com.icon) +
+    ' Daily commission</h3>' +
+    '<p class="com-task"><strong>' + esc(v.com.label) + '</strong> &mdash; ' +
+      esc(v.com.text(v.target)) + '</p>' +
+    '<div class="bar"><span style="width:' + pct.toFixed(1) + '%"></span></div>' +
+    '<p class="hp-line"><span class="num">' + Math.floor(v.progress) + '</span> / ' +
+      '<span class="num">' + v.target + '</span> ' + esc(v.com.unit) +
+      '<span class="com-pips">' + pips + '</span></p>' +
+    status + '</div>';
+}
+
 function wireArena() {
+  const com = document.getElementById('btn-commission');
+  if (com) com.addEventListener('click', () => {
+    const r = claimCommission(state, Date.now());
+    if (!r.ok) { flash(r.msg); return; }
+    save('commission');
+    renderAll();
+    flash('Commission paid: ' + gp(r.gold) + (r.streak > 1 ? ' · ' + r.streak + '-day streak' : ''));
+  });
   document.querySelectorAll('[data-autoyield]').forEach(b =>
     b.addEventListener('click', () => {
       state.account.autoYieldAt = parseFloat(b.dataset.autoyield);
@@ -6408,7 +6905,11 @@ function wireTrain() {
   const host = document.getElementById('train-body');
   if (!host) return;
   host.querySelectorAll('[data-facility]').forEach(b =>
-    b.addEventListener('click', () => { startTraining(b.dataset.facility); }));
+    b.addEventListener('click', () => {
+      /* The flash lives HERE, at the edge, not inside the core action. */
+      const r = startTraining(b.dataset.facility);
+      if (!r.ok) flash(r.msg);
+    }));
   host.querySelectorAll('[data-weapon]').forEach(b =>
     b.addEventListener('click', () => {
       const c = state.character;
@@ -6658,11 +7159,24 @@ function classGridMarkup(c) {
 
   const cards = shown.map(r => {
     const cl = r.cl, p = r.p, on = c.battleClass === r.id;
-    const mult = CLASS_TIERS[cl.tier].magnitude * (cl.drawback ? 1 + CLASS_DRAWBACK_BONUS : 1);
+    /* The card shows what THIS champion's own level in the class is worth, not
+       a generic tier figure - the same rule the shop follows for gear. Reading
+       the level per class rather than for the equipped one means the grid shows
+       the credit already banked in a class you are not currently wearing. */
+    const lvl = classLevelOf(c, r.id);
+    const lvlMult = CONST.CLASS_LEVEL_MULT[lvl - 1];
+    const prog = classLevelProgress(c, r.id);
+    const mult = CLASS_TIERS[cl.tier].magnitude * lvlMult * (cl.drawback ? 1 + CLASS_DRAWBACK_BONUS : 1);
     const bonuses = cl.bonuses.map(b =>
       '<span class="mod up">' + esc(bonusText(b, BONUS_KEYS[b].base * mult, cl)) + '</span>').join('') +
       (cl.drawback ? '<span class="mod down">' +
-        esc(bonusText(cl.drawback, -BONUS_KEYS[cl.drawback].base, cl)) + '</span>' : '');
+        esc(bonusText(cl.drawback, -BONUS_KEYS[cl.drawback].base * lvlMult, cl)) + '</span>' : '');
+    const lvlLine = p.met
+      ? '<p class="cc-lvl">Class level <span class="num">' + lvl + '</span>' +
+        (prog ? ' &middot; ' + prog.left + ' more round' + (prog.left === 1 ? '' : 's') +
+                ' fought for Lv ' + prog.next
+              : ' &middot; mastered') + '</p>'
+      : '';
     const req = p.parts.map(part =>
       '<span class="req' + (part.have >= part.need ? ' ok' : '') + '">' +
       esc(part.label) + ' <span class="num">' + Math.min(part.have, part.need) + '/' + part.need +
@@ -6671,8 +7185,9 @@ function classGridMarkup(c) {
     return '<div class="class-card' + (on ? ' is-on' : '') + (p.met ? '' : ' is-locked') + '">' +
       '<div class="cc-head">' + icon(p.met ? cl.icon : 'lock') +
         '<strong>' + esc(cl.label) + '</strong>' +
-        '<span class="tier num">T' + cl.tier + '</span></div>' +
-      '<div class="mods">' + bonuses + '</div>' +
+        '<span class="tier num">T' + cl.tier + '</span>' +
+        (p.met && lvl > 1 ? '<span class="tier num lv">Lv' + lvl + '</span>' : '') + '</div>' +
+      '<div class="mods">' + bonuses + '</div>' + lvlLine +
       '<div class="reqs">' + req + '</div>' +
       (p.met
         /* The attribute names the CLASS, never the action. Keyed on the action
@@ -6934,6 +7449,7 @@ function createChampion() {
 const MODAL_FOCUSABLE = '#modal textarea, #modal button';
 
 let lastFocus = null;
+let modalMode = 'records';
 let wipeTimer = null;
 
 /* The wipe button is a two-press confirm. Its armed state MUST be cleared
@@ -6948,15 +7464,23 @@ function disarmWipe() {
   b.textContent = 'Wipe Save';
 }
 
-function openModal() {
+function openModal(mode) {
+  const guide = mode === 'guide';
   lastFocus = document.activeElement;
+  modalMode = guide ? 'guide' : 'records';
   const m = document.getElementById('modal');
   m.classList.add('is-open');
   m.setAttribute('aria-hidden', 'false');
+  document.getElementById('modal-title').textContent = guide ? 'How to play' : 'Records';
+  document.getElementById('modal-records').hidden = guide;
+  document.getElementById('modal-guide').hidden = !guide;
   document.getElementById('save-text').value = '';
   setStatus('', null);
+  /* Disarmed on OPEN as well as close: an armed wipe that survived the dialog
+     closing was one press from erasing the ledger (Phase 1 audit), and opening
+     into the guide must never leave it armed behind the other tab either. */
   disarmWipe();
-  document.getElementById('btn-export').focus();
+  document.getElementById(guide ? 'btn-close' : 'btn-export').focus();
 }
 
 function closeModal() {
@@ -6968,7 +7492,7 @@ function closeModal() {
      lastFocus is <body>, and focusing that strands the caret inside a dialog
      that is no longer there. */
   const back = (lastFocus && lastFocus !== document.body && document.contains(lastFocus))
-    ? lastFocus : document.getElementById('btn-records');
+    ? lastFocus : document.getElementById(modalMode === 'guide' ? 'btn-guide' : 'btn-records');
   back.focus();
 }
 
@@ -6980,7 +7504,8 @@ function setStatus(msg, tone) {
 }
 
 function wireModal() {
-  document.getElementById('btn-records').addEventListener('click', openModal);
+  document.getElementById('btn-records').addEventListener('click', () => openModal('records'));
+  document.getElementById('btn-guide').addEventListener('click', () => openModal('guide'));
   document.getElementById('btn-close').addEventListener('click', closeModal);
   document.getElementById('modal').addEventListener('click', e => {
     if (e.target.id === 'modal') closeModal();
@@ -7145,6 +7670,20 @@ function harnessState(config) {
   s.character = newCharacter(cfg.race || 'human', 'Harness', account);
   const c = s.character;
   if (cfg.stats) STAT_KEYS.forEach(k => { if (cfg.stats[k] != null) c.stats[k] = cfg.stats[k]; });
+  /* The battle class is the single biggest lever a player pulls, and until now
+     the harness could not set it at all - which is exactly why nobody measured
+     that lifesteal was dominating every other class. Fitted directly, past the
+     proficiency gate, for the same reason augments are: the sweep asks what a
+     class is WORTH, not whether it can be unlocked. */
+  if (cfg.battleClass && CLASSES[cfg.battleClass]) c.battleClass = cfg.battleClass;
+  if (cfg.battleClass === null) c.battleClass = null;
+  /* Class LEVEL, set through the rounds it is derived from rather than by
+     writing a level the game would not honour. == null, not ||: level 1 is a
+     meaningful setting and the falsy default on a number is the trap this file
+     has hit four times. */
+  if (cfg.classLevel != null && c.battleClass) {
+    c.classRounds[c.battleClass] = CONST.CLASS_LEVEL_ROUNDS[clamp(Math.round(cfg.classLevel), 1, CONST.CLASS_LEVEL_ROUNDS.length) - 1];
+  }
   /* The renown ladder is part of a champion's power now, so the harness has to
      be able to set it - a sweep that always measured a rank-0 champion would
      be measuring somebody who does not exist at Might 2000. == null, not ||:
@@ -7332,6 +7871,19 @@ function assertAll() {
   const fails = [];
   let ran = 0;
   const ok = (cond, msg) => { ran++; if (!cond) fails.push(msg); };
+
+  /* The suite has always been pure with respect to localStorage. It was NOT
+     pure with respect to the screen: the bench assertion drove a benched
+     champion through startTraining(), which raised a toast, so every page load
+     showed the player "Still on the bench - back in 10m 00s" from a rig that
+     was not their champion. Reported by Rob on 2026-08-24.
+
+     Captured here and checked at the bottom. Any future assertion that reaches
+     the player through the UI now fails loudly instead of shipping. */
+  const flashBefore = (() => {
+    const el = document.getElementById('flash');
+    return el ? { on: el.classList.contains('is-on'), text: el.textContent } : { on: false, text: '' };
+  })();
 
   /* --- structure --- */
   SCREENS.forEach(s => {
@@ -10164,6 +10716,286 @@ function assertAll() {
 
 
 
+  /* --- class levels 1-4 --------------------------------------- */
+  (function () {
+    const T = CONST.CLASS_LEVEL_ROUNDS, M = CONST.CLASS_LEVEL_MULT;
+    ok(T.length === M.length, 'the class level thresholds and multipliers are different lengths');
+    ok(T.length === 4, 'class levels are not 1-4, they are 1-' + T.length);
+    ok(T[0] === 0 && M[0] === 1, 'level 1 is not free and neutral');
+    for (let i = 1; i < T.length; i++) {
+      ok(T[i] > T[i - 1], 'class level ' + (i + 1) + ' costs no more rounds than the one below');
+      ok(M[i] > M[i - 1], 'class level ' + (i + 1) + ' is worth no more than the one below');
+    }
+    ok(classLevelFor(0) === 1 && classLevelFor(T[1] - 1) === 1, 'a class levels up early');
+    ok(classLevelFor(T[1]) === 2 && classLevelFor(T[3]) === 4, 'a class does not level on its threshold');
+    ok(classLevelFor(999999) === 4, 'a class levelled past its maximum');
+    ok(classLevelFor(null) === 1 && classLevelFor(-5) === 1, 'a junk round count is not level 1');
+
+    const rig = () => {
+      const s = defaultState();
+      s.character = newCharacter('human', 'Leveller', s.account);
+      s.character.stats.str = 40; s.character.stats.con = 40;
+      s.character.weapons.mace = { level: 10, tp: 0 };
+      s.character.battleClass = 'paladin';
+      s.character.hp = maxHpOf(s.character);
+      return s;
+    };
+    let s = rig();
+    ok(classLevelOf(s.character) === 1, 'a fresh champion is not level 1 in their class');
+    const at1 = classBonus(s.character, 'vigor');
+    s.character.classRounds.paladin = T[3];
+    ok(classLevelOf(s.character) === 4, 'rounds fought did not raise the class level');
+    const at4 = classBonus(s.character, 'vigor');
+    ok(Math.abs(at4 / at1 - M[3]) < 1e-9,
+      'level 4 is not worth ' + M[3] + 'x level 1 - it is worth ' + (at4 / at1).toFixed(3) + 'x');
+    /* The DRAWBACK scales too, or a levelled Dark Knight is pure upside. */
+    const dk = rig();
+    dk.character.weapons.greatsword = { level: 10, tp: 0 };
+    dk.character.weapons.scythe = { level: 10, tp: 0 };
+    dk.character.battleClass = 'darkknight';
+    const draw1 = classBonus(dk.character, 'vigor');
+    dk.character.classRounds.darkknight = T[3];
+    const draw4 = classBonus(dk.character, 'vigor');
+    ok(draw1 < 0 && draw4 < draw1, 'a levelled class kept its drawback at level-1 size');
+
+    /* Earned by CLEARING ROUNDS with it on, and by nothing else. */
+    s = rig();
+    startRun(s, 0);
+    let g = 0;
+    while (s.arena.active && g++ < 200000) exchange(s, g * CONST.ARENA_TICK_MS);
+    ok(classRoundsOf(s.character, 'paladin') === s.character.lifetimeRounds,
+      'the class banked a different number of rounds than the champion cleared');
+    ok(classRoundsOf(s.character, 'fighter') === 0, 'a class that was not worn banked rounds');
+
+    /* A boss clears no rounds, so it levels nothing - the same rule that keeps
+       the story ladder from being a weapon-TP farm. */
+    const b = defaultState();
+    b.character = newCharacter('human', 'Boss', b.account);
+    b.character.stats.str = 400;
+    b.character.weapons.mace = { level: 10, tp: 0 };
+    b.character.battleClass = 'paladin';
+    b.character.bestRound = 40;
+    b.character.hp = maxHpOf(b.character);
+    if (startBoss(b, STORIES[0].id, 0, 0).ok) {
+      let g2 = 0;
+      while (b.arena.active && g2++ < 60000) exchange(b, 0);
+      ok(classRoundsOf(b.character, 'paladin') === 0, 'a story boss levelled a battle class');
+    }
+
+    /* The level is DERIVED, so a hand-edited one does not survive a load. */
+    const forged = rig();
+    forged.character.classRounds.paladin = 0;
+    forged.character.classLevel = 4;
+    const back = migrateCharacter(JSON.parse(JSON.stringify(forged.character)));
+    ok(classLevelOf(back) === 1, 'a forged class level survived migration');
+    ok(!back.classRounds.notaclass, 'migration kept rounds for a class that does not exist');
+    const junk = migrateCharacter(Object.assign(JSON.parse(JSON.stringify(forged.character)),
+      { classRounds: { notaclass: 900, paladin: 'lots' } }));
+    ok(junk.classRounds.notaclass === undefined, 'an invented class survived migration');
+    ok(junk.classRounds.paladin === 0, 'a non-numeric round count was not repaired');
+
+    /* Progress reads out, and stops at the top. */
+    const p1 = classLevelProgress(rig().character, 'paladin');
+    ok(p1 && p1.left === T[1], 'the level-2 requirement is not the threshold');
+    const maxed = rig(); maxed.character.classRounds.paladin = T[3];
+    ok(classLevelProgress(maxed.character, 'paladin') === null, 'a mastered class still shows progress');
+  })();
+
+  /* --- the daily commission ----------------------------------- */
+  (function () {
+    ok(COMMISSIONS.length >= 3, 'there are too few commissions to feel daily');
+    const ids = COMMISSIONS.map(x => x.id);
+    ok(new Set(ids).size === ids.length, 'two commissions share an id');
+    COMMISSIONS.forEach(cm => {
+      ok(ICON_NAMES.indexOf(cm.icon) !== -1, cm.id + ' names an icon outside the sprite');
+      ok(typeof cm.text === 'function' && cm.text(5).length > 0, cm.id + ' has no description');
+      ok(cm.target > 0, cm.id + ' asks for nothing');
+    });
+    ok(CONST.COMMISSION_STREAK_MULT.length === CONST.COMMISSION_STREAK_MAX,
+      'the streak table does not match the streak maximum');
+    for (let i = 1; i < CONST.COMMISSION_STREAK_MULT.length; i++)
+      ok(CONST.COMMISSION_STREAK_MULT[i] > CONST.COMMISSION_STREAK_MULT[i - 1],
+        'streak day ' + (i + 1) + ' pays no more than the day before');
+
+    /* Day keys and the gap between them. Computed at noon so daylight saving
+       cannot turn a 23-hour day into a broken streak. */
+    ok(/^\d{4}-\d{2}-\d{2}$/.test(dayKey(Date.now())), 'the day key is not a date');
+    ok(daysBetween('2026-03-01', '2026-03-02') === 1, 'consecutive days are not one apart');
+    ok(daysBetween('2026-03-01', '2026-03-01') === 0, 'the same day is not zero apart');
+    ok(daysBetween('2026-02-28', '2026-03-01') === 1, 'a month boundary broke the gap');
+    ok(daysBetween('2026-03-07', '2026-03-09') === 2, 'a skipped day is not two apart');
+    ok(daysBetween(null, '2026-03-01') === null, 'a missing day parsed as a day');
+    ok(daysBetween('nonsense', '2026-03-01') === null, 'junk parsed as a day');
+
+    /* The task is a pure function of the date, so it is the same all day and
+       the same on every device - there is nothing stored that could disagree
+       with what is on screen. */
+    const a1 = commissionFor('2026-05-05'), a2 = commissionFor('2026-05-05');
+    ok(a1.id === a2.id, 'the same day rolled two different commissions');
+    const spread = {};
+    for (let d = 1; d <= 28; d++) spread[commissionFor('2026-05-' + String(d).padStart(2, '0')).id] = true;
+    ok(Object.keys(spread).length >= 3, 'a month of days only ever rolls ' +
+      Object.keys(spread).length + ' distinct commissions');
+
+    const rig = () => {
+      const s = defaultState();
+      s.character = newCharacter('human', 'Worker', s.account);
+      s.character.stats.str = 40; s.character.hp = maxHpOf(s.character);
+      s.account.commission.day = dayKey(Date.now());
+      s.account.commission.id = 'rounds';
+      return s;
+    };
+    let s = rig();
+    let v = commissionState(s, Date.now());
+    ok(v.progress === 0 && !v.done, 'a fresh commission starts done');
+    ok(claimCommission(s, Date.now()).ok === false, 'an unfinished commission paid out');
+
+    /* Only TODAY'S commission advances. */
+    commissionAdvance(s, 'crits', 999, Date.now());
+    ok(commissionState(s, Date.now()).progress === 0, 'a commission that is not today advanced');
+    commissionAdvance(s, 'rounds', 999, Date.now());
+    v = commissionState(s, Date.now());
+    ok(v.done, 'the commission did not complete when its counter was filled');
+    ok(v.progress === v.target, 'progress ran past the target');
+
+    /* Claiming pays, sets the streak, and cannot be done twice. */
+    const goldBefore = s.character.gold;
+    const claim = claimCommission(s, Date.now());
+    ok(claim.ok && claim.gold > 0, 'a finished commission paid nothing');
+    ok(s.character.gold === goldBefore + claim.gold, 'the commission gold did not reach the champion');
+    ok(s.account.commission.streak === 1, 'the first claim did not start a streak');
+    ok(claimCommission(s, Date.now()).ok === false, 'a commission was claimed twice in one day');
+    ok(commissionAdvance(s, 'rounds', 50, Date.now()) === 0, 'a claimed commission kept counting');
+
+    /* The streak grows to its cap and no further. */
+    const streakRig = (n) => {
+      const t = rig();
+      t.account.commission.streak = n;
+      t.account.commission.doneOn = t.account.commission.day;
+      return t;
+    };
+    ok(commissionReward(streakRig(1), 2) > commissionReward(streakRig(1), 1),
+      'a second consecutive day pays no more than the first');
+    ok(commissionReward(streakRig(1), CONST.COMMISSION_STREAK_MAX + 5) ===
+       commissionReward(streakRig(1), CONST.COMMISSION_STREAK_MAX),
+      'the streak reward kept growing past its cap');
+
+    /* MISSING A DAY RESETS IT, and finishing yesterday does not. */
+    const gap = rig();
+    gap.account.commission.streak = 4;
+    gap.account.commission.doneOn = '2020-01-01';       // long ago
+    refreshCommission(gap, Date.now());
+    ok(gap.account.commission.streak === 0, 'a missed day did not reset the streak');
+
+    const kept = rig();
+    kept.account.commission.streak = 3;
+    const yest = new Date(); yest.setDate(yest.getDate() - 1);
+    kept.account.commission.doneOn = dayKey(yest.getTime());
+    kept.account.commission.day = kept.account.commission.doneOn;
+    refreshCommission(kept, Date.now());
+    ok(kept.account.commission.streak === 3, 'finishing yesterday broke the streak');
+    ok(kept.account.commission.day === dayKey(Date.now()), 'the commission did not roll to today');
+    ok(kept.account.commission.claimed === false, 'the new day arrived already claimed');
+
+    /* OPENING the game yesterday without finishing must NOT hold the streak -
+       the streak is measured from doneOn, not from the day last seen. */
+    const idle = rig();
+    idle.account.commission.streak = 3;
+    idle.account.commission.doneOn = null;
+    idle.account.commission.day = dayKey(yest.getTime());
+    refreshCommission(idle, Date.now());
+    ok(idle.account.commission.streak === 0,
+      'a day the player opened but did not finish kept the streak alive');
+
+    /* The reward scales with what a round is worth, or it is meaningless late. */
+    const poor = rig();
+    const rich = rig();
+    rich.character.bestRound = 45;
+    ok(commissionReward(rich, 1) > commissionReward(poor, 1),
+      'the commission pays a deep champion the same as a new one');
+    ok(commissionReward(poor, 1) >= CONST.COMMISSION_MIN_GOLD,
+      'the commission floor does not apply to a brand new champion');
+    /* But never so much that it rivals a run. */
+    const runWorth = roundReward(rich, Math.max(1, accountBestRound(rich))).gold * 20;
+    ok(commissionReward(rich, CONST.COMMISSION_STREAK_MAX) < runWorth,
+      'the daily commission pays more than a run - it has stopped being a bonus');
+
+    /* Migration repairs it without eating the streak, and refuses a future date. */
+    const raw = JSON.parse(JSON.stringify(defaultAccount()));
+    raw.commission = { day: 'not-a-day', id: 'nope', progress: -5, claimed: 'yes', streak: 99, doneOn: '2999-01-01' };
+    raw.legacyPoints = 77;
+    const m = migrateAccount(raw);
+    ok(m.legacyPoints === 77, 'repairing a commission took the ledger down with it');
+    ok(m.commission.id === null && m.commission.day === null, 'a junk commission survived');
+    ok(m.commission.progress === 0 && m.commission.claimed === false, 'junk progress survived');
+    ok(m.commission.doneOn === null && m.commission.streak === 0,
+      'a commission completed in the future was believed');
+  })();
+
+  /* --- sustain is capped, and the cap is shared ---------------
+     Flat healing against an exponentially growing threat is the one shape that
+     breaks this game. Rob reported it as "Paladin trivialises the arena"; the
+     sweep found it in four classes AND two augments, so the check is on the
+     rule rather than on any of them. */
+  (function () {
+    const rig = (fit) => {
+      const s = defaultState();
+      s.character = newCharacter('human', 'Sustain', s.account);
+      s.character.stats.str = 40; s.character.stats.con = 40;
+      s.character.hp = maxHpOf(s.character);
+      if (fit) fit(s.character);
+      startRun(s, 0);
+      return s;
+    };
+    const maxOf = s => maxHpOf(s.character);
+
+    /* The ceiling holds however the sustain is sourced. */
+    const cap = (s) => maxOf(s) * CONST.SUSTAIN_CAP_PCT_MAXHP;
+    const healOnce = (s) => {
+      s.arena.playerHp = 1;                                   // room to heal into
+      return applySustain(s, 100000, maxOf(s), null);         // absurd damage dealt
+    };
+    const bare = rig();
+    ok(healOnce(bare) === 0, 'a champion with no sustain at all healed');
+
+    const vamp = rig(c => { c.gear.weapon.augments = ['vampiric']; });
+    ok(Math.abs(healOnce(vamp) - cap(vamp)) < 1e-9,
+      'lifesteal is not held to the sustain cap - it healed ' + healOnce(vamp) + ' of a ' + cap(vamp) + ' ceiling');
+
+    const res = rig(c => { c.gear.armor.augments = ['resilient']; });
+    ok(res.character.gear.armor.augments.length === 1, 'the Resilient rig did not fit it');
+    ok(healOnce(res) <= cap(res) + 1e-9, 'flat regen is not held to the sustain cap');
+
+    /* THE property that matters: stacking every source buys nothing over one.
+       This is the degenerate state the cap exists to make impossible, and it is
+       what a second sustain augment or a fifth lifesteal class would revive. */
+    const stacked = rig(c => {
+      c.battleClass = 'paladin';
+      c.weapons.mace = { level: 10, tp: 0 };
+      c.gear.weapon.augments = ['vampiric'];
+      c.gear.armor.augments = ['resilient'];
+    });
+    ok(Math.abs(healOnce(stacked) - cap(stacked)) < 1e-9,
+      'stacking a lifesteal class with both sustain augments beat the shared ceiling');
+
+    /* Never heals past full, and never heals a corpse. */
+    const full = rig(c => { c.gear.weapon.augments = ['vampiric']; });
+    full.arena.playerHp = maxOf(full);
+    ok(applySustain(full, 100000, maxOf(full), null) === 0, 'sustain healed a champion already at full');
+    const dead = rig(c => { c.gear.weapon.augments = ['vampiric']; });
+    dead.arena.playerHp = 0;
+    ok(applySustain(dead, 100000, maxOf(dead), null) === 0, 'sustain healed a champion at zero HP');
+
+    /* And the cap is a real tunable, not decoration: it must actually bind. */
+    ok(CONST.SUSTAIN_CAP_PCT_MAXHP > 0 && CONST.SUSTAIN_CAP_PCT_MAXHP < 0.05,
+      'the sustain cap is outside any sane range');
+    const probe = rig(c => { c.gear.weapon.augments = ['vampiric']; });
+    probe.arena.playerHp = 1;
+    const uncapped = playerDamage(probe.character, false) * bonus(probe.character, 'lifesteal');
+    ok(uncapped > cap(probe),
+      'the sustain cap does not bind on a normal hit - it has stopped being a balance lever');
+  })();
+
   /* --- the knockout bench actually costs something ------------
      Doc 4 prices a knockout in TIME. It gated the arena door and nothing else,
      so a champion carried off the sand could start a training session in the
@@ -10233,16 +11065,22 @@ function assertAll() {
 
     /* And the gate on the UI action itself, which is where the defect was.
        startTraining touches the live globals and calls save(), so saving is
-       disarmed around it: assertAll must never write a record. */
+       disarmed around it: assertAll must never write a record. It must not
+       write to the SCREEN either - the refusal returns a message for the click
+       handler to flash rather than flashing it, and there is a check at the
+       bottom of this suite that no toast was raised. */
     const keepState = state, keepArmed = savesArmed;
     try {
       savesArmed = false;
       state = rig(Date.now() + 600000);
-      startTraining('forge');
+      const refused = startTraining('forge');
+      ok(refused && refused.ok === false, 'startTraining did not report the refusal to its caller');
+      ok(/bench/i.test(refused.msg || ''), 'the refusal does not say why');
       ok(!hasSession(state.character.training),
         'a benched champion started a training session - the bench costs nothing but the arena door');
       state.character.knockoutUntil = Date.now() - 1;
-      startTraining('forge');
+      const allowed = startTraining('forge');
+      ok(allowed && allowed.ok === true, 'startTraining did not report success');
       ok(hasSession(state.character.training),
         'a champion off the bench could not start training');
       ok(state.character.training.facility === 'forge', 'startTraining picked the wrong facility');
@@ -10723,6 +11561,14 @@ function assertAll() {
     if (anchor && typeof anchor.focus === 'function') anchor.focus();
     location.hash = keepHash;
   })();
+  /* --- the suite never speaks to the player ------------------ */
+  (function () {
+    const el = document.getElementById('flash');
+    const after = el ? { on: el.classList.contains('is-on'), text: el.textContent } : { on: false, text: '' };
+    ok(after.on === flashBefore.on && after.text === flashBefore.text,
+      'assertAll() raised a toast at the player: "' + after.text + '" - the suite must not reach the UI');
+  })();
+
   const summary = '[EA] ' + (ran - fails.length) + '/' + ran + ' assertions passed';
   if (fails.length) { console.error(summary); fails.forEach(f => console.error('  FAIL: ' + f)); }
   else console.log(summary);
@@ -10783,18 +11629,22 @@ window.EA = {
   timeToNextLevel, timeToFullHp, etaLine, loadoutChips, championActivity, updateTopbarLive, purseText,
   benched, benchLeft, sessionOrigin, updateArenaIdleLive,
   ENEMY_GIVEN, ENEMY_BANDS, bandFor, rollEnemyName,
-  startRun, beginRound, exchange, settleRun, yieldPreview, roundReward, enemyFor,
+  startRun, beginRound, exchange, settleRun, yieldPreview, roundReward, enemyFor, applySustain,
   playerDamage, playerCritChance, playerEvadeChance, damageTaken, profOf,
   startArenaTick, stopArenaTick, arenaStep, catchUpArena, defaultScreen, startingRenownFor, RENOWN_TOP_RANK,
   AUGMENTS, AUGMENT_KEYS, augBonus, augmentSlots, gearUpgradeCost, buyGearUpgrade,
   buyAugment, removeAugment, buyFacility, facilityUpgradeCost, facilityLocked, renownRankFor,
   BONUS_KEYS, CLASSES, CLASS_KEYS, CLASS_TIERS, STATUSES, FLOURISHES,
   bonus, classBonus, classProgress, classUnlocked, equipClass, maxHpOf,
+  classLevelFor, classLevelOf, classRoundsOf, classLevelProgress,
   afflictionChance, afflictionTypeFor, applyStatus, tickStatuses, tutelageBonus,
   LEGACY_PERKS, LEGACY_PERK_KEYS, HALL_INSCRIPTIONS, INSCRIPTION_RULES, MENTOR_BANDS,
   STORIES, STORY_BY_ID, RANK_UNLOCKS, FEATS, FEAT_BY_ID, FEAT_CATEGORIES, buildFeats,
   chapterClosed, storyChaptersClosed, storyIsTold, nextChapterOf, chapterGate,
   chapterBlocked, bossFor, bossReward, startBoss, closeChapter, autoYieldCheck,
+  COMMISSIONS, COMMISSION_BY_ID, dayKey, daysBetween, commissionFor, commissionTarget,
+  commissionRoundGold, commissionReward, refreshCommission, commissionAdvance,
+  commissionState, claimCommission, commissionMarkup,
   evaluateRankUnlocks, rankFor, unlockHolder, accountRank, anyChampion, weaponLevelOf,
   featEarned, grantFeat, evaluateFeats, featsEarnedCount, renderStory, renderFeats,
   perkLevel, perkValue, perkCost, buyPerk, mentorSlotsFor,
