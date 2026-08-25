@@ -822,14 +822,67 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
   <!-- Help. A ring with a question mark: the universal affordance, and it reads
        as a question at 18px because the stroke of the hook is the only busy part. -->
   <symbol id="icon-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.2 9a2.9 2.9 0 0 1 5.6 1c0 2-2.8 2.4-2.8 4.2"/><path d="M12 17.6h.01"/></symbol>
-  <!-- Weapon glyphs for the proficiency tree. Doc 2 lists 20 icons "needed";
-       that is a floor, not a cap, and fourteen nodes drawn with one sword
-       between them is not a tree anyone can read. -->
-  <symbol id="icon-dagger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2 3v7h-4V6z"/><path d="M8 13h8"/><path d="M12 13v6"/></symbol>
-  <symbol id="icon-axe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2.5v19"/><path d="M14 4L4.8 8.3a1 1 0 0 0 0 1.8L14 14.4z"/></symbol>
-  <symbol id="icon-hammer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="12" height="6" rx="1.5"/><path d="M11 10v10"/><path d="M9 20h4"/></symbol>
-  <symbol id="icon-staff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3L7 21"/><circle cx="17.5" cy="4.5" r="2.2"/></symbol>
-  <symbol id="icon-scythe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3v18"/><path d="M15 4.5C10.5 4 6 5.6 3.5 9c3.6 1.3 7.5 1.2 11.5-.4z"/></symbol>
+  <!-- Battle class glyphs. Twenty-three classes shared eight generic icons
+       before this - four different shields, three coins, three skulls - so the
+       grid told you a class existed and nothing about what it was.
+
+       Each of these is keyed to the class's IDENTITY rather than to its weapon,
+       because the weapon already has its own glyph in the tree and repeating it
+       here would say the same thing twice. Two to five strokes each: anything
+       busier turns to mush at the 18px the class grid actually renders at, and
+       this project has twice paid for shipping icons that were only ever
+       checked as path data. -->
+  <symbol id="icon-cls-grunt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5l7 5 7-5"/><path d="M5 11l7 5 7-5"/><path d="M5 17l7 5 7-5"/></symbol>
+  <symbol id="icon-cls-thief" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h12l1.5 7a3 3 0 0 1-3 3.5H7.5a3 3 0 0 1-3-3.5z"/><path d="M9 11l1-4h4l1 4"/></symbol>
+  <symbol id="icon-cls-brute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10h10a3 3 0 0 1 3 3v3a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-4"/><path d="M7.5 10V8a1.5 1.5 0 0 1 3 0v2M13 10V7.5a1.5 1.5 0 0 1 3 0V10"/><path d="M4 15l-1.5-2"/></symbol>
+  <symbol id="icon-cls-fighter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4l10 11"/><path d="M19 4L9 15"/><path d="M4 20l4-4"/><path d="M20 20l-4-4"/></symbol>
+  <symbol id="icon-cls-marauder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s4 5 4 7.5A4 4 0 0 1 8 10.5C8 8 12 3 12 3z"/><path d="M6 15s2 2.5 2 3.8A2 2 0 0 1 4 18.8C4 17.5 6 15 6 15z"/><path d="M18 15s2 2.5 2 3.8a2 2 0 0 1-4 0c0-1.3 2-3.8 2-3.8z"/></symbol>
+  <symbol id="icon-cls-warbringer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v18"/><path d="M7 4h12l-3.5 4.5L19 13H7z"/></symbol>
+  <symbol id="icon-cls-samurai" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/></symbol>
+  <symbol id="icon-cls-executioner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M12 5h4l4 4-4 4h-4z"/><path d="M12 5H8L4 9l4 4h4z"/></symbol>
+  <symbol id="icon-cls-berserker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21l1-11"/><path d="M16 21l-1-11"/><path d="M9 10L4 7l5-4z"/><path d="M15 10l5-3-5-4z"/></symbol>
+  <symbol id="icon-cls-paladin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.4-3 8-7 9-4-1-7-4.6-7-9V6z"/><path d="M12 8v7M9 11h6"/></symbol>
+  <symbol id="icon-cls-monk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9"/><circle cx="12" cy="6" r="3"/><path d="M8 21h8"/></symbol>
+  <symbol id="icon-cls-breaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16v11H4z"/><path d="M4 9l4-4 3 3 3-4 3 3 3-2"/></symbol>
+  <symbol id="icon-cls-crusader" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v15"/><path d="M7 8h10"/><path d="M12 18l-2.5 3h5z"/></symbol>
+  <symbol id="icon-cls-dragoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.5 6h-7z"/><path d="M12 8v14"/><path d="M8.5 8C6 8 4 9.5 3 11.5c2 .5 4 .2 5.5-1M15.5 8c2.5 0 4.5 1.5 5.5 3.5-2 .5-4 .2-5.5-1"/></symbol>
+  <symbol id="icon-cls-reaper" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3v18"/><path d="M17 7C10 7 5 10 3 16"/><path d="M3 16c5 1 9-1 12-5"/></symbol>
+  <symbol id="icon-cls-assassin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L5 9v7a7 7 0 0 0 14 0V9z"/><path d="M6 13h12"/></symbol>
+  <symbol id="icon-cls-thug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13h16v3a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><circle cx="7" cy="9" r="2"/><circle cx="12" cy="8.5" r="2"/><circle cx="17" cy="9" r="2"/></symbol>
+  <symbol id="icon-cls-raider" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15h18l-3 5H6z"/><path d="M12 15V3"/><path d="M12 4.5l6 3.5-6 3.5z"/></symbol>
+  <symbol id="icon-cls-warmage" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21L12 12"/><path d="M16 2c3 3 4.5 5 4.5 7.5A4.5 4.5 0 0 1 11.5 10C11.5 7.5 13 5 16 2z"/></symbol>
+  <symbol id="icon-cls-darkknight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21v-7a5 5 0 0 1 10 0v7"/><path d="M7 14C5 12 4 9 5 7c2 1 3 3 3 5M17 14c2-2 3-5 2-7-2 1-3 3-3 5"/><path d="M10 17h4"/></symbol>
+  <symbol id="icon-cls-vanguard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10v11a5 5 0 0 1-10 0z"/><circle cx="12" cy="10" r="2"/></symbol>
+  <symbol id="icon-cls-blademaster" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2 5v10h-4V7z"/><path d="M5 7l1.8 4v8H3.2v-8z"/><path d="M19 7l1.8 4v8h-3.6v-8z"/></symbol>
+  <symbol id="icon-cls-juggernaut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12H8"/><path d="M8 8H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h3z"/><path d="M12 9v6M16 9v6"/></symbol>
+
+  <!-- Weapon glyphs, one per type. Fourteen weapons ran on six icons before
+       this - three axes, three hammers, two daggers, two staves - which is a
+       problem the proficiency TREE has and the class grid did not: a tree whose
+       three axe nodes are the same picture is not showing you a progression,
+       it is showing you the same thing three times.
+
+       Family resemblance is deliberate and differentiation is by the ONE
+       feature that actually names the weapon: a mace is a spiked ball, a war
+       hammer is a head with a beak opposite it, a great maul is a block. The
+       plurals are drawn as plurals - Daggers and Dual Hatchets are two of the
+       thing, which is the cheapest possible way to tell them from their
+       singular relatives at 18px. -->
+  <symbol id="icon-wpn-daggers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12L6 6l2-3 2 3-2 6z"/><path d="M8 12v9"/><path d="M16 12l-2-6 2-3 2 3-2 6z"/><path d="M16 12v9"/></symbol>
+  <symbol id="icon-wpn-swords" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.5 5v9h-5V7z"/><path d="M7 16h10"/><path d="M12 16v6"/></symbol>
+  <symbol id="icon-wpn-greatsword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 5v7H9V7z"/><path d="M4 14h16"/><path d="M12 14v8"/><path d="M9 22h6"/></symbol>
+  <symbol id="icon-wpn-katana" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 3c-3 6-8 11-13 14"/><path d="M20 3c-1 6-5 11-11 15"/><path d="M7 17l-4 4"/></symbol>
+  <symbol id="icon-wpn-axes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21L13 8"/><path d="M10 7l3.5-4L20 8l-3 5.5c-1.5-3-4-5.5-7-6.5z"/></symbol>
+  <symbol id="icon-wpn-greataxe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v14"/><path d="M12 8l2-6 6 3-3 6c-1.5-2-3-3-5-3z"/><path d="M12 8l-2-6-6 3 3 6c1.5-2 3-3 5-3z"/></symbol>
+  <symbol id="icon-wpn-dualhatchets" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21l3-9"/><path d="M18 21l-3-9"/><path d="M9 12L6 6l4-2 2 5z"/><path d="M15 12l3-6-4-2-2 5z"/></symbol>
+  <symbol id="icon-wpn-clubs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l3.5-3.5"/><path d="M7.5 16.5a3 3 0 0 1 0-4.2l6-6a3 3 0 0 1 4.2 0l.5.5a3 3 0 0 1 0 4.2l-6 6a3 3 0 0 1-4.2 0z"/></symbol>
+  <symbol id="icon-wpn-mace" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14v8"/><circle cx="12" cy="9" r="4"/><path d="M12 2v3M4 9h2M18 9h2M6.5 3.5l1.5 1.5M17.5 3.5L16 5"/></symbol>
+  <symbol id="icon-wpn-greatmaul" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v14"/><path d="M4 3h16v7H4z"/><path d="M12 3v7"/></symbol>
+  <symbol id="icon-wpn-warhammer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10v12"/><path d="M5 4h9l5 3-5 3H5z"/><path d="M12 4v6"/></symbol>
+  <symbol id="icon-wpn-battlestaff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21L21 3"/><path d="M4 18l2 2M18 4l2 2"/><path d="M11 13l2 2"/></symbol>
+  <symbol id="icon-wpn-spear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c2.2 3.2 3 5.2 3 6.8A3 3 0 0 1 9 8.8C9 7.2 9.8 5.2 12 2z"/><path d="M12 11v11"/><path d="M9.5 13h5"/></symbol>
+  <symbol id="icon-wpn-scythe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 3v18"/><path d="M18 6C10 6 4 10 3 17"/><path d="M20 11h-2M18 15h-2.5"/></symbol>
+
 </svg>
 
 <div id="app">
@@ -1094,6 +1147,16 @@ const CONST = {
   INT_CRIT_PER: 0.007,
   INT_CRIT_RESIST_PER: 0.005,
   CHA_GOLD_PER: 0.02,
+  /* The SHARE of a champion's evasion cap that DEX alone can buy. Deliberately
+     below 1 so every evasion bonus in the game always has somewhere to go - see
+     FORMULAS.playerEvade for the two ways one shared ceiling broke.
+
+     A share rather than an absolute figure, because the elf's cap is higher
+     (doc 3.1) and an absolute sub-cap silently deleted that advantage: elf and
+     human both stopped at the same number from DEX, and the elf needed 0.10 of
+     bonus before their bloodline did anything at all. Caught by the assertion
+     that the elf cap must buy the elf something. */
+  EVASION_DEX_SHARE: 0.78,
   EVASION_CAP: 0.45,
   EVASION_CAP_ELF: 0.55,
 
@@ -1160,7 +1223,7 @@ const CONST = {
      flat sustain against an exponentially growing threat is the one shape that
      breaks this game, and it broke it through four classes and two augments at
      once. Swept 2026-08-24 against the whole class list. */
-  SUSTAIN_CAP_PCT_MAXHP: 0.002,
+  SUSTAIN_CAP_PCT_MAXHP: 0.0008,
 
   /* Class levels 1-4 (Rob, 2026-08-24). Rounds cleared with that class
      equipped, and the multiplier its bonuses are scaled by. Index 0 is level 1,
@@ -1195,10 +1258,30 @@ const CONST = {
      before touching it - Phase 8's Legacy Points and Phase 9's perks add sinks
      and will shift the target. */
   GOLD_SCALE: 1.12,
+  /* Past this round the purse per round stops growing - see
+     FORMULAS.goldPerRound. Deliberately a FLAT rate rather than a slower curve,
+     because "past round 28 the purse per round stops going up" is a rule a
+     player can hold in their head. Depth still pays, linearly, and renown still
+     scales exponentially so the ladder is unaffected.
+
+     28 sits clear of where a mid-game champion tops out (24), so every figure
+     measured before 2026-08-24 is unchanged: fresh 270 gph, mid 3,718. */
+  GOLD_SOFTCAP_ROUND: 28,
+  GOLD_SCALE_DEEP: 1.00,
   RENOWN_BASE: 2,
   RENOWN_SCALE: 1.15,
   YIELD_POT_KEPT: 0.70,
   KNOCKOUT_COOLDOWN_MS: 25 * 60 * 1000,
+  /* The most any stack of `recovery` can take off the bench. A knockout always
+     costs at least half its time, whatever a champion is wearing.
+
+     This was a bare 0.9 inside settleRun, and it was far too generous once the
+     harness could finally SEE recovery: a tier-2 Thug at class level 4 reached
+     0.84 relief, cutting a 25-minute bench to four, and swept at +421%
+     gold/hour while clearing not one extra round. Recovery divides the
+     denominator of every throughput figure in the game, so it needs the same
+     kind of ceiling sustain does. Swept 2026-08-24. */
+  RECOVERY_RELIEF_CAP: 0.5,
 
   RANK_MULT: 50,
   RANK_EXP: 2.2,
@@ -1335,16 +1418,50 @@ const FORMULAS = {
   /* Floored at 0: Heavy's -5% on a low-DEX champion produced a negative
      evasion chance. Harmless in the roll (rng() < -0.01 is never true) but it
      would read as a nonsense percentage the moment a screen displays it. */
+  /* DEX's own contribution is capped BELOW the total cap, and that separation
+     is the whole point. With one shared ceiling, `dex * 0.008` reached the 45%
+     cap on its own at DEX 56 - so for any champion past that, every evasion
+     source in the game was worth exactly zero: Swift, Thief, Samurai, Monk,
+     Dragoon, the renown ladder's rank-11 rung. Measured 2026-08-24, Swift
+     returned +0.0% gold/hour at the late stage for precisely this reason.
+
+     Worse, it cut the other way too - Warbringer and Juggernaut carry evasion
+     as a DRAWBACK, and above DEX 56 that drawback cost them nothing. A tier-3
+     class was getting pure upside for free.
+
+     Stats now take a champion most of the way and the last stretch has to be
+     earned from gear or a class, which is what a cap should mean. */
   playerEvade: (dex, evasionBonus, evadeCap) =>
     Math.max(0, Math.min(evadeCap === undefined ? CONST.EVASION_CAP : evadeCap,
-             dex * CONST.DEX_EVADE_PER + (evasionBonus || 0))),
+             Math.min((evadeCap === undefined ? CONST.EVASION_CAP : evadeCap) * CONST.EVASION_DEX_SHARE,
+                      dex * CONST.DEX_EVADE_PER) + (evasionBonus || 0))),
   enemyHp:   round => CONST.ENEMY_HP_BASE * Math.pow(CONST.ENEMY_HP_SCALE, round),
   enemyDmg:  round => CONST.ENEMY_DMG_BASE * Math.pow(CONST.ENEMY_DMG_SCALE, round),
   enemyCrit: int => Math.max(0, CONST.ENEMY_CRIT_BASE - int * CONST.INT_CRIT_RESIST_PER),
   dmgTaken: (enemyDmg, armorQuality, mitigationBonus) =>
     enemyDmg * (1 - armorQuality * CONST.ARMOR_QUALITY_PER) * (1 - (mitigationBonus || 0)),
-  goldPerRound: (round, cha, avariceBonus) =>
-    CONST.GOLD_BASE * Math.pow(CONST.GOLD_SCALE, round) * (1 + cha * CONST.CHA_GOLD_PER) * (1 + (avariceBonus || 0)),
+  /* Gold per round grows exponentially, and that exponent is the amplifier
+     behind every balance finding in this build. Every power source in the game
+     is multiplicative on SURVIVABILITY, survivability buys ROUNDS, and rounds
+     pay 1.12^round - so a 30% power gain becomes a 300% gold gain.
+
+     Measured 2026-08-24: a late champion with nothing bought every sink in the
+     game in 50.6 hours, and the same champion with a levelled capstone class,
+     the renown ladder, both sustain augments and Auto-Yield bought them in
+     3.7. No single lever was responsible - ablating any one of them left it
+     between 4.7 and 12.8 hours - which is doc 11's "three sinks compete for one
+     currency" tension collapsing multiplicatively.
+
+     So the curve gets a SOFT CAP rather than any one lever getting a nerf: past
+     GOLD_SOFTCAP_ROUND the exponent drops to GOLD_SCALE_DEEP. Depth still pays
+     more, forever, but it stops paying exponentially at depths only an
+     optimised build reaches - which leaves the early and mid curves, and every
+     number measured against them, exactly where they were. */
+  goldPerRound: (round, cha, avariceBonus) => {
+    const flat = Math.max(0, round - CONST.GOLD_SOFTCAP_ROUND);
+    const curve = Math.pow(CONST.GOLD_SCALE, round - flat) * Math.pow(CONST.GOLD_SCALE_DEEP, flat);
+    return CONST.GOLD_BASE * curve * (1 + cha * CONST.CHA_GOLD_PER) * (1 + (avariceBonus || 0));
+  },
   renownPerRound: (round, cha) =>
     CONST.RENOWN_BASE * Math.pow(CONST.RENOWN_SCALE, round) * (1 + cha * CONST.CHA_GOLD_PER),
   rankThreshold: N => CONST.RANK_MULT * Math.pow(N, CONST.RANK_EXP),
@@ -1453,20 +1570,20 @@ const STATS = {
    A parent at CONST.WEAPON_UNLOCK_LEVEL unlocks its children. Daggers and
    clubs are the two roots and the only weapons a champion starts with. */
 const WEAPONS = {
-  daggers:       { label: 'Daggers',       tier: 1, parent: null,          icon: 'dagger' },
-  swords:        { label: 'Swords',        tier: 2, parent: 'daggers',     icon: 'sword' },
-  axes:          { label: 'Axes',          tier: 2, parent: 'daggers',     icon: 'axe' },
-  greatsword:    { label: 'Great Sword',   tier: 3, parent: 'swords',      icon: 'sword' },
-  katana:        { label: 'Katana',        tier: 3, parent: 'swords',      icon: 'dagger' },
-  greataxe:      { label: 'Great Axe',     tier: 3, parent: 'axes',        icon: 'axe' },
-  dualhatchets:  { label: 'Dual Hatchets', tier: 3, parent: 'axes',        icon: 'axe' },
-  clubs:         { label: 'Clubs',         tier: 1, parent: null,          icon: 'hammer' },
-  mace:          { label: 'Mace',          tier: 2, parent: 'clubs',       icon: 'hammer' },
-  battlestaff:   { label: 'Battle Staff',  tier: 2, parent: 'clubs',       icon: 'staff' },
-  greatmaul:     { label: 'Great Maul',    tier: 3, parent: 'mace',        icon: 'hammer' },
-  warhammer:     { label: 'War Hammer',    tier: 3, parent: 'mace',        icon: 'anvil' },
-  spear:         { label: 'Spear',         tier: 3, parent: 'battlestaff', icon: 'staff' },
-  scythe:        { label: 'Scythe',        tier: 3, parent: 'battlestaff', icon: 'scythe' }
+  daggers:       { label: 'Daggers',       tier: 1, parent: null,          icon: 'wpn-daggers' },
+  swords:        { label: 'Swords',        tier: 2, parent: 'daggers',     icon: 'wpn-swords' },
+  axes:          { label: 'Axes',          tier: 2, parent: 'daggers',     icon: 'wpn-axes' },
+  greatsword:    { label: 'Great Sword',   tier: 3, parent: 'swords',      icon: 'wpn-greatsword' },
+  katana:        { label: 'Katana',        tier: 3, parent: 'swords',      icon: 'wpn-katana' },
+  greataxe:      { label: 'Great Axe',     tier: 3, parent: 'axes',        icon: 'wpn-greataxe' },
+  dualhatchets:  { label: 'Dual Hatchets', tier: 3, parent: 'axes',        icon: 'wpn-dualhatchets' },
+  clubs:         { label: 'Clubs',         tier: 1, parent: null,          icon: 'wpn-clubs' },
+  mace:          { label: 'Mace',          tier: 2, parent: 'clubs',       icon: 'wpn-mace' },
+  battlestaff:   { label: 'Battle Staff',  tier: 2, parent: 'clubs',       icon: 'wpn-battlestaff' },
+  greatmaul:     { label: 'Great Maul',    tier: 3, parent: 'mace',        icon: 'wpn-greatmaul' },
+  warhammer:     { label: 'War Hammer',    tier: 3, parent: 'mace',        icon: 'wpn-warhammer' },
+  spear:         { label: 'Spear',         tier: 3, parent: 'battlestaff', icon: 'wpn-spear' },
+  scythe:        { label: 'Scythe',        tier: 3, parent: 'battlestaff', icon: 'wpn-scythe' }
 };
 
 /* --- gear quality (doc 3.7) --- */
@@ -1493,7 +1610,12 @@ const BONUS_KEYS = {
   critPower:  { base: 0.25, label: '+% crit damage' },
   lifesteal:  { base: 0.08, label: '% of damage healed' },
   avarice:    { base: 0.25, label: '+% gold earned' },
-  recovery:   { base: 0.30, label: '−% knockout cooldown' },
+  /* Lowered 0.30 -> 0.20 (2026-08-24). It was the largest base in the pool
+     because every sweep had measured it as worth nothing - the harness was
+     reading the raw cooldown constant instead of the bench actually served. At
+     0.30 a tier-1 class hit the relief cap by level 3 and levelling stopped
+     paying; at 0.20 the cap only binds for tier 2 and up. */
+  recovery:   { base: 0.20, label: '−% knockout cooldown' },
   affliction: { base: 0.15, label: '% chance to inflict a status' },
   vigor:      { base: 0.10, label: '+% max HP' },
   tutelage:   { base: 0.25, label: '+% training speed' }
@@ -1519,29 +1641,61 @@ const CLASS_DRAWBACK_BONUS = 0.4;
    no magnitudes. These are PROPOSALS in doc 11's sense - the harness settles
    them, and they are all here in one block so simulate() can sweep them.
    `affliction` is inert until Phase 7 brings status effects. */
+/* PRICED FROM MEASUREMENT, 2026-08-24. Doc 3.7 names the eight and pins the
+   400-2,500 band; the magnitudes inside it were guesses for eight phases and
+   the costs were guesses about the guesses. The sweep now measures what each
+   one is actually worth - gold per hour added over a champion carrying none -
+   so the prices follow the value instead of preceding it.
+
+   `power` is that measurement, averaged over the fresh, mid and late stages,
+   recorded so the shop can be checked against it rather than against nothing.
+   The boot suite re-measures it and fails if the ordering has drifted.
+
+   Two real inversions were priced out. Keen at 400g strictly beat Cruel at
+   1,000g - cheaper AND better, which is a choice no player should ever be
+   offered. And Resilient DOMINATES Vampiric outright: both are capped by
+   applySustain, but Resilient's flat max-HP regen always reaches the ceiling
+   while Vampiric's damage-scaled heal only reaches it once damage is high
+   enough, so Resilient is never worse and was 500g cheaper.
+
+   THE FOUR WEAK ONES ARE PRICED IDENTICALLY, and that is the measurement
+   talking rather than laziness. Across two seeds their values are 3.1, 3.8,
+   4.0 and 4.9 while the seed-to-seed spread on each is 2.4 to 3.1 - so the
+   ordering between them is noise, and pricing them 400/450/500/700 would be
+   inventing a precision the game does not have. They are differentiated by
+   WHAT they do - crit, evade, damage, affliction - which suits different
+   builds, and a shelf of same-price different-effect options is a real choice
+   rather than a ranked list with one right answer.
+
+   Gilded and Stalwart measure to the digit across seeds (15.0 and 19.1)
+   because they are flat multipliers on gold and on the bench; the sustain pair
+   averages 16.9 but swings from 27.8 at mid to 5.9 late, which is the cap and
+   the gold soft cap between them. */
 const AUGMENTS = {
-  keen:      { label: 'Keen',      icon: 'sword',  cost: 400,  text: '+5% crit chance',
-               effect: { crit: 0.05 } },
-  heavy:     { label: 'Heavy',     icon: 'anvil',  cost: 900,  text: '+12% damage, −5% evasion',
-               effect: { damage: 0.12, evasion: -0.05 } },
-  swift:     { label: 'Swift',     icon: 'hurdle', cost: 800,  text: '+5% evasion',
-               effect: { evasion: 0.05 } },
-  cruel:     { label: 'Cruel',     icon: 'flame',  cost: 1000, text: '+10% affliction chance',
+  cruel:     { label: 'Cruel',     icon: 'flame',  cost: 400,  power: 3.8, text: '+10% affliction chance',
                effect: { affliction: 0.10 } },
-  gilded:    { label: 'Gilded',    icon: 'coin',   cost: 1200, text: '+15% gold',
+  keen:      { label: 'Keen',      icon: 'sword',  cost: 400,  power: 3.1, text: '+5% crit chance',
+               effect: { crit: 0.05 } },
+  swift:     { label: 'Swift',     icon: 'hurdle', cost: 400,  power: 4, text: '+5% evasion',
+               effect: { evasion: 0.05 } },
+  heavy:     { label: 'Heavy',     icon: 'anvil',  cost: 400,  power: 4.9, text: '+12% damage, −5% evasion',
+               effect: { damage: 0.12, evasion: -0.05 } },
+  gilded:    { label: 'Gilded',    icon: 'coin',   cost: 1500, power: 15, text: '+15% gold',
                effect: { avarice: 0.15 } },
-  stalwart:  { label: 'Stalwart',  icon: 'shield', cost: 1500, text: '−20% knockout cooldown',
-               effect: { recovery: 0.20 } },
   /* Both of these are SUSTAIN and both are held by the shared per-exchange
      ceiling in applySustain(). Resilient is set to sit exactly at that ceiling
      on its own, so the number in this text is the number the player gets;
      before the cap it read 0.5% and, once capped, would have been a lie on the
      shop row. Vampiric's 8% is still 8% of damage dealt but reaches the ceiling
-     almost immediately, so the row says so rather than implying it scales. */
-  resilient: { label: 'Resilient', icon: 'heart',  cost: 2000, text: 'Regain 0.2% max HP per exchange',
-               effect: { regen: 0.002 } },
-  vampiric:  { label: 'Vampiric',  icon: 'drop',   cost: 2500, text: 'Heal 8% of damage dealt, up to the sustain cap',
-               effect: { lifesteal: 0.08 } }
+     almost immediately, so the row says so rather than implying it scales -
+     and it is priced BELOW Resilient because reaching the ceiling is a
+     condition it has to meet and Resilient simply does not. */
+  vampiric:  { label: 'Vampiric',  icon: 'drop',   cost: 1700, power: 16.9, text: 'Heal 8% of damage dealt, up to the sustain cap',
+               effect: { lifesteal: 0.08 } },
+  resilient: { label: 'Resilient', icon: 'heart',  cost: 1800, power: 16.9, text: 'Regain 0.08% max HP per exchange',
+               effect: { regen: 0.0008 } },
+  stalwart:  { label: 'Stalwart',  icon: 'shield', cost: 2500, power: 19.1, text: '−20% knockout cooldown',
+               effect: { recovery: 0.20 } }
 };
 const AUGMENT_KEYS = Object.keys(AUGMENTS);
 
@@ -2098,36 +2252,36 @@ const CLASSES = {
      Phases 3, 5 and 8 measured, and it would stack with the Standing Orders
      legacy perk on the same key. A small max-HP bump touches only combat, is
      the gentlest thing in the pool, and suits a rank-and-file soldier. */
-  grunt:       { label: 'Grunt',       tier: 0, icon: 'shield', weapons: [],               bonuses: ['vigor'] },
+  grunt:       { label: 'Grunt',       tier: 0, icon: 'cls-grunt', weapons: [],               bonuses: ['vigor'] },
 
   /* Tier 1 - signature, one weapon at proficiency 4 */
-  thief:       { label: 'Thief',       tier: 1, icon: 'coin',   weapons: ['daggers'],      bonuses: ['avarice', 'evasion'] },
-  brute:       { label: 'Brute',       tier: 1, icon: 'anvil',  weapons: ['clubs'],        bonuses: ['recovery', 'vigor'] },
-  fighter:     { label: 'Fighter',     tier: 1, icon: 'sword',  weapons: ['swords'],       bonuses: ['damage', 'mitigation'] },
-  marauder:    { label: 'Marauder',    tier: 1, icon: 'drop',   weapons: ['axes'],         bonuses: ['affliction', 'damage'], afflictionType: 'bleed' },
-  warbringer:  { label: 'Warbringer',  tier: 1, icon: 'flame',  weapons: ['greatsword'],   bonuses: ['damage', 'critPower'], drawback: 'evasion' },
-  samurai:     { label: 'Samurai',     tier: 1, icon: 'star',   weapons: ['katana'],       bonuses: ['evasion', 'damage'] },
-  executioner: { label: 'Executioner', tier: 1, icon: 'skull',  weapons: ['greataxe'],     bonuses: ['crit', 'critPower'] },
-  berserker:   { label: 'Berserker',   tier: 1, icon: 'flame',  weapons: ['dualhatchets'], bonuses: ['damage', 'recovery'], drawback: 'mitigation' },
-  paladin:     { label: 'Paladin',     tier: 1, icon: 'shield', weapons: ['mace'],         bonuses: ['vigor', 'lifesteal'] },
-  monk:        { label: 'Monk',        tier: 1, icon: 'book',   weapons: ['battlestaff'],  bonuses: ['evasion', 'tutelage'], tutelageType: 'dex' },
-  breaker:     { label: 'Breaker',     tier: 1, icon: 'hurdle', weapons: ['greatmaul'],    bonuses: ['affliction', 'critPower'], afflictionType: 'stun' },
-  crusader:    { label: 'Crusader',    tier: 1, icon: 'shield', weapons: ['warhammer'],    bonuses: ['mitigation', 'lifesteal'] },
-  dragoon:     { label: 'Dragoon',     tier: 1, icon: 'hurdle', weapons: ['spear'],        bonuses: ['evasion', 'crit'] },
-  reaper:      { label: 'Reaper',      tier: 1, icon: 'skull',  weapons: ['scythe'],       bonuses: ['lifesteal', 'damage'] },
+  thief:       { label: 'Thief',       tier: 1, icon: 'cls-thief',   weapons: ['daggers'],      bonuses: ['avarice', 'evasion'] },
+  brute:       { label: 'Brute',       tier: 1, icon: 'cls-brute',  weapons: ['clubs'],        bonuses: ['recovery', 'vigor'] },
+  fighter:     { label: 'Fighter',     tier: 1, icon: 'cls-fighter',  weapons: ['swords'],       bonuses: ['damage', 'mitigation'] },
+  marauder:    { label: 'Marauder',    tier: 1, icon: 'cls-marauder',   weapons: ['axes'],         bonuses: ['affliction', 'damage'], afflictionType: 'bleed' },
+  warbringer:  { label: 'Warbringer',  tier: 1, icon: 'cls-warbringer',  weapons: ['greatsword'],   bonuses: ['damage', 'critPower'], drawback: 'evasion' },
+  samurai:     { label: 'Samurai',     tier: 1, icon: 'cls-samurai',   weapons: ['katana'],       bonuses: ['evasion', 'damage'] },
+  executioner: { label: 'Executioner', tier: 1, icon: 'cls-executioner',  weapons: ['greataxe'],     bonuses: ['crit', 'critPower'] },
+  berserker:   { label: 'Berserker',   tier: 1, icon: 'cls-berserker',  weapons: ['dualhatchets'], bonuses: ['damage', 'recovery'], drawback: 'mitigation' },
+  paladin:     { label: 'Paladin',     tier: 1, icon: 'cls-paladin', weapons: ['mace'],         bonuses: ['vigor', 'lifesteal'] },
+  monk:        { label: 'Monk',        tier: 1, icon: 'cls-monk',   weapons: ['battlestaff'],  bonuses: ['evasion', 'tutelage'], tutelageType: 'dex' },
+  breaker:     { label: 'Breaker',     tier: 1, icon: 'cls-breaker', weapons: ['greatmaul'],    bonuses: ['affliction', 'critPower'], afflictionType: 'stun' },
+  crusader:    { label: 'Crusader',    tier: 1, icon: 'cls-crusader', weapons: ['warhammer'],    bonuses: ['mitigation', 'lifesteal'] },
+  dragoon:     { label: 'Dragoon',     tier: 1, icon: 'cls-dragoon', weapons: ['spear'],        bonuses: ['evasion', 'crit'] },
+  reaper:      { label: 'Reaper',      tier: 1, icon: 'cls-reaper',  weapons: ['scythe'],       bonuses: ['lifesteal', 'damage'] },
 
   /* Tier 2 - advanced, two weapons at proficiency 6 */
-  assassin:    { label: 'Assassin',    tier: 2, icon: 'sword',  weapons: ['daggers', 'dualhatchets'], bonuses: ['critPower', 'crit'] },
-  thug:        { label: 'Thug',        tier: 2, icon: 'coin',   weapons: ['daggers', 'clubs'],        bonuses: ['avarice', 'recovery'] },
-  raider:      { label: 'Raider',      tier: 2, icon: 'coin',   weapons: ['dualhatchets', 'greataxe'], bonuses: ['avarice', 'damage'] },
-  warmage:     { label: 'War Mage',    tier: 2, icon: 'flame',  weapons: ['battlestaff', 'swords'],   bonuses: ['affliction', 'crit'], afflictionType: 'burn' },
-  darkknight:  { label: 'Dark Knight', tier: 2, icon: 'skull',  weapons: ['greatsword', 'scythe'],    bonuses: ['lifesteal', 'damage'], drawback: 'vigor' },
-  vanguard:    { label: 'Vanguard',    tier: 2, icon: 'shield', weapons: ['spear', 'warhammer'],      bonuses: ['mitigation', 'vigor'] },
+  assassin:    { label: 'Assassin',    tier: 2, icon: 'cls-assassin',  weapons: ['daggers', 'dualhatchets'], bonuses: ['critPower', 'crit'] },
+  thug:        { label: 'Thug',        tier: 2, icon: 'cls-thug',   weapons: ['daggers', 'clubs'],        bonuses: ['avarice', 'recovery'] },
+  raider:      { label: 'Raider',      tier: 2, icon: 'cls-raider',   weapons: ['dualhatchets', 'greataxe'], bonuses: ['avarice', 'damage'] },
+  warmage:     { label: 'War Mage',    tier: 2, icon: 'cls-warmage',  weapons: ['battlestaff', 'swords'],   bonuses: ['affliction', 'crit'], afflictionType: 'burn' },
+  darkknight:  { label: 'Dark Knight', tier: 2, icon: 'cls-darkknight',  weapons: ['greatsword', 'scythe'],    bonuses: ['lifesteal', 'damage'], drawback: 'vigor' },
+  vanguard:    { label: 'Vanguard',    tier: 2, icon: 'cls-vanguard', weapons: ['spear', 'warhammer'],      bonuses: ['mitigation', 'vigor'] },
 
   /* Tier 3 - master, three weapons at proficiency 8 */
-  blademaster: { label: 'Blade Master', tier: 3, icon: 'sword', weapons: ['daggers', 'swords', 'katana'],
+  blademaster: { label: 'Blade Master', tier: 3, icon: 'cls-blademaster', weapons: ['daggers', 'swords', 'katana'],
                  bonuses: ['crit', 'damage', 'tutelage'], tutelageType: 'weapon' },
-  juggernaut:  { label: 'Juggernaut',  tier: 3, icon: 'anvil',  weapons: ['greatsword', 'greataxe', 'greatmaul'],
+  juggernaut:  { label: 'Juggernaut',  tier: 3, icon: 'cls-juggernaut',  weapons: ['greatsword', 'greataxe', 'greatmaul'],
                  bonuses: ['damage', 'mitigation', 'vigor'], drawback: 'evasion' }
 };
 const CLASS_KEYS = Object.keys(CLASSES);
@@ -2385,10 +2539,15 @@ const STATUSES = {
 /* Every icon the BUILD doc 2 asks for. Asserted against the sprite at boot. */
 const ICON_NAMES = ['sword','shield','heart','coin','laurel','anvil','book','dumbbell','mug',
   'cross-medic','hurdle','skull','star','lock','chevron','trophy','scroll','flame','drop','hourglass',
-  /* weapon glyphs added in Phase 7 for the proficiency tree */
-  'dagger','axe','hammer','staff','scythe',
   /* Phase-post: the guide button in the topbar. */
-  'help'];
+  'help',
+  /* One glyph per battle class. Twenty-three classes shared eight generic
+     icons before this, so the grid said a class existed and nothing about
+     what it was. Built from CLASS_KEYS so a new class cannot be added without
+     a matching symbol - the assertion below walks this list against the
+     sprite, and a missing one fails at boot rather than rendering blank. */
+  ].concat(Object.keys(CLASSES).map(k => 'cls-' + k))
+   .concat(Object.keys(WEAPONS).map(k => 'wpn-' + k));
 
 /* ==============================================================
    STATE  (BUILD doc 5)
@@ -4358,7 +4517,12 @@ function settleRun(s, how, now) {
   if (how === 'knockout') {
     c.hp = 0;
     /* Doc 4: 25 min x (1 - recoveryBonus). Stalwart is that bonus. */
-    const relief = Math.min(0.9, Math.max(0, bonus(c, 'recovery')));
+    /* Clamped by a named constant, not a literal 0.9. The bench is the only
+       cost a knockout has, and  is the one pool key that acts on
+       TIME rather than on the fight - so it divides the denominator of every
+       gold-per-hour figure in the game, which is why an unclamped stack of it
+       measured at +421%. See CONST.RECOVERY_RELIEF_CAP. */
+    const relief = Math.min(CONST.RECOVERY_RELIEF_CAP, Math.max(0, bonus(c, 'recovery')));
     c.knockoutUntil = (typeof now === 'number' ? now : 0) +
       CONST.KNOCKOUT_COOLDOWN_MS * (1 - relief);
     s.account.lifetime.knockouts += 1;
@@ -7218,7 +7382,12 @@ function bonusText(key, value, cl) {
     recovery: 'KO cooldown', affliction: 'affliction', vigor: 'max HP', tutelage: 'training'
   }[key] || key;
   const inverted = (key === 'mitigation' || key === 'recovery');
-  return (inverted ? (value < 0 ? '+' : '−') : sign) + pct + '% ' + noun + type;
+  /* Sustain is held to a shared per-exchange ceiling, so a bare "+14% lifesteal"
+     on a class card overstates what the player actually gets - the same lie the
+     Resilient shop row was telling before it was rewritten. The chip carries the
+     pool value, which is right, plus the word that says it is bounded. */
+  const capped = (key === 'lifesteal' || key === 'regen') ? ' (capped)' : '';
+  return (inverted ? (value < 0 ? '+' : '−') : sign) + pct + '% ' + noun + type + capped;
 }
 
 function championMarkup(c) {
@@ -7745,8 +7914,17 @@ function simulateRun(config, seed) {
     rounds: over.rounds, how: over.how, gold: over.gold, renown: over.renown,
     exchanges: exchanges, fightMs: fightMs,
     /* A knockout's cost is time on the bench. Excluding it from gold/hour makes
-       dying look free, which is exactly the decision the number should inform. */
-    downMs: over.how === 'knockout' ? CONST.KNOCKOUT_COOLDOWN_MS : 0
+       dying look free, which is exactly the decision the number should inform.
+
+       Read from the CHAMPION, not from CONST.KNOCKOUT_COOLDOWN_MS. The raw
+       constant ignores the `recovery` bonus that settleRun() applies, so every
+       recovery source in the game measured as worth exactly nothing: Stalwart
+       (a 1,500g augment) came back at +0.0% gold/hour at all three stages, and
+       the renown ladder's two recovery rungs and the Brute, Thug and Berserker
+       classes were all under-valued the same way. The harness runs at T=0, so
+       knockoutUntil IS the bench length. Fifth instance in this build of a
+       re-derivation quietly disagreeing with the thing it copied. */
+    downMs: over.how === 'knockout' ? Math.max(0, num(s.character.knockoutUntil, 0) - T) : 0
   };
 }
 
@@ -7895,6 +8073,218 @@ function assertAll() {
   ok(document.querySelectorAll('.screen.is-active').length === 1, 'exactly one screen must be active');
 
   ICON_NAMES.forEach(n => ok(!!document.getElementById('icon-' + n), 'icon missing from sprite: ' + n));
+  ok(new Set(ICON_NAMES).size === ICON_NAMES.length, 'ICON_NAMES lists the same icon twice');
+  /* --- the shop is priced against what it sells ---------------
+     Two properties, and each of them shipped broken for eight phases.
+
+     DOMINANCE: nothing may be both cheaper AND meaningfully better than
+     something else on the shelf. Resilient beat Vampiric at every point while
+     costing 500g less, because both are held by the sustain ceiling but only
+     Resilient always reaches it.
+
+     FAIR PRICING: things that measure the same must not be priced very
+     differently. Keen at 400g and Cruel at 1,000g were within noise of each
+     other in value and 2.5x apart in price, which the dominance rule alone does
+     not catch - it is not that one beat the other, it is that one cost two and
+     a half times as much for the same thing.
+
+     Value is RE-MEASURED here rather than read from the `power` field. A check
+     comparing the stored number to the price would only prove the data agrees
+     with itself; this proves the price agrees with the game. Measured over the
+     two stages a champion actually owns an augment for - a fresh one cannot
+     afford any of them - which is the basis the prices were set on. */
+  (function () {
+    const stages = [
+      { stats: { str: 40, dex: 30, int: 20, con: 40, cha: 15 }, weaponLevel: 6, weaponQuality: 2, armorQuality: 2 },
+      { stats: { str: 120, dex: 90, int: 60, con: 120, cha: 40 }, weaponLevel: 10, weaponQuality: 4, armorQuality: 4 }
+    ];
+    const value = {};
+    AUGMENT_KEYS.forEach(id => { value[id] = 0; });
+    let usable = true;
+    stages.forEach(st => {
+      const cfg = Object.assign({}, st, { battleClass: null, seed: 11 });
+      const base = simulate(cfg, 10).goldPerHour;
+      if (!(base > 0)) { usable = false; return; }
+      AUGMENT_KEYS.forEach(id => {
+        const r = simulate(Object.assign({}, cfg, { augments: { weapon: [id] } }), 10).goldPerHour;
+        value[id] += (100 * (r - base) / base) / stages.length;
+      });
+    });
+    ok(usable, 'the augment pricing rig earns nothing, so nothing below means anything');
+    if (!usable) return;
+
+    /* Every augment has to do something, or it is 400g for nothing. */
+    AUGMENT_KEYS.forEach(id => ok(value[id] > 0.5,
+      AUGMENTS[id].label + ' adds ' + value[id].toFixed(1) + '% gold/hour - it is priced but inert'));
+
+    /* The tolerance is the measured seed-to-seed spread, not a design opinion:
+       the weak augments swing 2.4-3.1 points between seeds, so anything inside
+       3 points is the same number twice. */
+    const NOISE = 3;
+    AUGMENT_KEYS.forEach(a => AUGMENT_KEYS.forEach(b => {
+      if (a === b) return;
+      const ca = AUGMENTS[a].cost, cb = AUGMENTS[b].cost;
+      if (ca >= cb) return;
+      ok(value[a] <= value[b] + NOISE,
+        AUGMENTS[a].label + ' (' + ca + 'g, +' + value[a].toFixed(1) + '%) strictly dominates ' +
+        AUGMENTS[b].label + ' (' + cb + 'g, +' + value[b].toFixed(1) + '%) - cheaper and better');
+      if (Math.abs(value[a] - value[b]) <= NOISE) {
+        ok(cb / ca <= 2,
+          AUGMENTS[a].label + ' and ' + AUGMENTS[b].label + ' measure the same (+' +
+          value[a].toFixed(1) + '% vs +' + value[b].toFixed(1) + '%) but ' + AUGMENTS[b].label +
+          ' costs ' + (cb / ca).toFixed(1) + 'x as much');
+      }
+    }));
+
+    /* The recorded `power` is what the prices were set from, so it has to still
+       resemble the game. Loose - this rig is 10 runs against the 40-run,
+       two-seed sweep that set them. */
+    AUGMENT_KEYS.forEach(id => {
+      ok(typeof AUGMENTS[id].power === 'number' && AUGMENTS[id].power > 0,
+        AUGMENTS[id].label + ' has no recorded power');
+      ok(Math.abs(AUGMENTS[id].power - value[id]) <= 6,
+        AUGMENTS[id].label + ' is recorded at ' + AUGMENTS[id].power + ' but measures ' +
+        value[id].toFixed(1) + ' - the shop was priced from a number the game no longer produces');
+    });
+    /* Doc 3.7 pins the band, and both ends of it should be used. */
+    const costs = AUGMENT_KEYS.map(id => AUGMENTS[id].cost);
+    ok(Math.min.apply(null, costs) === 400 && Math.max.apply(null, costs) === 2500,
+      'the augment prices no longer span doc 3.7\'s 400-2,500 band');
+
+    /* THE SUSTAIN PAIR NEEDS AN EXACT CHECK, not a statistical one. Both are
+       held by the same ceiling, and at any stat profile the sweep above uses
+       they BOTH reach it - so the simulation cannot tell them apart and the
+       dominance rule above passes whatever they cost. Their difference only
+       appears at low damage, where Resilient still reaches the ceiling and
+       Vampiric does not.
+
+       Resilient is therefore never worse than Vampiric, and must never be
+       cheaper. It was, by 500g, for eight phases. */
+    const healAt = (aug, str) => {
+      const s = defaultState();
+      s.character = newCharacter('human', 'Sustain', s.account);
+      s.character.battleClass = null;
+      s.character.stats.str = str;
+      s.character.stats.con = 200;                 // a big pool, a small hit
+      s.character.hp = maxHpOf(s.character);
+      s.character.gear.weapon.augments = [aug];
+      startRun(s, 0);
+      s.arena.playerHp = 1;
+      return applySustain(s, playerDamage(s.character, false), maxHpOf(s.character), null);
+    };
+    const weakHit = 1;
+    ok(healAt('vampiric', weakHit) < healAt('resilient', weakHit),
+      'Vampiric and Resilient are indistinguishable even at minimum damage - the rig cannot ' +
+      'see the difference the price is supposed to reflect');
+    ok(healAt('resilient', 400) >= healAt('vampiric', 400),
+      'Vampiric out-heals Resilient at high damage, which the shared ceiling should make impossible');
+    ok(AUGMENTS.resilient.cost >= AUGMENTS.vampiric.cost,
+      'Resilient is never worse than Vampiric and yet costs less - a strictly dominated purchase');
+  })();
+
+
+  /* --- the bench always costs something ----------------------
+     `recovery` is the one pool key that acts on TIME rather than on the fight,
+     so it divides the denominator of every gold-per-hour figure in the game.
+     Unclamped, a levelled tier-2 recovery class cut a 25-minute bench to four
+     and swept at +421% gold/hour while clearing not one extra round. */
+  (function () {
+    ok(CONST.RECOVERY_RELIEF_CAP > 0 && CONST.RECOVERY_RELIEF_CAP <= 0.75,
+      'the recovery relief cap is outside any sane range');
+    const bench = (fit) => {
+      const s = defaultState();
+      s.character = newCharacter('human', 'Bench', s.account);
+      s.character.hp = maxHpOf(s.character);
+      if (fit) fit(s.character);
+      startRun(s, 0);
+      s.arena.playerHp = 0;
+      settleRun(s, 'knockout', 0);
+      return s.character.knockoutUntil;
+    };
+    const plain = bench();
+    ok(plain === CONST.KNOCKOUT_COOLDOWN_MS, 'a champion with no recovery served the wrong bench');
+    /* Every source stacked - class, augment and the renown ladder's two rungs -
+       still cannot take more than the cap off. */
+    const stacked = bench(c => {
+      c.battleClass = 'thug';
+      c.weapons.daggers = { level: 10, tp: 0 };
+      c.weapons.clubs = { level: 10, tp: 0 };
+      c.classRounds.thug = CONST.CLASS_LEVEL_ROUNDS[3];
+      c.gear.armor.augments = ['stalwart'];
+      c.renown = FORMULAS.rankThreshold(RENOWN_TOP_RANK);
+      c.renownRank = RENOWN_TOP_RANK;
+    });
+    ok(stacked >= CONST.KNOCKOUT_COOLDOWN_MS * (1 - CONST.RECOVERY_RELIEF_CAP) - 1,
+      'a stack of recovery beat the relief cap - the bench fell to ' +
+      Math.round(stacked / 60000) + ' minutes');
+    ok(stacked < plain, 'stacking recovery took nothing off the bench at all');
+  })();
+
+  /* --- the harness prices the bench it actually served ---------
+     downMs read CONST.KNOCKOUT_COOLDOWN_MS rather than the champion's own
+     knockoutUntil, so every `recovery` source measured as worth nothing and
+     Stalwart - a 1,500g augment - swept at +0.0% gold/hour at every stage.
+     A sweep that cannot see a bonus cannot price the thing that sells it. */
+  (function () {
+    const cfg = { stats: { str: 40, dex: 5, int: 5, con: 40, cha: 5 }, weaponLevel: 6, seed: 3 };
+    const plain = simulate(cfg, 12);
+    const relief = simulate(Object.assign({}, cfg, { augments: { armor: ['stalwart'] } }), 12);
+    ok(plain.knockoutRate > 0, 'the recovery rig never gets knocked out, so the bench is not being priced');
+    ok(relief.goldPerHour > plain.goldPerHour,
+      'a -20% knockout cooldown did not raise gold per hour - the harness is pricing the raw constant ' +
+      'rather than the bench the champion actually served');
+    /* And it must not have changed the FIGHT, only the wait. */
+    ok(Math.abs(relief.goldPerHourFighting - plain.goldPerHourFighting) < 1e-6,
+      'the cooldown augment changed the fight itself');
+  })();
+
+  /* Every WEAPON has a glyph of its own, the same rule the classes carry. The
+     proficiency tree is the reason it matters more here than anywhere else: a
+     tree whose three axe nodes are the same picture is not showing a
+     progression, it is showing one thing three times. */
+  Object.keys(WEAPONS).forEach(id => {
+    ok(ICON_NAMES.indexOf(WEAPONS[id].icon) !== -1, id + ' names an icon outside the sprite sheet');
+    ok(WEAPONS[id].icon === 'wpn-' + id,
+      id + ' does not have an icon of its own (uses "' + WEAPONS[id].icon + '")');
+  });
+  /* No two weapons drawn identically either - a family SHOULD resemble itself,
+     but the same path data under two names is one icon wearing two hats. */
+  (function () {
+    const seen = {};
+    Object.keys(WEAPONS).forEach(id => {
+      const sym = document.getElementById('icon-' + WEAPONS[id].icon);
+      if (!sym) return;
+      const d = sym.innerHTML.replace(/\s+/g, '');
+      ok(!seen[d], 'weapons ' + seen[d] + ' and ' + id + ' are drawn identically');
+      seen[d] = id;
+    });
+  })();
+
+  /* And nothing in the sheet is dead. This is the CONST dead-tunable scan
+     applied to the sprite: giving the fourteen weapons their own glyphs left
+     the five generic ones they used to share (dagger, axe, hammer, staff,
+     scythe) referenced by nothing but their own definitions, which is exactly
+     the dead-registry shape the epithet pool was deleted for. Nothing else
+     would have noticed - a dead symbol resolves fine and renders nothing. */
+  (function () {
+    const declared = Array.prototype.slice.call(document.querySelectorAll('svg symbol[id]'))
+      .map(s => s.id.replace(/^icon-/, ''));
+    declared.forEach(n => ok(ICON_NAMES.indexOf(n) !== -1,
+      'sprite symbol "' + n + '" is in the sheet but not in ICON_NAMES - a dead glyph'));
+  })();
+  /* No two classes may share a silhouette. Two symbols with identical path data
+     are the same icon wearing different names, which is the state this sheet
+     was in before - and it is invisible in code review. */
+  (function () {
+    const seen = {};
+    CLASS_KEYS.forEach(id => {
+      const sym = document.getElementById('icon-' + CLASSES[id].icon);
+      if (!sym) return;
+      const d = sym.innerHTML.replace(/\s+/g, '');
+      ok(!seen[d], 'classes ' + seen[d] + ' and ' + id + ' are drawn identically');
+      seen[d] = id;
+    });
+  })();
   Object.keys(FACILITIES).forEach(k =>
     ok(ICON_NAMES.indexOf(FACILITIES[k].icon) !== -1, 'facility ' + k + ' names an icon outside the sheet'));
   document.querySelectorAll('use').forEach(u => {
@@ -8111,8 +8501,20 @@ function assertAll() {
   ok(FORMULAS.playerDmg(0, 0, 0, 0) === 10, 'playerDmg base != 10');
   ok(Math.abs(FORMULAS.playerCrit(0, 0, 0) - 0.05) < 1e-9, 'playerCrit base != 0.05');
   ok(FORMULAS.critMult(0) === 2, 'critMult base != 2');
-  ok(FORMULAS.playerEvade(1000, 0) === CONST.EVASION_CAP, 'playerEvade ignores the cap');
-  ok(FORMULAS.playerEvade(1000, 0, CONST.EVASION_CAP_ELF) === CONST.EVASION_CAP_ELF, 'Elf evasion cap not honoured');
+  /* DEX ALONE stops below the cap; the last stretch is bought with bonuses.
+     These used to assert that DEX 1000 reached the cap on its own, which is
+     exactly the behaviour that made every evasion bonus in the game worthless
+     above DEX 56 - the assertions were encoding the defect. */
+  ok(FORMULAS.playerEvade(1000, 0) === CONST.EVASION_CAP * CONST.EVASION_DEX_SHARE,
+     'DEX alone still saturates the evasion cap - every evasion bonus is dead again');
+  ok(CONST.EVASION_DEX_SHARE < 1,
+     'the DEX share is not below the whole cap, so it does nothing');
+  ok(FORMULAS.playerEvade(1000, 0.5) === CONST.EVASION_CAP, 'playerEvade ignores the cap');
+  ok(FORMULAS.playerEvade(1000, 0.5, CONST.EVASION_CAP_ELF) === CONST.EVASION_CAP_ELF, 'Elf evasion cap not honoured');
+  /* And a bonus is still worth something to a maxed-DEX champion, which is the
+     whole reason the sub-cap exists. */
+  ok(FORMULAS.playerEvade(1000, 0.05) > FORMULAS.playerEvade(1000, 0),
+     'an evasion bonus does nothing for a high-DEX champion');
   ok(FORMULAS.goldPerRound(0, 0, 0) === 10, 'goldPerRound base != 10');
   ok(FORMULAS.renownPerRound(0, 0) === 2, 'renownPerRound base != 2');
   /* Doc 4 gives these worked values for rankThreshold. */
@@ -8506,10 +8908,15 @@ function assertAll() {
      'a crit is not 2x');
   ok(Math.abs(playerCritChance(a1.character) - (0.05 + 5 * 0.007 + 1 * 0.01)) < 1e-9, 'crit chance drifted');
   ok(Math.abs(playerEvadeChance(a1.character) - 5 * 0.008) < 1e-9, 'evade chance drifted');
-  ok(playerEvadeChance(arig(s => { s.character.stats.dex = 1000; }).character) === CONST.EVASION_CAP,
-     'evasion is not capped at 45% for a non-elf');
-  const aElf = arig(s => { s.character = newCharacter('elf', 'E', s.account); s.character.stats.dex = 1000; });
-  ok(playerEvadeChance(aElf.character) === CONST.EVASION_CAP_ELF, 'the elf evasion cap is not 55%');
+  ok(playerEvadeChance(arig(s => { s.character.stats.dex = 1000; }).character) === CONST.EVASION_CAP * CONST.EVASION_DEX_SHARE,
+     'DEX alone reaches the full evasion cap again');
+  const aCapped = arig(s => { s.character.stats.dex = 1000; s.character.gear.armor.augments = ['swift']; });
+  ok(playerEvadeChance(aCapped.character) > CONST.EVASION_CAP * CONST.EVASION_DEX_SHARE,
+     'Swift is worth nothing to a maxed-DEX champion - the augment it prices is dead');
+  const aElf = arig(s => { s.character = newCharacter('elf', 'E', s.account); s.character.stats.dex = 1000; s.character.gear.armor.augments = ['swift']; });
+  ok(playerEvadeChance(aElf.character) <= CONST.EVASION_CAP_ELF, 'the elf evasion cap is not honoured');
+  ok(playerEvadeChance(aElf.character) > playerEvadeChance(aCapped.character),
+     'the elf evasion cap buys the elf nothing');
   const aOrc = arig(s => { s.character = newCharacter('orc', 'O', s.account); s.character.stats.str = 5; });
   ok(Math.abs(playerDamage(aOrc.character, false) - 10 * 1.10 * 1.03 * 1.10) < 1e-9,
      'the orc +10% damage is not applied');
@@ -8568,14 +8975,33 @@ function assertAll() {
       for (let L = 2; L <= CONST.FACILITY_MAX_LEVEL; L++) n += FORMULAS.facilityCost(L);
       return n;
     })();
-  const lateEcon = simulate({ stats: { str: 120, dex: 5, int: 5, con: 120, cha: 5 },
-    weaponLevel: 10, weaponQuality: 4, armorQuality: 4, seed: 5 }, 30);
+  const lateBase = { stats: { str: 120, dex: 5, int: 5, con: 120, cha: 5 },
+    weaponLevel: 10, weaponQuality: 4, armorQuality: 4, seed: 5 };
+
+  /* TWO champions, and measuring only the first is how this hid for eight
+     phases. The bare champion answers "is the shop reachable"; the OPTIMISED
+     one answers "does gold still mean anything", and it is the one that was
+     never checked. Measured 2026-08-24: bare bought every sink in 50.6 hours
+     and passed comfortably, while the same champion with a levelled capstone
+     class, the renown ladder, both sustain augments and Auto-Yield bought them
+     in 3.7 - and ablating any single one of those left it between 4.7 and 12.8,
+     so no one lever was responsible. A guard that only ever measures a
+     strawman is not a guard. */
+  const lateEcon = simulate(lateBase, 30);
   const hoursToBuyAll = allSinks / lateEcon.goldPerHour;
-  ok(hoursToBuyAll >= 20,
-     'a late champion buys every sink in the game in ' + hoursToBuyAll.toFixed(1) +
-     'h - gold has stopped meaning anything');
   ok(hoursToBuyAll <= 400,
      'every sink in the game takes ' + hoursToBuyAll.toFixed(1) + 'h to afford - the shop is unreachable');
+
+  const bestEcon = simulate(Object.assign({}, lateBase, {
+    battleClass: 'juggernaut', classLevel: CONST.CLASS_LEVEL_ROUNDS.length, renownRank: RENOWN_TOP_RANK,
+    augments: { weapon: ['vampiric'], armor: ['resilient'] }, yieldAtHp: 0.25
+  }), 30);
+  const bestHours = allSinks / bestEcon.goldPerHour;
+  ok(bestHours >= 20,
+     'a fully optimised late champion buys every sink in the game in ' + bestHours.toFixed(1) +
+     'h - gold has stopped meaning anything');
+  ok(bestHours <= hoursToBuyAll,
+     'the optimised build earns LESS than the bare one, so the sweep is not measuring what it claims');
 
   /* A run start clears training rather than losing it (doc 5's one-activity rule). */
   const aRun = arig(s => { s.character.training = { facility: 'forge', startedAt: Date.now() - 3600000, weaponTarget: null }; });
@@ -8917,6 +9343,12 @@ function assertAll() {
        id + ' needs ' + cl.weapons.length + ' weapons, tier ' + cl.tier + ' wants ' + CLASS_TIERS[cl.tier].weapons);
     cl.weapons.forEach(w => ok(!!WEAPONS[w], id + ' requires "' + w + '", which is not a weapon'));
     ok(ICON_NAMES.indexOf(cl.icon) !== -1, id + ' names an icon outside the sprite sheet');
+    /* Its OWN icon, not a shared one. Twenty-three classes ran on eight generic
+       glyphs - four shields, three coins, three skulls - so the grid told you a
+       class existed and nothing about what it was. Keyed off the class id so a
+       new class cannot be added without drawing for it, and the ICON_NAMES
+       check above then proves the symbol is really in the sheet. */
+    ok(cl.icon === 'cls-' + id, id + ' does not have an icon of its own (uses "' + cl.icon + '")');
     ok(new Set(cl.bonuses).size === cl.bonuses.length, id + ' lists the same bonus twice');
     if (cl.afflictionType) ok(!!STATUSES[cl.afflictionType], id + ' inflicts an unknown status');
   });
