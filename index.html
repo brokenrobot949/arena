@@ -769,6 +769,10 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 .guide h3:first-child{margin-top:2px}
 .guide p{font-size:13px;line-height:1.55;color:var(--ink-soft);margin:0}
 .guide strong,.guide em{color:var(--ink)}
+.guide ul{margin:6px 0 0;padding-left:18px}
+.guide li{font-size:13px;line-height:1.55;color:var(--ink-soft);margin:0 0 4px}
+.guide p+p{margin-top:6px}
+.guide-rule{border-left:3px solid var(--ink);padding-left:9px;margin-top:8px!important}
 #modal textarea{
   width:100%;min-height:132px;resize:vertical;
   font-family:var(--font-data);font-size:11.5px;line-height:1.45;
@@ -989,7 +993,20 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
         <p>Rounds get harder and pay more, forever. You choose when to walk: <strong>yielding</strong> keeps 70% of the pot and your health, a <strong>knockout</strong> keeps the whole pot but costs you 25 minutes on the bench &mdash; during which you cannot train or heal either. The run keeps fighting while the tab is closed.</p>
 
         <h3>Gear and augments</h3>
-        <p>Quality tiers sit on the <em>slot</em>, so switching weapon type costs you nothing. Augments fit into weapon and armour separately; the same augment cannot go on both. Healing from all sources is capped per exchange, so stacking sustain does not stack.</p>
+        <p>Quality tiers sit on the <em>slot</em>, so switching weapon type costs you nothing. Augments fit into weapon and armour separately, and the same augment cannot go on both.</p>
+
+        <h3>The sustain cap &mdash; read this before you stack healing</h3>
+        <p>Everything that heals you mid-fight &mdash; <strong>lifesteal</strong> from a class or Vampiric, and <strong>regen</strong> from Resilient &mdash; draws from <em>one shared budget</em>, capped each exchange at <strong>0.08% of your max HP</strong>.</p>
+        <p>Because the cap is a share of your health pool rather than of your damage, lifesteal saturates it almost immediately. The rule:</p>
+        <p class="guide-rule">If you hit for more than <strong>1% of your own max HP</strong>, 8% lifesteal is already at the cap. Everything above that heals you for nothing.</p>
+        <p>What that means in practice:</p>
+        <ul>
+          <li><strong>Take one sustain source, never two.</strong> A lifesteal class <em>or</em> Vampiric <em>or</em> Resilient. A second one adds exactly zero &mdash; not less, zero.</li>
+          <li><strong>Resilient fills the whole budget by itself</strong> at any damage level. Pair it with a lifesteal class and the class's lifesteal is completely wasted.</li>
+          <li><strong>To heal more, raise max HP</strong>, not lifesteal. The cap scales with your health pool, so CON and +max HP bonuses lift it. The lifesteal percentage on a class card does not.</li>
+          <li>The exception is a <strong>slow tank</strong> &mdash; very high CON, low damage. If your hit is under 1% of your max HP, extra lifesteal genuinely scales for you.</li>
+        </ul>
+        <p>One sustain source returns roughly a third of your health pool over a full run, which is well worth a slot. The second returns none of it &mdash; spend that slot on gold, cooldown or damage instead.</p>
 
         <h3>Battle classes</h3>
         <p>Earned by weapon proficiency, not bought. Each grants two or three bonuses and some carry a drawback in exchange for stronger ones. A class gains <strong>levels 1&ndash;4</strong> as you clear rounds wearing it, and its bonuses grow with the level.</p>
@@ -2275,7 +2292,26 @@ const CLASSES = {
   thug:        { label: 'Thug',        tier: 2, icon: 'cls-thug',   weapons: ['daggers', 'clubs'],        bonuses: ['avarice', 'recovery'] },
   raider:      { label: 'Raider',      tier: 2, icon: 'cls-raider',   weapons: ['dualhatchets', 'greataxe'], bonuses: ['avarice', 'damage'] },
   warmage:     { label: 'War Mage',    tier: 2, icon: 'cls-warmage',  weapons: ['battlestaff', 'swords'],   bonuses: ['affliction', 'crit'], afflictionType: 'burn' },
-  darkknight:  { label: 'Dark Knight', tier: 2, icon: 'cls-darkknight',  weapons: ['greatsword', 'scythe'],    bonuses: ['lifesteal', 'damage'], drawback: 'vigor' },
+  /* REWORKED 2026-08-25 (Rob). It was `lifesteal + damage` with a `vigor`
+     drawback, which is the most anti-synergistic row this registry has ever
+     held: the sustain ceiling is a percentage of MAX HP, so the drawback
+     lowered the cap on the class's own primary bonus. Worse, at tier 2 with a
+     drawback it carried 31.4% lifesteal at level 4 against a ceiling a champion
+     saturates by hitting for 0.25% of their own max HP - measured, 98% of the
+     bonus was discarded, and levelling the class bought none of it back.
+
+     `affliction:weaken` replaces it, and the chain is the point: damage kills
+     faster, weaken makes the enemy hit for 0.75x, and weaken is what pays for
+     being fragile. The drawback creates the problem and one of the bonuses
+     answers it, rather than undercutting the other one.
+
+     Nothing here saturates. `damage` is uncapped, affliction CHANCE is
+     uncapped, and weaken's multiplier sits outside MITIGATION_CAP - so unlike
+     lifesteal and recovery, every class level pays in full.
+
+     It also revives a dead status: `weaken` and `slow` were both implemented in
+     exchange() and inflicted by nothing at all. */
+  darkknight:  { label: 'Dark Knight', tier: 2, icon: 'cls-darkknight',  weapons: ['greatsword', 'scythe'],    bonuses: ['affliction', 'damage'], afflictionType: 'weaken', drawback: 'vigor' },
   vanguard:    { label: 'Vanguard',    tier: 2, icon: 'cls-vanguard', weapons: ['spear', 'warhammer'],      bonuses: ['mitigation', 'vigor'] },
 
   /* Tier 3 - master, three weapons at proficiency 8 */
@@ -2532,7 +2568,13 @@ const STATUSES = {
   bleed:  { label: 'Bleed',  pctOfHit: 0.15, exchanges: 3, maxStacks: 3 },
   burn:   { label: 'Burn',   pctOfHit: 0.20, exchanges: 3, maxStacks: 1 },
   stun:   { label: 'Stun',   skipNext: true, exchanges: 1, maxStacks: 1 },
-  weaken: { label: 'Weaken', dmgMult: 0.75,  exchanges: 4, maxStacks: 1 },
+  /* 0.75 -> 0.60 on 2026-08-25, when the Dark Knight rework made this the only
+     thing in the game that inflicts it. Weaken is that class's entire answer to
+     its own vigor drawback, so its strength IS the class's balance: at 0.75 the
+     Dark Knight landed at +67% gold/hour against a tier-2 average of +100, and
+     at 0.60 it lands at +97. Nothing else applies weaken, so this number is
+     not shared with anything. */
+  weaken: { label: 'Weaken', dmgMult: 0.60,  exchanges: 4, maxStacks: 1 },
   slow:   { label: 'Slow',   skipEvery: 3,   exchanges: 6, maxStacks: 1 }
 };
 
@@ -9465,7 +9507,15 @@ function assertAll() {
   ok(STATUSES.bleed.pctOfHit === 0.15 && STATUSES.bleed.exchanges === 3 && STATUSES.bleed.maxStacks === 3,
      'Bleed drifted from doc 3.6');
   ok(STATUSES.burn.pctOfHit === 0.20 && STATUSES.burn.maxStacks === 1, 'Burn drifted from doc 3.6');
-  ok(STATUSES.weaken.dmgMult === 0.75 && STATUSES.weaken.exchanges === 4, 'Weaken drifted from doc 3.6');
+  /* Weaken is a DELIBERATE deviation from doc 3.6's 0.75, the same way the
+     combat constants and the proportional mentor decay are. It is the Dark
+     Knight's whole answer to its own vigor drawback and nothing else in the
+     game inflicts it, so its strength is that class's balance rather than a
+     shared number - see STATUSES. The doc's DURATION is untouched, and the
+     shape of the check is kept: it must still cut damage and must still be a
+     reduction rather than a bonus. */
+  ok(STATUSES.weaken.dmgMult === 0.60 && STATUSES.weaken.exchanges === 4, 'Weaken drifted from its swept value');
+  ok(STATUSES.weaken.dmgMult > 0 && STATUSES.weaken.dmgMult < 1, 'Weaken no longer weakens');
   ok(STATUSES.slow.skipEvery === 3 && STATUSES.slow.exchanges === 6, 'Slow drifted from doc 3.6');
   const sa2 = defaultArena();
   applyStatus(sa2, 'bleed', 100); applyStatus(sa2, 'bleed', 100); applyStatus(sa2, 'bleed', 100);
@@ -9484,7 +9534,7 @@ function assertAll() {
   ok(sk2.statuses.length === 0, 'Stun outlasted its one exchange');
   const sw2 = defaultArena();
   applyStatus(sw2, 'weaken', 0);
-  ok(tickStatuses(sw2).dmgMult === 0.75, 'Weaken does not cut enemy damage');
+  ok(tickStatuses(sw2).dmgMult === STATUSES.weaken.dmgMult, 'Weaken does not cut enemy damage');
   /* A flourish must actually fire during a normal run. Keyed on the per-round
      counter it never did, because rounds end before the fourth exchange. */
   const flRig = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
