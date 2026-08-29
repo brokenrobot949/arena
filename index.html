@@ -299,10 +299,19 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 }
 .class-card.is-on{background:var(--gold);border-width:3px}
 .class-card.is-locked{background:var(--stone);box-shadow:none;border-style:dashed}
-.cc-head{display:flex;align-items:center;gap:7px;font-size:14px}
-.cc-head .icon{width:18px;height:18px}
+/* WRAPS, for the same reason .fac-head does. A grid column at minmax(158px)
+   leaves the head about 133px once the card's padding and border are taken
+   off, and icon + name + tier badge + level badge needs 136-184 of it - so
+   EVERY class card spilled its badges over the card edge between roughly 500
+   and 660px wide, Grunt included. Pre-existing and invisible at 375px (one
+   column, plenty of width) and at full desktop (wide columns); it only shows
+   in the band where auto-fit has just added a second column. Found by the
+   spill assertion added the day the facility cards did the same thing. */
+.cc-head{display:flex;align-items:center;gap:7px;font-size:14px;flex-wrap:wrap}
+.cc-head .icon{width:18px;height:18px;flex:none}
+.cc-head strong{min-width:0;overflow-wrap:anywhere}
 .cc-head .tier{margin-left:auto;font-size:10px;background:var(--paper);
-  border:var(--bd-thin);border-radius:var(--r-pill);padding:1px 6px}
+  border:var(--bd-thin);border-radius:var(--r-pill);padding:1px 6px;flex:none}
 .reqs{display:flex;flex-wrap:wrap;gap:5px}
 .req{font-family:var(--font-data);font-size:10.5px;color:var(--ink-soft);
   border:2px dashed var(--ink-faint);border-radius:var(--r-pill);padding:2px 7px}
@@ -372,11 +381,49 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 .lock-note{display:block;color:var(--vermilion-deep);font-weight:700}
 .btn.small{font-size:13px;padding:9px 15px;min-height:44px;
   font-family:var(--font-data);white-space:nowrap}
-.aug-group{border:2px dashed var(--ink-faint);border-radius:12px;padding:10px 12px;margin:12px 0}
-.aug-head{display:flex;align-items:center;gap:8px;font-size:13.5px;margin:0 0 8px}
-.aug-head .icon{width:20px;height:20px;flex:none}
-.aug-head .num{margin-left:auto;font-size:12px;color:var(--ink-soft)}
-.aug-group .row-buy:last-of-type{border-bottom:0}
+/* --- augments: two pools, two shelves ---------------------------
+   Each pool gets its own bed and its own accent so the eye never has to read
+   the heading to know which half it is in - the weapon shelf is warm, the
+   armour shelf cool. Everything wraps: the head is the same shape that spilled
+   the facility cards at 375px before it was allowed to. */
+.aug-group{border:3px solid var(--ink);border-radius:14px;margin:14px 0;
+  background:var(--paper);box-shadow:3px 3px 0 var(--ink);overflow:hidden}
+.aug-group.is-weapon{--aug-accent:var(--vermilion-deep)}
+.aug-group.is-armor{--aug-accent:var(--cobalt)}
+.aug-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:0;
+  padding:10px 12px;background:var(--aug-accent);color:var(--paper);
+  font-family:var(--font-display);font-size:14px;letter-spacing:.04em}
+.aug-head .icon{width:22px;height:22px;flex:none;fill:currentColor}
+.aug-head .aug-count{margin-left:auto;display:flex;align-items:center;gap:7px;
+  font-family:var(--font-data);font-size:12px;letter-spacing:0}
+/* Round, not rotated diamonds. A 45deg transform leaves the layout box at 11px
+   while the ink reaches 15.6, so the row's own spill check fired at 58>56 -
+   the check added the day the facility cards spilled, doing its job on the
+   next thing that tried it. */
+.aug-pips{display:flex;gap:4px;flex:none}
+.aug-pips i{display:block;width:11px;height:11px;border:2px solid var(--paper);
+  border-radius:50%}
+.aug-pips i.on{background:var(--paper)}
+.aug-body{padding:4px 12px 10px}
+.aug-fitted{display:flex;flex-wrap:wrap;gap:6px;align-items:center;
+  padding:9px 0;border-bottom:2px dashed var(--ink-faint)}
+.aug-fitted .rb-now{margin:0}
+.aug-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:9px 0;border-bottom:2px dashed var(--ink-faint)}
+.aug-row:last-child{border-bottom:0}
+.aug-row .icon{width:24px;height:24px;flex:none}
+.aug-row .ar-t{flex:1;min-width:150px}
+.aug-row .ar-t strong{display:block;font-size:14px}
+.aug-row .ar-t span{display:block;font-size:11.5px;line-height:1.4;color:var(--ink-soft)}
+.aug-row .ar-buy{margin-left:auto}
+.aug-row.is-fitted .ar-t strong::after{content:' ●';color:var(--aug-accent);font-size:11px}
+.ar-warn{display:flex!important;align-items:center;gap:5px;margin-top:3px;
+  color:var(--vermilion-deep)!important;font-weight:700}
+.ar-warn .icon{width:14px;height:14px;flex:none}
+.aug-row.is-off{opacity:.62}
+.aug-note{margin:0;padding:10px 12px;font-size:11.5px;line-height:1.5;
+  color:var(--ink-soft);background:var(--stone)}
+.aug-empty{padding:12px 0 6px;font-size:12.5px;line-height:1.5;color:var(--ink-soft)}
 .commission h3.sub{display:flex;align-items:center;gap:8px}
 .commission h3.sub .icon{width:20px;height:20px;flex:none}
 .com-task{margin:2px 0 10px;font-size:13px;line-height:1.5;color:var(--ink-soft)}
@@ -860,6 +907,25 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
   <symbol id="icon-cls-blademaster" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2 5v10h-4V7z"/><path d="M5 7l1.8 4v8H3.2v-8z"/><path d="M19 7l1.8 4v8h-3.6v-8z"/></symbol>
   <symbol id="icon-cls-juggernaut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12H8"/><path d="M8 8H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h3z"/><path d="M12 9v6M16 9v6"/></symbol>
 
+  <!-- The four tier-3 classes added 2026-08-28. Same rule as the other
+       nineteen: keyed to the class IDENTITY, not to its weapons, because the
+       weapons already have glyphs of their own in the proficiency tree. -->
+  <symbol id="icon-cls-ravager" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5c2 3.4 3.4 7.6 4 13"/><path d="M10.5 3.5c2 3.6 3.4 8 4 13.8"/><path d="M17 5.5c1.6 3 2.7 6.4 3.2 10.6"/></symbol>
+  <symbol id="icon-cls-nightblade" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.4 14.8A8.2 8.2 0 0 1 9.4 3.6a8.6 8.6 0 1 0 9 11.2z"/></symbol>
+  <symbol id="icon-cls-warlord" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 16l-1-9.5 5.5 4L12 4l4 6.5 5.5-4-1 9.5z"/><path d="M3.8 19.5h16.4"/></symbol>
+  <symbol id="icon-cls-sentinel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 20.5V10a8.5 8.5 0 0 1 17 0v10.5"/><path d="M8.6 20.5V5.4M15.4 20.5V5.4"/><path d="M3.5 13.4h17"/></symbol>
+
+  <!-- Augment glyphs. Only the five that had no honest match already in the
+       sheet get their own drawing; the other nine name an existing UI glyph
+       that genuinely reads as the thing (a flame for Cruel, an anvil for
+       Heavy, a book for Honed). Two augments sharing one picture would be the
+       state the class grid was in before it was fixed, so no two do. -->
+  <symbol id="icon-aug-keen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l2.4 7.1 7.1 2.4-7.1 2.4-2.4 7.1-2.4-7.1L2.5 12l7.1-2.4z"/></symbol>
+  <symbol id="icon-aug-savage" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.8 2.5L5.5 13h5.4l-2.7 8.5L18.5 11h-5.6z"/></symbol>
+  <symbol id="icon-aug-warded" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l8 4.5v9l-8 4.5-8-4.5v-9z"/><path d="M7.8 10L12 14.2 16.2 10"/></symbol>
+  <symbol id="icon-aug-bulwark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 20.5V8.5h4.5v-4h4v4h4.5v-4h4v4h2v12z"/></symbol>
+  <symbol id="icon-aug-plated" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5c1.8-1.8 9.2-1.8 11 0v2.8c-1.8-1.4-9.2-1.4-11 0z"/><path d="M4.5 10.4c2.5-2.6 12.5-2.6 15 0v3c-2.5-2.2-12.5-2.2-15 0z"/><path d="M3 16.6c3-3 15-3 18 0v3.2c-3-2.6-15-2.6-18 0z"/></symbol>
+
   <!-- Weapon glyphs, one per type. Fourteen weapons ran on six icons before
        this - three axes, three hammers, two daggers, two staves - which is a
        problem the proficiency TREE has and the class grid did not: a tree whose
@@ -993,7 +1059,10 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
         <p>Rounds get harder and pay more, forever. You choose when to walk: <strong>yielding</strong> keeps 70% of the pot and your health, a <strong>knockout</strong> keeps the whole pot but costs you 25 minutes on the bench &mdash; during which you cannot train or heal either. The run keeps fighting while the tab is closed.</p>
 
         <h3>Gear and augments</h3>
-        <p>Quality tiers sit on the <em>slot</em>, so switching weapon type costs you nothing. Augments fit into weapon and armour separately, and the same augment cannot go on both.</p>
+        <p>Quality tiers sit on the <em>slot</em>, so switching weapon type costs you nothing. Better quality opens more augment slots &mdash; one at Fine, two at Master, three at Legendary, on each piece.</p>
+        <p>There are <strong>two separate augment pools</strong> and they do not mix. <strong>Weapon</strong> augments are what you do to the enemy: crit, crit damage, raw damage, affliction, gold, lifesteal, and one that speeds weapon training. <strong>Armour</strong> augments are what the arena does to you: evasion, damage reduction, max HP, in-fight regen, out-of-combat healing speed, and a shorter knockout bench.</p>
+        <p>Fitting and removing are both free, so a build is never locked in &mdash; only the gold you spent buying an augment is gone.</p>
+        <p class="guide-rule">Two things are easy to get wrong. <strong>Vampiric and Resilient share one healing budget</strong>, so owning both is owning one &mdash; the shop says so on the row. And <strong>Honed pays nothing in the arena</strong>; it speeds weapon training only, which is a real reason to buy it and not a combat one.</p>
 
         <h3>The sustain cap &mdash; read this before you stack healing</h3>
         <p>Everything that heals you mid-fight &mdash; <strong>lifesteal</strong> from a class or Vampiric, and <strong>regen</strong> from Resilient &mdash; draws from <em>one shared budget</em>, capped each exchange at <strong>0.08% of your max HP</strong>.</p>
@@ -1658,63 +1727,119 @@ const CLASS_DRAWBACK_BONUS = 0.4;
    no magnitudes. These are PROPOSALS in doc 11's sense - the harness settles
    them, and they are all here in one block so simulate() can sweep them.
    `affliction` is inert until Phase 7 brings status effects. */
-/* PRICED FROM MEASUREMENT, 2026-08-24. Doc 3.7 names the eight and pins the
-   400-2,500 band; the magnitudes inside it were guesses for eight phases and
-   the costs were guesses about the guesses. The sweep now measures what each
-   one is actually worth - gold per hour added over a champion carrying none -
-   so the prices follow the value instead of preceding it.
+/* PRICED FROM MEASUREMENT. `power` is gold per hour added over a champion
+   carrying none, averaged across a fresh, a mid and a late build over three
+   seeds, so the prices FOLLOW the value instead of preceding it. The boot
+   suite re-measures every one of them and fails if the ordering has drifted -
+   a check comparing the stored number to the price would only prove the data
+   agrees with itself.
 
-   `power` is that measurement, averaged over the fresh, mid and late stages,
-   recorded so the shop can be checked against it rather than against nothing.
-   The boot suite re-measures it and fails if the ordering has drifted.
+   REPRICED 2026-08-28 against a harness that could finally see the whole
+   clock. simulateRun() counted the knockout bench as downtime and not the time
+   spent healing back up, so out-of-combat regen was invisible - the same shape
+   as the `recovery` blind spot of 2026-08-24, one step further along. Adding
+   healMs() moved Stalwart from 19.1 to 9.3 (the bench is a smaller share of
+   downtime than it looked) and made Mending measurable at all, at 12.6.
 
-   Two real inversions were priced out. Keen at 400g strictly beat Cruel at
-   1,000g - cheaper AND better, which is a choice no player should ever be
-   offered. And Resilient DOMINATES Vampiric outright: both are capped by
-   applySustain, but Resilient's flat max-HP regen always reaches the ceiling
-   while Vampiric's damage-scaled heal only reaches it once damage is high
-   enough, so Resilient is never worse and was 500g cheaper.
+   The measured spread is 2.0 to 19.0. Everything at or under 5 sits at the
+   400g floor, because the seed-to-seed spread on those is up to 3.5 points and
+   the ordering between them is noise - they are differentiated by WHAT they do,
+   not by how much, and a shelf of same-price different-effect options is a real
+   choice rather than a ranked list with one right answer.
 
-   THE FOUR WEAK ONES ARE PRICED IDENTICALLY, and that is the measurement
-   talking rather than laziness. Across two seeds their values are 3.1, 3.8,
-   4.0 and 4.9 while the seed-to-seed spread on each is 2.4 to 3.1 - so the
-   ordering between them is noise, and pricing them 400/450/500/700 would be
-   inventing a precision the game does not have. They are differentiated by
-   WHAT they do - crit, evade, damage, affliction - which suits different
-   builds, and a shelf of same-price different-effect options is a real choice
-   rather than a ranked list with one right answer.
+   Honed is the exception and carries `payline: 'idle'`. Its whole effect is
+   outside the arena, so gold per hour cannot see it; it is proved to work by
+   its own assertion, priced at the floor, and excluded from the comparisons
+   rather than being silently scored zero.
 
-   Gilded and Stalwart measure to the digit across seeds (15.0 and 19.1)
-   because they are flat multipliers on gold and on the bench; the sustain pair
-   averages 16.9 but swings from 27.8 at mid to 5.9 late, which is the cap and
-   the gold soft cap between them. */
+   Resilient must never cost less than Vampiric. Both are held by the sustain
+   ceiling, but Resilient's flat max-HP regen ALWAYS reaches it while Vampiric's
+   damage-scaled heal only reaches it once damage is high enough, so Resilient
+   is never worse. That is exact, not statistical - the sweep genuinely cannot
+   tell them apart - and it has its own applySustain check. */
+/* SPLIT INTO TWO POOLS, 2026-08-28 (Rob). Every augment now names the piece it
+   fits, and `buyAugment` refuses the other one. The old shelf offered all eight
+   to both pieces, which made the two sections identical lists and the choice
+   purely "which slot has room" - the legibility fix of 2026-08-24 separated the
+   SECTIONS without separating the CHOICES.
+
+   The split is what lets the two halves say different things: the weapon pool
+   is what the champion does to the enemy, the armour pool is what the arena
+   does to the champion. That also opens the four pool keys no augment could
+   reach before - `critPower`, `tutelage`, `mitigation`, `vigor` - because an
+   armour piece granting crit damage was always going to read as arbitrary.
+
+   MIGRATION COST, and it is a real one: a save can hold Stalwart on a weapon.
+   migrateGear() relocates a displaced augment to its own piece if there is room
+   and drops it if there is not, rather than deleting on sight - see there. That
+   was the objection recorded against this split in Phase 6 and it is answered
+   by the repair, not by avoiding the change.
+
+   `hpRegen` is a NEW non-pool effect key, like `regen`: it multiplies the
+   out-of-combat trickle in regenPctFor(). Not a doc 3.4 pool key because no
+   class grants it, exactly as `regen` is not.
+
+   `tutelageType` on an augment works the way it does on a class - Honed speeds
+   the Sparring Circle and nothing else. */
 const AUGMENTS = {
-  cruel:     { label: 'Cruel',     icon: 'flame',  cost: 400,  power: 3.8, text: '+10% affliction chance',
-               effect: { affliction: 0.10 } },
-  keen:      { label: 'Keen',      icon: 'sword',  cost: 400,  power: 3.1, text: '+5% crit chance',
-               effect: { crit: 0.05 } },
-  swift:     { label: 'Swift',     icon: 'hurdle', cost: 400,  power: 4, text: '+5% evasion',
-               effect: { evasion: 0.05 } },
-  heavy:     { label: 'Heavy',     icon: 'anvil',  cost: 400,  power: 4.9, text: '+12% damage, −5% evasion',
-               effect: { damage: 0.12, evasion: -0.05 } },
-  gilded:    { label: 'Gilded',    icon: 'coin',   cost: 1500, power: 15, text: '+15% gold',
-               effect: { avarice: 0.15 } },
-  /* Both of these are SUSTAIN and both are held by the shared per-exchange
-     ceiling in applySustain(). Resilient is set to sit exactly at that ceiling
-     on its own, so the number in this text is the number the player gets;
-     before the cap it read 0.5% and, once capped, would have been a lie on the
-     shop row. Vampiric's 8% is still 8% of damage dealt but reaches the ceiling
-     almost immediately, so the row says so rather than implying it scales -
-     and it is priced BELOW Resilient because reaching the ceiling is a
-     condition it has to meet and Resilient simply does not. */
-  vampiric:  { label: 'Vampiric',  icon: 'drop',   cost: 1700, power: 16.9, text: 'Heal 8% of damage dealt, up to the sustain cap',
-               effect: { lifesteal: 0.08 } },
-  resilient: { label: 'Resilient', icon: 'heart',  cost: 1800, power: 16.9, text: 'Regain 0.08% max HP per exchange',
-               effect: { regen: 0.0008 } },
-  stalwart:  { label: 'Stalwart',  icon: 'shield', cost: 2500, power: 19.1, text: '−20% knockout cooldown',
-               effect: { recovery: 0.20 } }
+  /* --- weapon: what the champion does to the enemy --- */
+  keen:      { slot: 'weapon', label: 'Keen',      icon: 'aug-keen',   cost: 400,  power: 2.0,
+               text: '+5% crit chance', effect: { crit: 0.05 } },
+  cruel:     { slot: 'weapon', label: 'Cruel',     icon: 'flame',      cost: 400,  power: 2.9,
+               text: '+10% affliction chance', effect: { affliction: 0.10 } },
+  savage:    { slot: 'weapon', label: 'Savage',    icon: 'aug-savage', cost: 700,  power: 6.5,
+               text: '+25% crit damage', effect: { critPower: 0.25 } },
+  heavy:     { slot: 'weapon', label: 'Heavy',     icon: 'anvil',      cost: 400,  power: 3.4,
+               text: '+12% damage, −5% evasion', effect: { damage: 0.12, evasion: -0.05 } },
+  /* The one augment that pays outside the arena. It is deliberately TYPED, so
+     it speeds weapon training and not the five stat facilities - an untyped
+     one would be a flat idle-economy multiplier bought with arena gold, which
+     is the loop feeding itself. */
+  honed:     { slot: 'weapon', label: 'Honed',     icon: 'book',       cost: 400,  power: null,
+               payline: 'idle',
+               text: '+20% weapon training speed', effect: { tutelage: 0.20 }, tutelageType: 'weapon' },
+  /* Held by the shared per-exchange ceiling in applySustain(). The 8% is still
+     8% of damage dealt but reaches the ceiling almost immediately, so the row
+     says so rather than implying it scales. */
+  vampiric:  { slot: 'weapon', label: 'Vampiric',  icon: 'drop',       cost: 2300, power: 19.0,
+               budget: 'sustain',
+               text: 'Heal 8% of damage dealt, up to the sustain cap', effect: { lifesteal: 0.08 } },
+  gilded:    { slot: 'weapon', label: 'Gilded',    icon: 'coin',       cost: 1800, power: 15.1,
+               text: '+15% gold', effect: { avarice: 0.15 } },
+
+  /* --- armour: what the arena does to the champion --- */
+  swift:     { slot: 'armor',  label: 'Swift',     icon: 'hurdle',     cost: 400,  power: 3.3,
+               text: '+5% evasion', effect: { evasion: 0.05 } },
+  warded:    { slot: 'armor',  label: 'Warded',    icon: 'aug-warded', cost: 400,  power: 4.9,
+               text: '−8% damage taken', effect: { mitigation: 0.08 } },
+  bulwark:   { slot: 'armor',  label: 'Bulwark',   icon: 'aug-bulwark', cost: 700, power: 6.3,
+               text: '+10% max HP', effect: { vigor: 0.10 } },
+  /* Sits exactly at the sustain ceiling on its own, so the number in this text
+     is the number the player gets. Before the cap it read 0.5% and, once
+     capped, would have been a lie on the shop row. */
+  resilient: { slot: 'armor',  label: 'Resilient', icon: 'heart',      cost: 2500, power: 19.0,
+               budget: 'sustain',
+               text: 'Regain 0.08% max HP per exchange', effect: { regen: 0.0008 } },
+  /* Out-of-combat regen, so it shortens the wait between runs rather than
+     doing anything inside one. That makes it a THROUGHPUT lever like recovery,
+     which is the class of bonus this project has twice mispriced - swept, not
+     guessed. */
+  mending:   { slot: 'armor',  label: 'Mending',   icon: 'cross-medic', cost: 1500, power: 12.6,
+               text: '+30% out-of-combat HP regeneration', effect: { hpRegen: 0.30 } },
+  plated:    { slot: 'armor',  label: 'Plated',    icon: 'aug-plated', cost: 1200,  power: 10.1,
+               text: '−10% damage taken, +8% max HP, −5% evasion',
+               effect: { mitigation: 0.10, vigor: 0.08, evasion: -0.05 } },
+  stalwart:  { slot: 'armor',  label: 'Stalwart',  icon: 'hourglass',  cost: 1100, power: 9.3,
+               text: '−20% knockout cooldown', effect: { recovery: 0.20 } }
 };
 const AUGMENT_KEYS = Object.keys(AUGMENTS);
+const AUGMENT_SLOTS = ['weapon', 'armor'];
+/* Derived, never hand-listed: a new augment reaches its own shelf by naming a
+   slot, and cannot land on both or on neither. */
+const AUGMENTS_BY_SLOT = AUGMENT_SLOTS.reduce((m, sl) => {
+  m[sl] = AUGMENT_KEYS.filter(id => AUGMENTS[id].slot === sl);
+  return m;
+}, {});
 
 /* --- legacy perks (doc 4 "Legacy Points") --------------------
    Doc 4 names five perks and gives no numbers, exactly as doc 3.7 did for the
@@ -2118,7 +2243,30 @@ const RENOWN_RANKS = [
   { title: 'Exalted',             bonus: { damage: 0.03 } },
   { title: 'Peerless',            bonus: { recovery: 0.05 } },
   { title: 'Legend of the Sands', bonus: { evasion: 0.02 } },
-  { title: 'Undying',             bonus: { avarice: 0.05 } }
+  { title: 'Undying',             bonus: { avarice: 0.05 } },
+  /* EXTENDED 12 -> 20 rungs, 2026-08-28 (Rob). The old top was reached in
+     about 22 mid-game runs - roughly half a champion's life - and then the
+     ladder simply stopped while renown kept counting for nothing but prestige.
+     Eight more rungs put the ceiling past a single lifetime again, so the top
+     of the ladder is something an ACCOUNT climbs across successors rather than
+     something one champion finishes.
+
+     The new rungs deliberately avoid `recovery`: it is the one pool key that
+     divides the denominator of every throughput figure in the game, the ladder
+     already grants two rungs of it, and a third would sit against
+     RECOVERY_RELIEF_CAP where it pays nothing. `avarice` appears once, at the
+     very top, for the same reason - it is a flat multiplier on the economy the
+     shop is priced against. The rest is combat, where the gold soft cap holds
+     the knock-on. `critPower` joins the ladder here because it is uncapped and
+     nothing else on it grants crit damage. */
+  { title: 'Monumental',          bonus: { vigor: 0.04 } },
+  { title: 'Sovereign of the Sand', bonus: { damage: 0.03 } },
+  { title: 'Myth-Wrought',        bonus: { critPower: 0.10 } },
+  { title: 'Star-Named',          bonus: { mitigation: 0.02 } },
+  { title: 'Godsworn',            bonus: { crit: 0.02 } },
+  { title: 'Unconquered',         bonus: { vigor: 0.05 } },
+  { title: 'Arena Incarnate',     bonus: { damage: 0.04 } },
+  { title: 'Eternal',             bonus: { avarice: 0.05 } }
 ];
 const RENOWN_TOP_RANK = RENOWN_RANKS.length - 1;
 
@@ -2318,7 +2466,34 @@ const CLASSES = {
   blademaster: { label: 'Blade Master', tier: 3, icon: 'cls-blademaster', weapons: ['daggers', 'swords', 'katana'],
                  bonuses: ['crit', 'damage', 'tutelage'], tutelageType: 'weapon' },
   juggernaut:  { label: 'Juggernaut',  tier: 3, icon: 'cls-juggernaut',  weapons: ['greatsword', 'greataxe', 'greatmaul'],
-                 bonuses: ['damage', 'mitigation', 'vigor'], drawback: 'evasion' }
+                 bonuses: ['damage', 'mitigation', 'vigor'], drawback: 'evasion' },
+  /* FOUR MORE, 2026-08-28 (Rob). Tier 3 is the end of the class ladder and it
+     held exactly two rows, so the deepest investment in the game - three
+     weapons at proficiency 8, about 8,300 TP - offered a choice between a crit
+     build and a tank. Six rows make it a real shelf.
+
+     Two rules held while choosing them, and both are mechanical rather than
+     thematic. Each row must cover a DISTINCT set of three bonuses (no two tier
+     3 classes may be reskins of each other), and no row may lead on a bonus
+     that saturates at tier-3 magnitude: `lifesteal` is held by the sustain cap
+     and `recovery` by RECOVERY_RELIEF_CAP, so a tier-3 class built on either
+     would pay less than the tier-1 class beneath it. That leaves damage, crit,
+     critPower, evasion, mitigation, vigor, avarice, affliction and tutelage -
+     and the six rows between them now use all nine. */
+  ravager:     { label: 'Ravager',     tier: 3, icon: 'cls-ravager', weapons: ['axes', 'dualhatchets', 'greataxe'],
+                 bonuses: ['affliction', 'damage', 'critPower'], afflictionType: 'bleed', drawback: 'mitigation' },
+  nightblade:  { label: 'Nightblade',  tier: 3, icon: 'cls-nightblade', weapons: ['daggers', 'katana', 'scythe'],
+                 bonuses: ['crit', 'critPower', 'evasion'] },
+  /* `avarice` was the obvious third bonus for this one and it was measured out.
+     At tier-3 magnitude and class level 4 it is +87.5% gold with no condition
+     attached, and gold per hour is the metric - so the same row swept at +287%
+     with it and +144% without, against a tier-3 average of 167%. It is not
+     that the class was strong; it is that avarice multiplies the answer
+     instead of earning it. See the tier-3 assertion. */
+  warlord:     { label: 'Warlord',     tier: 3, icon: 'cls-warlord', weapons: ['swords', 'greatsword', 'mace'],
+                 bonuses: ['damage', 'crit', 'mitigation'] },
+  sentinel:    { label: 'Sentinel',    tier: 3, icon: 'cls-sentinel', weapons: ['battlestaff', 'spear', 'warhammer'],
+                 bonuses: ['mitigation', 'vigor', 'evasion'] }
 };
 const CLASS_KEYS = Object.keys(CLASSES);
 
@@ -2560,6 +2735,46 @@ const FLOURISHES = {
     "She swings great sword, axe, and maul like the weight is nothing.",
     "The Juggernaut's mass alone seems to win half the fight.",
     "He absorbs the blow and keeps walking through it regardless."
+  ],
+  ravager: [
+    "The Ravager opens three wounds where one would have done.",
+    "Every axe in her hands finds something soft to ruin.",
+    "He fights uncovered, and every hit he takes buys a deeper one.",
+    "The sand darkens under the Ravager's opponent, then keeps darkening.",
+    "She doesn't guard. Guarding is time she could spend cutting.",
+    "The Ravager's blades come apart and back together mid-swing.",
+    "Blood follows him around the ring like a second shadow.",
+    "The wounds she leaves do more work than she does."
+  ],
+  nightblade: [
+    "The Nightblade is not where the swing went, and never was.",
+    "One breath of stillness, then three cuts nobody counted.",
+    "She reads the guard, finds the seam, and is gone again.",
+    "The Nightblade strikes the one spot that ends arguments.",
+    "A katana whispers, a dagger answers, and the scythe closes it.",
+    "He moves like the fight is a rumour he heard secondhand.",
+    "The crowd sees the blood before they see the blade.",
+    "The Nightblade never takes the hit he was offered."
+  ],
+  warlord: [
+    "The Warlord fights like the arena already belongs to him.",
+    "She calls the opening a beat before it exists, then takes it.",
+    "Sword, great sword and mace — whichever the moment is asking for.",
+    "The Warlord turns a brawl into a campaign in four exchanges.",
+    "He gives ground to nobody and asks for none in return.",
+    "Command comes off her like heat off the sand.",
+    "The Warlord's guard is a formation held by one person.",
+    "Every strike lands where the last one taught him to aim."
+  ],
+  sentinel: [
+    "The Sentinel holds the line and the line does not move.",
+    "Staff, spear and hammer, all of them pointed outward.",
+    "She turns the strike aside without troubling to step back.",
+    "The Sentinel is still standing exactly where she started.",
+    "He guards the ground under his feet like it was sworn to him.",
+    "Every blow arrives, and every blow arrives too slow.",
+    "The Sentinel waits. The arena is the one running out of time.",
+    "Nothing gets past. That is the whole of the technique."
   ]
 };
 
@@ -2589,7 +2804,16 @@ const ICON_NAMES = ['sword','shield','heart','coin','laurel','anvil','book','dum
      a matching symbol - the assertion below walks this list against the
      sprite, and a missing one fails at boot rather than rendering blank. */
   ].concat(Object.keys(CLASSES).map(k => 'cls-' + k))
-   .concat(Object.keys(WEAPONS).map(k => 'wpn-' + k));
+   .concat(Object.keys(WEAPONS).map(k => 'wpn-' + k))
+   /* Augments are the one registry allowed to REUSE a glyph from the list
+      above - a flame really is Cruel and an anvil really is Heavy, and drawing
+      a second flame under another name would be the duplicate-path state the
+      class sheet was fixed out of. So only the BESPOKE ones are appended here,
+      and the dead-glyph scan still proves every symbol in the sheet is named
+      somewhere in this list. */
+   .concat(Object.keys(AUGMENTS)
+     .map(k => AUGMENTS[k].icon)
+     .filter(n => n.indexOf('aug-') === 0));
 
 /* ==============================================================
    STATE  (BUILD doc 5)
@@ -2850,6 +3074,54 @@ function migrateAccount(raw) {
    "stats is an object" is not enough: a champion missing CON has no max HP. */
 const STAT_KEYS = ['str', 'dex', 'int', 'con', 'cha'];
 
+/* The pool split's whole migration cost, in one place.
+
+   Before 2026-08-28 every augment fitted either piece, so a real save can hold
+   Stalwart on a weapon and Keen on the armour. Deleting those on sight would
+   charge the player for a change they did not make - 2,500g in Stalwart's case -
+   so a displaced augment is RELOCATED to the piece it now belongs on whenever
+   that piece has room, and only dropped when it does not. Dropping is still
+   possible (a Legendary weapon and a Crude chest is three displaced augments
+   into zero slots) and that is honest: the alternative is a champion carrying
+   more augments than they have slots for, which every consumer would then have
+   to defend against.
+
+   Also enforces the invariants the whole file assumes about this list, which
+   were previously spread across trimAugments and buyAugment: real ids only, no
+   duplicates within a piece, none across the two, and never longer than the
+   slot count. Runs on load and on import, so a hand-edited save cannot arrive
+   holding six augments in two slots.
+
+   `account` is optional because migrateCharacter runs before the account is
+   necessarily to hand; without it the racial slot still counts and only the
+   Heirloom Fitting perk's extra slot is missed, which can only ever trim MORE
+   than needed - reconcileGear() re-runs with the account at the end of
+   migrate() and restores it. */
+function migrateGear(c, account) {
+  if (!c || !c.gear) return;
+  const seen = {};
+  const keep = {};
+  const displaced = [];
+  AUGMENT_SLOTS.forEach(sl => {
+    keep[sl] = [];
+    (c.gear[sl].augments || []).forEach(id => {
+      const a = AUGMENTS[id];
+      if (!a || seen[id]) return;            // unknown, or already held elsewhere
+      seen[id] = true;
+      if (a.slot === sl) keep[sl].push(id); else displaced.push(id);
+    });
+  });
+  AUGMENT_SLOTS.forEach(sl => {
+    const max = slotsAtQuality(c, sl, c.gear[sl].quality, account);
+    if (keep[sl].length > max) keep[sl].length = max;
+  });
+  displaced.forEach(id => {
+    const sl = AUGMENTS[id].slot;
+    if (keep[sl].length < slotsAtQuality(c, sl, c.gear[sl].quality, account)) keep[sl].push(id);
+  });
+  AUGMENT_SLOTS.forEach(sl => { c.gear[sl].augments = keep[sl]; });
+}
+
 function migrateCharacter(raw) {
   if (!isObj(raw)) return null;
   if (typeof raw.id !== 'string' || typeof raw.name !== 'string' || typeof raw.race !== 'string') return null;
@@ -2944,6 +3216,10 @@ function migrateCharacter(raw) {
   c.unlocks = {
     earlyAugment: bool(isObj(raw.unlocks) ? raw.unlocks.earlyAugment : false, false)
   };
+  /* AFTER c.unlocks, because Early Fitting is one of the terms slotsAtQuality
+     counts. reconcileUnlocks() runs this again with the account once both
+     branches exist, which is what restores the Heirloom Fitting slot. */
+  migrateGear(c);
 
   /* A battleClass must name a real class AND be EARNED by this champion's own
      weapon proficiencies. Checking only that the name existed let a hand-edited
@@ -3073,6 +3349,12 @@ function reconcileUnlocks(s) {
   });
   /* A threshold is meaningless without the control it belongs to. */
   if (!s.account.unlocks.autoYield) s.account.autoYieldAt = 0;
+  /* Re-run the gear repair now that BOTH branches exist. migrateCharacter has
+     no account to hand, so it cannot see the Heirloom Fitting slot; and
+     Early Fitting is a rank unlock this function has only just settled. Running
+     it once more with the whole state is the difference between trimming a
+     legitimately-held augment and keeping it. */
+  if (s.character) migrateGear(s.character, s.account);
   return s;
 }
 function migrate(raw) {
@@ -3393,15 +3675,33 @@ const raceTrainingMult = s =>
    a type only speeds up that facility; Blade Master's `tutelage:weapon` helps
    the Sparring Circle, Monk's `tutelage:dex` helps the Obstacle Course. The
    Standing Orders legacy perk is the untyped version and applies everywhere. */
+/* One place the type test lives, because there are two typed sources now and a
+   rule that has to be remembered at each call site will be forgotten at one. An
+   untyped source applies everywhere; a typed one applies only where the
+   facility feeds the thing it names. */
+function tutelageApplies(type, key) {
+  if (!type) return true;
+  if (!key) return false;
+  return (FACILITIES[key] && FACILITIES[key].feeds) === type;
+}
+
 function tutelageBonus(s, key) {
   let n = perkValue(s.account, 'tutelage');
   const c = s.character;
   const cl = c && CLASSES[c.battleClass];
-  if (cl && cl.bonuses.indexOf('tutelage') !== -1 && key) {
-    const type = cl.tutelageType;
-    const feeds = FACILITIES[key] && FACILITIES[key].feeds;
-    if (!type || feeds === type) n += classBonus(c, 'tutelage');
-  }
+  if (cl && cl.bonuses.indexOf('tutelage') !== -1 && key &&
+      tutelageApplies(cl.tutelageType, key)) n += classBonus(c, 'tutelage');
+  /* Honed (weapon augment). Read straight off the fitted list rather than
+     through bonus(), because bonus() is untyped by design and would speed every
+     facility in the academy. */
+  if (c && key) AUGMENT_SLOTS.forEach(sl => {
+    const list = (c.gear[sl] && c.gear[sl].augments) || [];
+    list.forEach(id => {
+      const a = AUGMENTS[id];
+      if (a && typeof a.effect.tutelage === 'number' && tutelageApplies(a.tutelageType, key))
+        n += a.effect.tutelage;
+    });
+  });
   return n;
 }
 
@@ -3694,8 +3994,14 @@ function regenPctFor(s, key) {
      rather than at either call site - regen has one home for the same reason
      derived stats do. */
   const vigil = 1 + perkValue(s.account, 'vigil');
-  if (key !== 'medic') return CONST.PASSIVE_REGEN_PCT_MIN * vigil;
-  return CONST.MEDIC_REGEN_PCT_MIN * FORMULAS.facilityRate(facilityLevel(s, key)) * vigil;
+  /* Mending (armour augment) is the champion-side version of the same thing,
+     and it belongs here for the same reason Standing Vigil does: it must reach
+     the passive trickle, the Medic AND every estimate drawn from them
+     (timeToFullHp reads this function, not the constants). `hpRegen` is a
+     non-pool effect key like `regen` - no class grants it. */
+  const kit = 1 + Math.max(-0.9, augBonus(s.character, 'hpRegen'));
+  if (key !== 'medic') return CONST.PASSIVE_REGEN_PCT_MIN * vigil * kit;
+  return CONST.MEDIC_REGEN_PCT_MIN * FORMULAS.facilityRate(facilityLevel(s, key)) * vigil * kit;
 }
 
 /* `now` is threaded so the bench can be honoured here rather than at each call
@@ -3983,19 +4289,23 @@ function buyGearUpgrade(s, slot) {
   return { ok: true, quality: c.gear[slot].quality, spent: cost };
 }
 
-function trimAugments(c, slot, account) {
-  const max = augmentSlots(c, slot, account);
-  if (c.gear[slot].augments.length > max) c.gear[slot].augments.length = max;
-}
+/* The list invariants have ONE home now (migrateGear), so a gear change and a
+   load repair cannot disagree about what a legal augment list is. */
+function trimAugments(c, slot, account) { migrateGear(c, account); }
 
 function buyAugment(s, slot, id) {
   const c = s.character;
   if (!c || !AUGMENTS[id]) return { ok: false, msg: 'No such augment.' };
-  /* Unique per CHAMPION, not per slot. Scoped per slot, a player could fit Keen
-     to both the weapon and the armour for a guaranteed +10% crit - buying the
-     same upgrade twice beats choosing between eight, which is the opposite of
-     what an augment pool is for. */
-  if (['weapon', 'armor'].some(sl => c.gear[sl].augments.indexOf(id) !== -1))
+  /* The pool split, enforced in the core rather than in the shop's markup. The
+     UI already only offers each augment under its own piece, but a rule that
+     lives only in the render layer is a rule importSave and the harness do not
+     have. */
+  if (AUGMENTS[id].slot !== slot)
+    return { ok: false, msg: AUGMENTS[id].label + ' is ' +
+      (AUGMENTS[id].slot === 'weapon' ? 'a weapon' : 'an armour') + ' augment.' };
+  /* Unique per CHAMPION, not per slot. Kept after the split because the pools
+     could yet share an id, and because the check costs nothing. */
+  if (AUGMENT_SLOTS.some(sl => c.gear[sl].augments.indexOf(id) !== -1))
     return { ok: false, msg: 'Already fitted.' };
   if (c.gear[slot].augments.length >= augmentSlots(c, slot, s.account)) return { ok: false, msg: 'No free slot.' };
   const cost = AUGMENTS[id].cost;
@@ -4003,6 +4313,29 @@ function buyAugment(s, slot, id) {
   c.gold -= cost;
   c.gear[slot].augments.push(id);
   return { ok: true, spent: cost };
+}
+
+/* The pool split created one trap and this is the answer to it.
+
+   Vampiric and Resilient are both SUSTAIN and both draw on the single
+   per-exchange ceiling in applySustain(), so a champion wearing one gains
+   nothing at all from the other. Before the split they sat on the same shelf
+   and competed; now one is a weapon augment and the other is armour, so the
+   obvious thing for a player to do - fit the good one to each piece - is
+   exactly the purchase that wastes 2,500 gold.
+
+   `budget` names the shared ceiling and this reports the conflict, so the shop
+   can say so on the row rather than leaving it to the guide. It does NOT
+   forbid the purchase: the combination is pointless, not illegal, and a game
+   that silently refuses is worse than one that explains. */
+function budgetConflict(c, id) {
+  const a = AUGMENTS[id];
+  if (!c || !a || !a.budget) return null;
+  let found = null;
+  AUGMENT_SLOTS.forEach(sl => ((c.gear[sl] && c.gear[sl].augments) || []).forEach(other => {
+    if (other !== id && AUGMENTS[other] && AUGMENTS[other].budget === a.budget) found = other;
+  }));
+  return found;
 }
 
 /* Doc 3.7: "freely swappable" - removing costs nothing and refunds nothing. */
@@ -6129,54 +6462,93 @@ function gearRows(c) {
    augments already fitted to the "wrong" piece on existing saves, and the
    complaint here was legibility rather than choice. Noted for Rob. */
 const SLOT_LABEL = { weapon: 'Weapon', armor: 'Armour' };
+const SLOT_BLURB = {
+  weapon: 'What you do to them — damage, crit, spoils and the edge you train with.',
+  armor:  'What the arena does to you — soak, evasion, healing and time on the bench.'
+};
+
+/* The quality tier at which a piece first opens a slot, read out of the table
+   rather than written down: AUGMENT_SLOTS_BY_QUALITY is the tunable, and a row
+   naming "Fine" in prose would go stale the moment it moved. */
+function firstSlotQuality() {
+  const t = CONST.AUGMENT_SLOTS_BY_QUALITY;
+  for (let i = 0; i < t.length; i++) if (t[i] > 0) return i;
+  return CONST.GEAR_MAX_QUALITY;
+}
 
 function augmentSlotSection(c, slot) {
   const max = augmentSlots(c, slot, state.account);
   const fitted = c.gear[slot].augments;
+  const pips = [];
+  for (let i = 0; i < Math.max(max, 1); i++)
+    pips.push('<i' + (i < fitted.length ? ' class="on"' : '') + '></i>');
+
   const head = '<h4 class="aug-head">' + icon(slot === 'weapon' ? 'sword' : 'shield') +
-    SLOT_LABEL[slot] + ' augments <span class="num">' + fitted.length + '/' + max + '</span></h4>';
+    SLOT_LABEL[slot] + ' augments' +
+    '<span class="aug-count">' +
+      (max > 0 ? '<span class="aug-pips" aria-hidden="true">' + pips.join('') + '</span>' : '') +
+      fitted.length + '/' + max + '</span></h4>';
+  const note = '<p class="aug-note">' + esc(SLOT_BLURB[slot]) + '</p>';
 
   if (max === 0) {
-    return '<div class="aug-group">' + head +
-      '<p class="rb-now">No slots on this piece until ' + esc(QUALITY[2]) +
-      ' quality. Upgrade it above.</p></div>';
+    return '<section class="aug-group is-' + slot + '">' + head + note +
+      '<div class="aug-body"><p class="aug-empty">No slots on this piece yet — ' +
+      esc(QUALITY[firstSlotQuality()]) + ' quality opens the first one. ' +
+      'Upgrade it above.</p></div></section>';
   }
 
   const chips = fitted.map(id =>
     '<button class="chip-btn is-on" type="button" data-unfit="' + slot + '|' + id + '" ' +
     'aria-label="Remove ' + esc(AUGMENTS[id].label) + ' from ' + SLOT_LABEL[slot].toLowerCase() + '">' +
     esc(AUGMENTS[id].label) + ' ×</button>').join('') ||
-    '<span class="rb-now">Nothing fitted</span>';
+    '<span class="rb-now">Nothing fitted — pick from below</span>';
 
-  const rows = AUGMENT_KEYS.map(id => {
+  /* THIS pool only. Before the split both shelves listed all eight, so the two
+     sections were the same list twice and the only real question was which
+     piece had a free slot. */
+  const rows = AUGMENTS_BY_SLOT[slot].map(id => {
     const a = AUGMENTS[id];
     const here = fitted.indexOf(id) !== -1;
     const room = fitted.length < max;
     const afford = c.gold >= a.cost;
-    /* Uniqueness is per champion, not per slot (Phase 6 audit): the same
-       augment on both pieces was double value for double gold. */
-    const elsewhere = c.gear[slot === 'weapon' ? 'armor' : 'weapon'].augments.indexOf(id) !== -1;
-    const why = here ? 'Fitted' : elsewhere ? 'On ' + SLOT_LABEL[slot === 'weapon' ? 'armor' : 'weapon'].toLowerCase()
-      : !room ? 'No slot' : !afford ? gp(a.cost) : gp(a.cost);
-    const can = !here && !elsewhere && room && afford;
-    return '<div class="row-buy">' +
-      '<div class="rb-main">' + icon(a.icon) +
-        '<div><strong>' + esc(a.label) + '</strong>' +
-        '<span class="rb-now">' + esc(a.text) + '</span></div></div>' +
-      '<div class="rb-buy"><button class="btn small" type="button" ' +
-      'data-buy-aug="' + slot + '|' + id + '"' +
-      ' aria-label="Fit ' + esc(a.label) + ' to ' + SLOT_LABEL[slot].toLowerCase() +
-      ' for ' + gp(a.cost) + '"' + (can ? '' : ' disabled') + '>' +
-      esc(why) + '</button></div></div>';
+    const why = here ? 'Remove' : !room ? 'No slot' : gp(a.cost);
+    const can = here || (room && afford);
+    const cls = 'aug-row' + (here ? ' is-fitted' : (room && afford) ? '' : ' is-off');
+    /* Named at the point of purchase, not left to the guide. */
+    const clash = budgetConflict(c, id);
+    const warn = clash ? '<span class="ar-warn">' + icon('help') + 'Capped — ' +
+      esc(AUGMENTS[clash].label) + ' already fills the healing budget</span>' : '';
+    /* One button per row, and it does the obvious thing to the row it sits in:
+       buy when empty, remove when fitted. A fitted row whose only control is a
+       disabled "Fitted" button is a dead end - the player has to go find the
+       chip above to undo it.
+
+       It carries ONE data attribute, `data-aug`, whose value does not change
+       when the button's action does. keepFocus() restores focus by matching
+       the data-* attribute the focused control carried, so a button that
+       switched from data-buy-aug to data-unfit as you pressed it could not be
+       found again: measured, pressing Remove sent the keyboard to a different
+       augment's Buy button two rows up. The handler reads the fitted state
+       instead of the markup. */
+    return '<div class="' + cls + '">' + icon(a.icon) +
+      '<div class="ar-t"><strong>' + esc(a.label) + '</strong>' +
+      '<span>' + esc(a.text) + '</span>' + warn + '</div>' +
+      '<div class="ar-buy"><button class="btn small" type="button" ' +
+      'data-aug="' + slot + '|' + id + '"' +
+      ' aria-label="' + (here ? 'Remove ' + esc(a.label) + ' from ' : 'Fit ' + esc(a.label) + ' to ') +
+      SLOT_LABEL[slot].toLowerCase() + (here ? '' : ' for ' + gp(a.cost)) + '"' +
+      (can ? '' : ' disabled') + '>' + esc(why) + '</button></div></div>';
   }).join('');
 
-  return '<div class="aug-group">' + head +
-    '<div class="picker">' + chips + '</div>' + rows + '</div>';
+  return '<section class="aug-group is-' + slot + '">' + head + note +
+    '<div class="aug-body"><div class="aug-fitted">' + chips + '</div>' +
+    rows + '</div></section>';
 }
 
 function augmentSection(c) {
-  return '<p class="hp-line">Augments swap freely — removing one costs nothing ' +
-    'and refunds nothing. The same augment cannot go on both pieces.</p>' +
+  return '<p class="hp-line">Two separate pools — a weapon augment will not fit ' +
+    'armour and an armour augment will not fit a weapon. Swapping is free both ' +
+    'ways: removing one costs nothing and refunds nothing.</p>' +
     augmentSlotSection(c, 'weapon') +
     augmentSlotSection(c, 'armor');
 }
@@ -6229,10 +6601,14 @@ function wireShop() {
     b.addEventListener('click', () => after(buyGearUpgrade(state, b.dataset.buyGear))));
   host.querySelectorAll('[data-buy-fac]').forEach(b =>
     b.addEventListener('click', () => after(buyFacility(state, b.dataset.buyFac))));
-  host.querySelectorAll('[data-buy-aug]').forEach(b =>
+  /* The row toggle. Which way it goes is read from state, not from the markup,
+     so the control keeps one identity across the press - see augmentSlotSection. */
+  host.querySelectorAll('[data-aug]').forEach(b =>
     b.addEventListener('click', () => {
-      const p = b.dataset.buyAug.split('|');
-      after(buyAugment(state, p[0], p[1]));
+      const p = b.dataset.aug.split('|');
+      const c = state.character;
+      const fitted = c && c.gear[p[0]] && c.gear[p[0]].augments.indexOf(p[1]) !== -1;
+      after(fitted ? removeAugment(state, p[0], p[1]) : buyAugment(state, p[0], p[1]));
     }));
   host.querySelectorAll('[data-unfit]').forEach(b =>
     b.addEventListener('click', () => {
@@ -7966,8 +8342,40 @@ function simulateRun(config, seed) {
        classes were all under-valued the same way. The harness runs at T=0, so
        knockoutUntil IS the bench length. Fifth instance in this build of a
        re-derivation quietly disagreeing with the thing it copied. */
-    downMs: over.how === 'knockout' ? Math.max(0, num(s.character.knockoutUntil, 0) - T) : 0
+    /* AND the time healing back up, which this harness could not see until
+       2026-08-28 - the same blind spot as the `recovery` one above, one step
+       further along the same clock. A run ends with the champion hurt (or at
+       zero after a knockout) and they cannot fight again until they are
+       patched up, so the wait is part of the loop whether or not the arena
+       measures it.
+
+       ADDED to the bench, not maxed with it, because that is the game's own
+       rule: applyRegen() returns 0 while benched, so a knocked-out champion
+       serves the bench and only then starts healing. Healing is priced at the
+       champion's own Medic, through regenPctFor(), so the facility level, the
+       Standing Vigil perk and the Mending augment are all folded in by the
+       same function the live tick uses.
+
+       This is what makes out-of-combat regen priceable at all. It also lowers
+       every gold/hour figure this project has ever measured, because those
+       figures were all quietly assuming a champion heals for free. */
+    downMs: (over.how === 'knockout' ? Math.max(0, num(s.character.knockoutUntil, 0) - T) : 0) +
+            healMs(s)
   };
+}
+
+/* Minutes back to full at the champion's Medic, in ms. Pure, and it reads
+   regenPctFor() rather than the constants for the same reason timeToFullHp
+   does - reading the raw rate would skip the facility level, the perk and the
+   augment and still look right at level 1. */
+function healMs(s) {
+  const c = s.character;
+  if (!c) return 0;
+  const max = maxHpOf(c);
+  const missing = Math.max(0, max - num(c.hp, max));
+  if (missing <= 0) return 0;
+  const perMin = max * regenPctFor(s, 'medic');
+  return perMin > 0 ? (missing / perMin) * 60000 : 0;
 }
 
 function simulate(config, n) {
@@ -8132,23 +8540,38 @@ function assertAll() {
 
      Value is RE-MEASURED here rather than read from the `power` field. A check
      comparing the stored number to the price would only prove the data agrees
-     with itself; this proves the price agrees with the game. Measured over the
-     two stages a champion actually owns an augment for - a fresh one cannot
-     afford any of them - which is the basis the prices were set on. */
+     with itself; this proves the price agrees with the game.
+
+     THREE stages, not two, since 2026-08-28. The old rig skipped the fresh
+     stage on the grounds that a fresh champion cannot afford any augment -
+     which stopped being true when the floor came down to 400g, and it was
+     hiding a real ordering: Plated is worth 15.9% fresh and 2.7% late, so a
+     two-stage average called it cheap and a three-stage one does not.
+
+     Each augment is measured ON ITS OWN PIECE, because the pools are split now
+     and fitting an armour augment to a weapon simply fails. */
   (function () {
     const stages = [
+      { stats: { str: 12, dex: 10, int: 8, con: 14, cha: 6 }, weaponLevel: 3, weaponQuality: 1, armorQuality: 1 },
       { stats: { str: 40, dex: 30, int: 20, con: 40, cha: 15 }, weaponLevel: 6, weaponQuality: 2, armorQuality: 2 },
       { stats: { str: 120, dex: 90, int: 60, con: 120, cha: 40 }, weaponLevel: 10, weaponQuality: 4, armorQuality: 4 }
     ];
+    /* An augment whose whole effect is outside the arena cannot be measured in
+       gold per hour, and pretending otherwise would report it as inert. Honed
+       speeds weapon training; it is proved to work by its own assertion above
+       and priced at the floor, and it is excluded from the comparisons here
+       rather than being silently scored zero. */
+    const PRICED = AUGMENT_KEYS.filter(id => AUGMENTS[id].payline !== 'idle');
     const value = {};
-    AUGMENT_KEYS.forEach(id => { value[id] = 0; });
+    PRICED.forEach(id => { value[id] = 0; });
     let usable = true;
     stages.forEach(st => {
       const cfg = Object.assign({}, st, { battleClass: null, seed: 11 });
       const base = simulate(cfg, 10).goldPerHour;
       if (!(base > 0)) { usable = false; return; }
-      AUGMENT_KEYS.forEach(id => {
-        const r = simulate(Object.assign({}, cfg, { augments: { weapon: [id] } }), 10).goldPerHour;
+      PRICED.forEach(id => {
+        const aug = {}; aug[AUGMENTS[id].slot] = [id];
+        const r = simulate(Object.assign({}, cfg, { augments: aug }), 10).goldPerHour;
         value[id] += (100 * (r - base) / base) / stages.length;
       });
     });
@@ -8156,14 +8579,18 @@ function assertAll() {
     if (!usable) return;
 
     /* Every augment has to do something, or it is 400g for nothing. */
-    AUGMENT_KEYS.forEach(id => ok(value[id] > 0.5,
+    PRICED.forEach(id => ok(value[id] > 0.5,
       AUGMENTS[id].label + ' adds ' + value[id].toFixed(1) + '% gold/hour - it is priced but inert'));
+    ok(AUGMENT_KEYS.filter(id => AUGMENTS[id].payline === 'idle')
+        .every(id => AUGMENTS[id].cost === 400),
+      'an augment excluded from the gold sweep is priced above the floor - ' +
+      'it is being charged for on a number nothing measured');
 
     /* The tolerance is the measured seed-to-seed spread, not a design opinion:
        the weak augments swing 2.4-3.1 points between seeds, so anything inside
        3 points is the same number twice. */
     const NOISE = 3;
-    AUGMENT_KEYS.forEach(a => AUGMENT_KEYS.forEach(b => {
+    PRICED.forEach(a => PRICED.forEach(b => {
       if (a === b) return;
       const ca = AUGMENTS[a].cost, cb = AUGMENTS[b].cost;
       if (ca >= cb) return;
@@ -8181,7 +8608,7 @@ function assertAll() {
     /* The recorded `power` is what the prices were set from, so it has to still
        resemble the game. Loose - this rig is 10 runs against the 40-run,
        two-seed sweep that set them. */
-    AUGMENT_KEYS.forEach(id => {
+    PRICED.forEach(id => {
       ok(typeof AUGMENTS[id].power === 'number' && AUGMENTS[id].power > 0,
         AUGMENTS[id].label + ' has no recorded power');
       ok(Math.abs(AUGMENTS[id].power - value[id]) <= 6,
@@ -8192,6 +8619,16 @@ function assertAll() {
     const costs = AUGMENT_KEYS.map(id => AUGMENTS[id].cost);
     ok(Math.min.apply(null, costs) === 400 && Math.max.apply(null, costs) === 2500,
       'the augment prices no longer span doc 3.7\'s 400-2,500 band');
+    /* Both shelves must span the band too. A pool split whose armour half is
+       all cheap and whose weapon half is all dear is two shelves in name only:
+       the real choice a player makes is inside one piece at a time. */
+    AUGMENT_SLOTS.forEach(sl => {
+      const c = AUGMENTS_BY_SLOT[sl].map(id => AUGMENTS[id].cost);
+      ok(Math.min.apply(null, c) === 400,
+        'the ' + sl + ' shelf has nothing at the 400g floor - it opens too late');
+      ok(Math.max.apply(null, c) >= 2000,
+        'the ' + sl + ' shelf tops out at ' + Math.max.apply(null, c) + 'g - it has no late purchase');
+    });
 
     /* THE SUSTAIN PAIR NEEDS AN EXACT CHECK, not a statistical one. Both are
        held by the same ceiling, and at any stat profile the sweep above uses
@@ -8209,7 +8646,7 @@ function assertAll() {
       s.character.stats.str = str;
       s.character.stats.con = 200;                 // a big pool, a small hit
       s.character.hp = maxHpOf(s.character);
-      s.character.gear.weapon.augments = [aug];
+      s.character.gear[AUGMENTS[aug].slot].augments = [aug];
       startRun(s, 0);
       s.arena.playerHp = 1;
       return applySustain(s, playerDamage(s.character, false), maxHpOf(s.character), null);
@@ -8278,6 +8715,26 @@ function assertAll() {
     /* And it must not have changed the FIGHT, only the wait. */
     ok(Math.abs(relief.goldPerHourFighting - plain.goldPerHourFighting) < 1e-6,
       'the cooldown augment changed the fight itself');
+
+    /* THE SAME BLIND SPOT, ONE STEP FURTHER ALONG THE CLOCK. downMs counted
+       the bench and not the time healing back up, so out-of-combat regen was
+       invisible to every sweep this project has run - Mending measured 0.0%.
+       Pinned directly rather than only through Mending's price, so a future
+       edit that drops healMs() fails at the harness and says so, instead of
+       failing three checks away as "an augment is priced but inert". */
+    const mend = simulate(Object.assign({}, cfg, { augments: { armor: ['mending'] } }), 12);
+    ok(mend.goldPerHour > plain.goldPerHour,
+      'faster out-of-combat healing did not raise gold per hour - the harness is not ' +
+      'counting the time a champion spends getting patched up');
+    ok(Math.abs(mend.goldPerHourFighting - plain.goldPerHourFighting) < 1e-6,
+      'the healing augment changed the fight itself');
+    /* The two are ADDED, not maxed: applyRegen() returns 0 while benched, so a
+       champion serves the bench and only then starts healing. A rig that maxed
+       them would under-report every knockout run in the game. */
+    const oneRun = simulateRun(cfg, 3);
+    if (oneRun.how === 'knockout') ok(oneRun.downMs > CONST.KNOCKOUT_COOLDOWN_MS,
+      'a knockout costs no more than the bench itself - the bench and the heal are ' +
+      'being overlapped, but a benched champion does not heal');
   })();
 
   /* Every WEAPON has a glyph of its own, the same rule the classes carry. The
@@ -9257,6 +9714,97 @@ function assertAll() {
   ok(augBonus(sf.character, 'crit') === AUGMENTS.keen.effect.crit,
      'an augment effect is being double-counted across slots');
   ok(buyAugment(sf, 'weapon', 'heavy').ok === false, 'an augment was fitted with no free slot');
+  /* THE POOL SPLIT, enforced in the core. The shop only ever offers each
+     augment under its own piece, but a rule that lives in the render layer is
+     a rule importSave does not have. */
+  const sp = shopRig();
+  sp.character.gear.weapon.quality = 4;
+  sp.character.gear.armor.quality = 4;
+  ok(buyAugment(sp, 'weapon', 'stalwart').ok === false,
+     'an armour augment was fitted to a weapon');
+  ok(buyAugment(sp, 'armor', 'keen').ok === false,
+     'a weapon augment was fitted to armour');
+  ok(sp.character.gold === 1e9, 'a refused cross-slot fitting still charged the player');
+  ok(buyAugment(sp, 'weapon', 'keen').ok === true && buyAugment(sp, 'armor', 'stalwart').ok === true,
+     'an augment could not be fitted to the piece it belongs on');
+  AUGMENT_KEYS.forEach(id => {
+    ok(AUGMENT_SLOTS.indexOf(AUGMENTS[id].slot) !== -1,
+       id + ' names slot "' + AUGMENTS[id].slot + '", which is not a gear piece');
+    ok(AUGMENTS_BY_SLOT[AUGMENTS[id].slot].indexOf(id) !== -1,
+       id + ' is missing from its own shelf');
+  });
+  ok(AUGMENT_SLOTS.reduce((n, sl) => n + AUGMENTS_BY_SLOT[sl].length, 0) === AUGMENT_KEYS.length,
+     'the two augment shelves do not partition the registry');
+  AUGMENT_SLOTS.forEach(sl => ok(AUGMENTS_BY_SLOT[sl].length >= 4,
+    'the ' + sl + ' augment shelf has only ' + AUGMENTS_BY_SLOT[sl].length + ' options'));
+  /* THE ROW CONTROL KEEPS ONE IDENTITY ACROSS THE PRESS. keepFocus() restores
+     the keyboard by matching the data-* attribute the focused control carried,
+     so a button that renamed its own attribute as you pressed it cannot be
+     found again - measured before this was fixed, pressing Remove sent focus
+     to a different augment's Buy button two rows up. Fifth instance of the
+     focus-drop family in this build and the first that did not land on <body>,
+     which is precisely why it needed a check rather than a fix.
+
+     Compared as MARKUP rather than by driving the DOM: assertAll() must not
+     touch the screen, and it must not spend a champion's gold to find out. */
+  (function () {
+    const rig = shopRig();
+    rig.character.gear.weapon.quality = 4;
+    const attrs = html => (html.match(/data-[a-z-]+(?==)/g) || [])
+      .filter(a => a !== 'data-unfit');           // the fitted chips, not the rows
+    const empty = attrs(augmentSlotSection(rig.character, 'weapon'));
+    rig.character.gear.weapon.augments = ['savage'];
+    const full = attrs(augmentSlotSection(rig.character, 'weapon'));
+    ok(empty.length > 0 && full.length === empty.length,
+       'the augment rows changed how many controls they carry when one was fitted');
+    ok(JSON.stringify(empty) === JSON.stringify(full),
+       'an augment row control renames its own data attribute when fitted (' +
+       empty.join(',') + ' -> ' + full.join(',') + ') - keepFocus cannot follow it');
+  })();
+
+  /* No two augments may share a picture. Same rule as the class grid, and the
+     same reason: a duplicate drawing under two names is invisible in review. */
+  (function () {
+    const icons = AUGMENT_KEYS.map(id => AUGMENTS[id].icon);
+    ok(new Set(icons).size === icons.length, 'two augments share one icon: ' + icons.join(','));
+  })();
+
+  /* MIGRATION: a save written before the split can hold Stalwart on a weapon.
+     It must be RELOCATED, not deleted - the player paid 2,500g for it. */
+  (function () {
+    const wide = migrateCharacter(Object.assign(JSON.parse(JSON.stringify(shopRig().character)), {
+      gear: { weapon: { quality: 4, augments: ['stalwart', 'keen'] },
+              armor:  { quality: 4, augments: ['gilded', 'swift'] } }
+    }));
+    ok(wide.gear.weapon.augments.indexOf('stalwart') === -1 &&
+       wide.gear.armor.augments.indexOf('stalwart') !== -1,
+       'a displaced armour augment was not relocated to the armour');
+    ok(wide.gear.armor.augments.indexOf('gilded') === -1 &&
+       wide.gear.weapon.augments.indexOf('gilded') !== -1,
+       'a displaced weapon augment was not relocated to the weapon');
+    ok(wide.gear.weapon.augments.indexOf('keen') !== -1 &&
+       wide.gear.armor.augments.indexOf('swift') !== -1,
+       'relocating displaced augments dropped ones that were already correct');
+    /* Dropped only when there is genuinely nowhere to put it. A Crude chest
+       has no slots at all, so an armour augment sitting on a Legendary weapon
+       has to go - and that is honest, because the alternative is a champion
+       holding more augments than slots. */
+    const tight = migrateCharacter(Object.assign(JSON.parse(JSON.stringify(shopRig().character)), {
+      gear: { weapon: { quality: 4, augments: ['stalwart'] }, armor: { quality: 0, augments: [] } }
+    }));
+    ok(tight.gear.weapon.augments.length === 0 && tight.gear.armor.augments.length === 0,
+       'a displaced augment survived with nowhere legal to sit');
+    /* And the list invariants migrateGear now owns for everybody. */
+    const junk = migrateCharacter(Object.assign(JSON.parse(JSON.stringify(shopRig().character)), {
+      gear: { weapon: { quality: 4, augments: ['keen', 'keen', 'nope', 'heavy', 'gilded', 'cruel'] },
+              armor:  { quality: 2, augments: ['swift', 'swift'] } }
+    }));
+    ok(junk.gear.weapon.augments.indexOf('nope') === -1, 'an unknown augment id survived migration');
+    ok(new Set(junk.gear.weapon.augments).size === junk.gear.weapon.augments.length,
+       'a duplicated augment survived migration');
+    ok(junk.gear.weapon.augments.length <= slotsAtQuality(junk, 'weapon', 4, null),
+       'a champion came back holding more augments than slots');
+  })();
   const goldBefore = sf.character.gold;
   ok(removeAugment(sf, 'weapon', 'keen').ok === true, 'a fitted augment could not be removed');
   ok(sf.character.gold === goldBefore, 'removing an augment moved gold - it must be free both ways');
@@ -9267,7 +9815,7 @@ function assertAll() {
     ok(ICON_NAMES.indexOf(AUGMENTS[id].icon) !== -1, id + ' names an icon outside the sprite sheet');
     ok(Object.keys(AUGMENTS[id].effect).length > 0, id + ' has no mechanical effect');
   });
-  ok(AUGMENT_KEYS.length === 8, 'expected 8 augments, found ' + AUGMENT_KEYS.length);
+  ok(AUGMENT_KEYS.length === 14, 'expected 14 augments, found ' + AUGMENT_KEYS.length);
 
   /* Augments must actually reach combat, not just sit in state. */
   const ab = shopRig();
@@ -9288,10 +9836,60 @@ function assertAll() {
   ok(roundReward(gi, 5).gold > goldRateBefore, 'Gilded did not raise gold earned');
   const st = shopRig();
   st.character.gear.weapon.quality = 2;
-  buyAugment(st, 'weapon', 'stalwart');
+  st.character.gear.armor.quality = 2;
+  buyAugment(st, 'armor', 'stalwart');
   startRun(st, 0); settleRun(st, 'knockout', 0);
   ok(st.character.knockoutUntil < CONST.KNOCKOUT_COOLDOWN_MS,
      'Stalwart did not shorten the knockout cooldown');
+
+  /* The four NEW effects, each proved at the one consumer that can see it.
+     Every one of these is the check Phase 7 wished it had had in Phase 1:
+     a bonus that reaches the registry and not the game is silent forever. */
+  (function () {
+    const rig = () => { const r = shopRig(); r.character.gear.weapon.quality = 4;
+      r.character.gear.armor.quality = 4; return r; };
+    /* Savage: crit damage only. Reading plain damage would call it inert. */
+    const sv = rig();
+    const beforeRatio = playerDamage(sv.character, true) / playerDamage(sv.character, false);
+    buyAugment(sv, 'weapon', 'savage');
+    ok(playerDamage(sv.character, true) / playerDamage(sv.character, false) > beforeRatio,
+       'Savage did not raise crit damage');
+    ok(Math.abs(playerDamage(sv.character, false) -
+       playerDamage(rig().character, false)) < 1e-9, 'Savage moved ordinary damage as well');
+    /* Warded and Plated: mitigation. Plated also carries vigor and a drawback. */
+    const wd = rig(); const takenBefore = damageTaken(wd.character, 100);
+    buyAugment(wd, 'armor', 'warded');
+    ok(damageTaken(wd.character, 100) < takenBefore, 'Warded did not reduce damage taken');
+    const pl = rig(); const plHp = maxHpOf(pl.character); const plEv = playerEvadeChance(pl.character);
+    buyAugment(pl, 'armor', 'plated');
+    ok(damageTaken(pl.character, 100) < takenBefore, 'Plated did not reduce damage taken');
+    ok(maxHpOf(pl.character) > plHp, 'Plated did not raise max HP');
+    ok(playerEvadeChance(pl.character) < plEv || plEv === 0, 'Plated did not carry its evasion drawback');
+    /* Bulwark: max HP. */
+    const bw = rig(); const bwHp = maxHpOf(bw.character);
+    buyAugment(bw, 'armor', 'bulwark');
+    ok(maxHpOf(bw.character) > bwHp, 'Bulwark did not raise max HP');
+    /* Mending: OUT-OF-COMBAT regen, so it must move both the passive trickle
+       and the Medic - regenPctFor is the one home and both read it. */
+    const mn = rig();
+    const passiveBefore = regenPctFor(mn, 'forge'), medicBefore = regenPctFor(mn, 'medic');
+    buyAugment(mn, 'armor', 'mending');
+    ok(regenPctFor(mn, 'forge') > passiveBefore, 'Mending did not speed the passive HP trickle');
+    ok(regenPctFor(mn, 'medic') > medicBefore, 'Mending did not speed the Medic');
+    ok(near(regenPctFor(mn, 'forge') / passiveBefore, 1 + AUGMENTS.mending.effect.hpRegen, 0.001),
+       'Mending is not applying its own magnitude');
+    /* Honed: TYPED, so it speeds the Sparring Circle and nothing else. An
+       untyped one would be a flat idle-economy multiplier bought with arena
+       gold, which is the loop feeding itself. */
+    const hn = rig();
+    const spar = FACILITY_KEYS.find(k => FACILITIES[k].feeds === 'weapon');
+    const other = FACILITY_KEYS.find(k => FACILITIES[k].feeds === 'str');
+    const sparBefore = tpPerMin(hn, spar), otherBefore = tpPerMin(hn, other);
+    buyAugment(hn, 'weapon', 'honed');
+    ok(tpPerMin(hn, spar) > sparBefore, 'Honed did not speed weapon training');
+    ok(Math.abs(tpPerMin(hn, other) - otherBefore) < 1e-9,
+       'Honed leaked onto a stat facility - a typed tutelage must be typed');
+  })();
   /* Vampiric and Resilient are the in-run sustain the Phase 5 harness said the
      early game was missing - they must show up as a longer run. */
   const base = simulate({ race: 'orc', stats: { str: 5, dex: 5, int: 5, con: 5, cha: 5 },
@@ -9360,12 +9958,39 @@ function assertAll() {
      'equipping a class does not move Might by its tier term');
 
   /* --- battle classes and the bonus pool (doc 3.4, 3.5) --- */
-  /* Doc 3.5's twenty-two, plus the one tier-0 starting class. */
-  ok(CLASS_KEYS.length === 23, 'expected 23 classes, found ' + CLASS_KEYS.length);
+  /* Doc 3.5's twenty-two, plus the one tier-0 starting class, plus the four
+     tier-3 rows added 2026-08-28. One weapon opens tier 1, so there are as
+     many tier-1 classes as weapons and that count is DERIVED - a fifteenth
+     weapon would otherwise need someone to remember this line. */
+  ok(CLASS_KEYS.length === 27, 'expected 27 classes, found ' + CLASS_KEYS.length);
   const byTier = { 0: 0, 1: 0, 2: 0, 3: 0 };
   CLASS_KEYS.forEach(id => { byTier[CLASSES[id].tier]++; });
-  ok(byTier[1] === 14 && byTier[2] === 6 && byTier[3] === 2,
+  ok(byTier[0] === 1 && byTier[1] === Object.keys(WEAPONS).length &&
+     byTier[2] === 6 && byTier[3] === 6,
      'class tier counts drifted from doc 3.5: ' + JSON.stringify(byTier));
+  /* The tier-3 shelf must be six DIFFERENT builds, not six labels over the
+     same three bonuses. A duplicate set is invisible in code review and would
+     make the deepest investment in the game a cosmetic choice. */
+  (function () {
+    const sets = CLASS_KEYS.filter(id => CLASSES[id].tier === 3)
+      .map(id => CLASSES[id].bonuses.slice().sort().join('+'));
+    ok(new Set(sets).size === sets.length,
+       'two tier-3 classes grant the same three bonuses: ' + sets.join(' | '));
+    /* And none of them may LEAD on a bonus that saturates at tier-3
+       magnitude - a capped primary makes a tier-3 class pay less than the
+       tier-1 class under it, which is how Dark Knight got built. */
+    CLASS_KEYS.filter(id => CLASSES[id].tier === 3).forEach(id =>
+      ['lifesteal', 'recovery'].forEach(k => ok(CLASSES[id].bonuses.indexOf(k) === -1,
+        id + ' is a tier-3 class built on "' + k + '", which saturates before tier 3')));
+    /* And none of them may carry `avarice`. It is the one pool key that
+       multiplies the metric rather than earning it: measured, the same tier-3
+       row swept at +287% gold/hour with avarice and +144% without, against a
+       tier average of 167%. A class holding it wins the comparison whatever
+       else it does, so the top tier does not get it. */
+    CLASS_KEYS.filter(id => CLASSES[id].tier === 3).forEach(id =>
+      ok(CLASSES[id].bonuses.indexOf('avarice') === -1 && CLASSES[id].drawback !== 'avarice',
+        id + ' is a tier-3 class carrying "avarice", which multiplies gold/hour directly'));
+  })();
   ok(byTier[0] === 1, 'there is not exactly one starting class');
   /* A tier-0 class must be wearable by a champion who has done nothing, or
      newCharacter hands out something migrateCharacter will strip on load. */
@@ -11718,7 +12343,8 @@ function assertAll() {
       c.battleClass = null;                       // isolate the ladder from the class pool
       const read = () => ({
         dmg: playerDamage(c, false), crit: playerCritChance(c), ev: playerEvadeChance(c),
-        hp: maxHpOf(c), taken: damageTaken(c, 100), gold: roundReward(s, 5).gold
+        hp: maxHpOf(c), taken: damageTaken(c, 100), gold: roundReward(s, 5).gold,
+        critDmg: playerDamage(c, true)
       });
       c.renown = 0; c.renownRank = 0;
       const before = read();
@@ -11732,6 +12358,11 @@ function assertAll() {
         key === 'mitigation' ? after.taken < before.taken :
         key === 'avarice'    ? after.gold > before.gold :
         key === 'recovery'   ? benchMs(RENOWN_TOP_RANK) < benchMs(0) :
+        /* Crit damage is the only reading that separates critPower from
+           `damage` - a rung granting it moves the crit blow and not the plain
+           one, and reading only playerDamage(c,false) would have called the
+           whole rung inert. */
+        key === 'critPower'  ? after.critDmg / after.dmg > before.critDmg / before.dmg :
         false;
       ok(moved, 'the ladder grants "' + key + '" and it changes nothing measurable');
     });
@@ -12114,7 +12745,9 @@ window.EA = {
   startRun, beginRound, exchange, settleRun, yieldPreview, roundReward, enemyFor, applySustain,
   playerDamage, playerCritChance, playerEvadeChance, damageTaken, profOf,
   startArenaTick, stopArenaTick, arenaStep, catchUpArena, defaultScreen, startingRenownFor, RENOWN_TOP_RANK,
-  AUGMENTS, AUGMENT_KEYS, augBonus, augmentSlots, gearUpgradeCost, buyGearUpgrade,
+  AUGMENTS, AUGMENT_KEYS, AUGMENT_SLOTS, AUGMENTS_BY_SLOT, budgetConflict,
+  migrateGear, healMs,
+  augBonus, augmentSlots, gearUpgradeCost, buyGearUpgrade,
   buyAugment, removeAugment, buyFacility, facilityUpgradeCost, facilityLocked, renownRankFor,
   BONUS_KEYS, CLASSES, CLASS_KEYS, CLASS_TIERS, STATUSES, FLOURISHES,
   bonus, classBonus, classProgress, classUnlocked, equipClass, maxHpOf,
