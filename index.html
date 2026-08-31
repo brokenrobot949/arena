@@ -127,7 +127,17 @@ h1,h2,h3{font-family:var(--font-display);text-transform:uppercase;letter-spacing
 .tb-hp .num{font-size:11px;white-space:nowrap}
 /* Knocked out: the activity line becomes the countdown, and says so. */
 .tb-status.is-down .tb-doing{font-weight:700}
-@media (max-width:430px){
+/* 560, not 430. Crossing 430 upward used to restore the laurel, the full-size
+   purse chips AND the wider gaps all at once - about 88px of chrome for 1px of
+   viewport - so the longest name the syllable tables can build stopped fitting
+   again from 431px up to roughly 505px. Measured: at 440px the title needed
+   139px of an available 97.
+
+   Invisible for months because the topbar assertion only ever tests the width
+   it happens to run at, and 375px and full desktop both sit outside the band.
+   Same shape as the .cc-head spill: a defect that only exists between two
+   breakpoints nobody sampled. The band is swept explicitly now. */
+@media (max-width:560px){
   .purse{gap:4px}
   .purse .chip{font-size:10.5px;padding:3px 6px 3px 4px;gap:3px}
   .purse .chip .icon{width:12px;height:12px}
@@ -436,6 +446,7 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 .cond .icon{width:22px;height:22px;flex:none;margin-top:1px}
 .cond strong{display:block;font-size:13.5px}
 .cond span{display:block;font-size:11.5px;line-height:1.4;color:var(--ink-soft)}
+.cond-fx{display:flex!important;flex-wrap:wrap;gap:4px;margin-top:5px}
 .boon-held{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
 .boon-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;
   font-family:var(--font-data);padding:3px 8px;border-radius:var(--r-pill);
@@ -8028,13 +8039,48 @@ let lastDraftSig = '';
 
 /* --- the sand, the draft, and what you have built ------------- */
 
+/* WHAT A CONDITION ACTUALLY DOES, derived from the same numbers the core
+   reads rather than written out beside them. The flavour line says how it
+   feels; this says what it changes, and the two cannot drift apart.
+
+   Pool effects are phrased by bonusText(), which is already the one home for
+   "what does this pool key mean" - so the sand card and a class card can never
+   describe the same key differently, and its inversion rule does the hard part
+   for free: a −0.10 `mitigation` reads as "+10% damage taken", not as a
+   negative bonus nobody can parse.
+
+   `good` is what the chip is coloured on, and it is not the sign. Every pool
+   key is framed so that MORE is better, so a positive value is good; on the
+   enemy side a multiplier BELOW 1 is good, because it is the enemy being
+   diminished rather than the champion. */
+function conditionEffects(cond) {
+  const out = [];
+  Object.keys(cond.pool || {}).forEach(k => {
+    if (typeof cond.pool[k] !== 'number' || cond.pool[k] === 0) return;
+    out.push({ text: bonusText(k, cond.pool[k]), good: cond.pool[k] > 0 });
+  });
+  const em = cond.enemy || {};
+  [['hp', 'enemy health'], ['dmg', 'enemy damage']].forEach(pair => {
+    const v = em[pair[0]];
+    if (typeof v !== 'number' || v === 1) return;
+    out.push({
+      text: (v < 1 ? '−' : '+') + Math.round(Math.abs(1 - v) * 100) + '% ' + pair[1],
+      good: v < 1
+    });
+  });
+  return out;
+}
+
 function conditionChips(ids) {
   return arr(ids, []).map(id => {
     const cond = ARENA_CONDITIONS[id];
     if (!cond) return '';
+    const fx = conditionEffects(cond).map(e =>
+      '<span class="mod ' + (e.good ? 'up' : 'down') + '">' + esc(e.text) + '</span>').join('');
     return '<li class="cond">' + icon(cond.icon) +
       '<div><strong>' + esc(cond.label) + '</strong>' +
-      '<span>' + esc(cond.text) + '</span></div></li>';
+      '<span>' + esc(cond.text) + '</span>' +
+      '<span class="cond-fx">' + fx + '</span></div></li>';
   }).join('');
 }
 
@@ -10173,7 +10219,54 @@ function assertAll() {
         id + ' grants "' + k + '", which is not a doc 3.4 pool key'));
       Object.keys(cond.enemy || {}).forEach(k => ok(k === 'hp' || k === 'dmg',
         id + ' names an enemy modifier "' + k + '" that enemyFor cannot apply'));
+      /* THE CARD HAS TO SAY EVERYTHING THE CONDITION DOES. Rob could not tell
+         what Fever Pitch changed, because the panel carried the flavour line
+         and nothing else. Counting the chips against the data is what stops a
+         new condition shipping with a modifier that never reaches the screen -
+         the flavour text is written by hand and would not notice. */
+      const shown = conditionEffects(cond);
+      const real = Object.keys(cond.pool).filter(k => cond.pool[k] !== 0).length +
+                   Object.keys(cond.enemy || {}).filter(k => cond.enemy[k] !== 1).length;
+      ok(shown.length === real,
+         id + ' does something the sand card does not mention (' + shown.length +
+         ' of ' + real + ' effects shown)');
+      shown.forEach(e => ok(/^[+−]\d/.test(e.text),
+        id + ' renders an effect with no number in it: "' + e.text + '"'));
     });
+    /* And the colour has to mean "good for me", which is NOT the sign of the
+       number. A negative `mitigation` is more damage taken, and an enemy
+       multiplier below 1 is the enemy being diminished - both are the easy
+       ones to get backwards. */
+    (function () {
+      /* REPORTS, never throws. The first version indexed [0] straight off the
+         result, so the honest falsification - deleting the enemy half of
+         conditionEffects - blew up inside the suite instead of failing, and
+         every check after it was hidden. Third time this file has had to learn
+         that; a missing row is a FAILURE, not an exception. */
+      const probe = (pool, enemy) => {
+        const out = conditionEffects({ pool: pool || {}, enemy: enemy || {} });
+        return Array.isArray(out) && out.length ? out[0] : null;
+      };
+      const has = (e, what) => ok(!!e, 'conditionEffects returned nothing for ' + what);
+      const mDown = probe({ mitigation: -0.10 });
+      if (has(mDown, 'a negative mitigation')) {
+        ok(mDown.good === false, 'a condition that raises damage taken is marked as a benefit');
+        ok(/damage taken/.test(mDown.text), 'a negative mitigation is not phrased as damage taken');
+      }
+      const mUp = probe({ mitigation: 0.10 });
+      if (has(mUp, 'a positive mitigation'))
+        ok(mUp.good === true, 'a condition that lowers damage taken is marked as a penalty');
+      const eWeak = probe(null, { dmg: 0.9 });
+      if (has(eWeak, 'a weakened enemy'))
+        ok(eWeak.good === true, 'weaker enemies are marked as a penalty');
+      const eStrong = probe(null, { dmg: 1.1 });
+      if (has(eStrong, 'a strengthened enemy'))
+        ok(eStrong.good === false, 'stronger enemies are marked as a benefit');
+      const eHp = probe(null, { hp: 0.88 });
+      if (has(eHp, 'an enemy health multiplier'))
+        ok(eHp.text === '−12% enemy health',
+           'an enemy health multiplier is not rendered as a percentage change');
+    })();
     BOON_KEYS.forEach(id => {
       const b = BOONS[id];
       ok(ICON_NAMES.indexOf(b.icon) !== -1, id + ' names an icon outside the sprite sheet');
@@ -14043,6 +14136,7 @@ window.EA = {
   migrateGear, healMs,
   ARENA_CONDITIONS, CONDITION_KEYS, BOONS, BOON_KEYS, DRAFT_BUCKETS,
   conditionsForBlock, conditionsAt, conditionBlock, conditionsLeftMs, enemyMods,
+  conditionEffects, bonusText,
   assignedStoryFor, championToldATale, libraryOpen,
   draftsEarnedBy, draftPending, offerBoons, settleDraftOwed, takeDraft,
   autoPickBoon, resolveOverdueDraft, runBonus, bindRun,
