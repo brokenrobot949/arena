@@ -424,6 +424,36 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 .aug-note{margin:0;padding:10px 12px;font-size:11.5px;line-height:1.5;
   color:var(--ink-soft);background:var(--stone)}
 .aug-empty{padding:12px 0 6px;font-size:12.5px;line-height:1.5;color:var(--ink-soft)}
+/* --- the sand and the draft --------------------------------- */
+.sand h3.sub,.draft h3.sub{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sand h3.sub .icon,.draft h3.sub .icon{width:20px;height:20px;flex:none}
+.sand-when,.draft-of{margin-left:auto;font-family:var(--font-data);font-size:11px;
+  color:var(--ink-soft);white-space:nowrap}
+.cond-list{list-style:none;margin:6px 0 0;padding:0;display:flex;
+  flex-direction:column;gap:7px}
+.cond{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;
+  background:var(--sand);border:2px solid var(--ink-faint);border-radius:10px}
+.cond .icon{width:22px;height:22px;flex:none;margin-top:1px}
+.cond strong{display:block;font-size:13.5px}
+.cond span{display:block;font-size:11.5px;line-height:1.4;color:var(--ink-soft)}
+.boon-held{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
+.boon-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;
+  font-family:var(--font-data);padding:3px 8px;border-radius:var(--r-pill);
+  background:var(--jade-deep);color:var(--paper)}
+.boon-chip .icon{width:13px;height:13px;fill:currentColor}
+/* The offer. Deliberately the loudest thing on the screen while it stands -
+   it is the one moment in a run that asks the player for something. */
+.draft{border-color:var(--gold);box-shadow:4px 4px 0 var(--ink)}
+.draft-opts{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
+@media (min-width:560px){.draft-opts{grid-template-columns:repeat(3,1fr)}}
+.draft-opt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+  text-align:left;padding:11px 12px;min-height:44px;cursor:pointer;
+  background:var(--paper);border:3px solid var(--ink);border-radius:12px;
+  box-shadow:3px 3px 0 var(--ink);font:inherit;color:var(--ink)}
+.draft-opt:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.draft-opt .icon{width:22px;height:22px}
+.draft-opt strong{font-size:14px}
+.draft-opt span{font-size:11.5px;line-height:1.4;color:var(--ink-soft)}
 .commission h3.sub{display:flex;align-items:center;gap:8px}
 .commission h3.sub .icon{width:20px;height:20px;flex:none}
 .com-task{margin:2px 0 10px;font-size:13px;line-height:1.5;color:var(--ink-soft)}
@@ -561,6 +591,13 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 .tale-head strong{display:block;font-size:14px}
 .tale-head .fact{margin-left:auto;flex:none}
 .tale.is-told .tale-head strong{color:var(--jade-deep)}
+/* Shut to this champion. Dimmed, never hidden - the premise and the progress
+   are exactly what tells a player what they are working toward. */
+.tale.is-shut .tale-head strong,.tale.is-shut .tale-head .rb-now{opacity:.62}
+h3.sub:has(.tale-tag){display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tale-tag{margin-left:auto;font-family:var(--font-data);font-size:10.5px;
+  letter-spacing:.02em;padding:2px 8px;border-radius:var(--r-pill);
+  background:var(--cobalt);color:var(--paper);white-space:nowrap}
 .tale .chapters{padding:0 0 11px 4px}
 
 /* ============================================================
@@ -1058,6 +1095,11 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
         <h3>The arena</h3>
         <p>Rounds get harder and pay more, forever. You choose when to walk: <strong>yielding</strong> keeps 70% of the pot and your health, a <strong>knockout</strong> keeps the whole pot but costs you 25 minutes on the bench &mdash; during which you cannot train or heal either. The run keeps fighting while the tab is closed.</p>
 
+        <h3>The sand, and the boons</h3>
+        <p>Two <strong>conditions</strong> are in force at any moment &mdash; shown on the Arena screen before you enter, and they change every twenty minutes. Each has an upside and a cost: a rich purse with hungrier opponents, weaker enemies and a thinner purse. A run keeps whatever sand it started on, so entering is a real choice: fight this one, or wait for sand that suits what you are carrying.</p>
+        <p>Every five rounds you are offered three <strong>boons</strong> and take one. They last for that run only, they <em>stack</em>, and the fight does not stop while you choose &mdash; the boon starts working the moment you take it. If you are not watching, the game takes one for you after twelve exchanges, using the preference you set under the arena card.</p>
+        <p class="guide-rule">A deep start does not cost you boons. If you have Seeded Entry and begin at round 24, you are owed every boon a run that fought its way there would have &mdash; four of them, all offered before the first exchange.</p>
+
         <h3>Gear and augments</h3>
         <p>Quality tiers sit on the <em>slot</em>, so switching weapon type costs you nothing. Better quality opens more augment slots &mdash; one at Fine, two at Master, three at Legendary, on each piece.</p>
         <p>There are <strong>two separate augment pools</strong> and they do not mix. <strong>Weapon</strong> augments are what you do to the enemy: crit, crit damage, raw damage, affliction, gold, lifesteal, and one that speeds weapon training. <strong>Armour</strong> augments are what the arena does to you: evasion, damage reduction, max HP, in-fight regen, out-of-combat healing speed, and a shorter knockout bench.</p>
@@ -1082,6 +1124,10 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 
         <h3>Renown and rank</h3>
         <p>Renown is fame, and it only ever goes up. Each rank gives your champion a new title and a small permanent bonus, and the highest rank you reach raises the floor every <em>future</em> champion starts from.</p>
+
+        <h3>Stories</h3>
+        <p>Each champion answers for <strong>one tale</strong> &mdash; the one the academy is in the middle of. The rest of the library stays shut until they have finished that tale themselves; a tale a predecessor closed is not one you have told.</p>
+        <p>Chapters gate on <strong>your own best round</strong>, not the academy's. Closed chapters, and the name of whoever closed them, are permanent &mdash; so a successor picks up a half-told tale where it was left, but still has to earn their way to the next boss.</p>
 
         <h3>Retirement</h3>
         <p>Retiring is not losing. Your champion joins the Hall, pays out <strong>Legacy Points</strong> for permanent account perks, and can be seated as a <strong>mentor</strong> to speed the training of everyone after them. Mentors wear out, so you always need the next champion.</p>
@@ -1172,8 +1218,11 @@ const CONST = {
   LEGACY_MIN_AGE_MS: 30 * 60 * 1000,
 
   /* --- story ladder (doc 8) ---------------------------------
-     Chapters gate on ACCOUNT-best arena round, not the current champion's, so
-     a tale survives the death of whoever started it (doc 10). */
+     Chapters gate on THE CHAMPION'S OWN best arena round (Rob, 2026-08-30).
+     What survives the death of whoever started a tale is the tale itself - the
+     closed chapters, their attribution and the ladder position are all account
+     state - but the right to fight the next boss is earned by whoever is going
+     to fight it. See chapterBlocked. */
   STORY_GATES: [5, 10, 15, 20, 26],
   STORY_CHAPTERS: 5,
   /* A boss is a one-off encounter, never inside an endless run (doc 8), so its
@@ -1412,7 +1461,36 @@ const CONST = {
   FLOURISH_EVERY: 4,
   /* Tiefling's racial affliction (doc 3.1) and Cruel's (doc 3.7) need a status
      to inflict when the champion's class does not name one. */
-  DEFAULT_AFFLICTION: 'bleed'
+  DEFAULT_AFFLICTION: 'bleed',
+
+  /* --- the sand, and the draft (Rob, 2026-08-30) --------------
+     A mid-game run was 6.2 minutes and about 336 exchanges with exactly ONE
+     decision in it - push or yield - and Auto-Yield exists to remove that one.
+     These two mechanics are the answer: conditions make runs differ from each
+     other before you enter, and the draft makes a run something you assemble
+     while it happens. Both resolve through the doc 3.4 bonus pool, so no
+     combat code learns they exist.
+
+     The sand rotates on a clock BLOCK, derived the way a daily commission is:
+     no stored "which sand did we roll", so it is the same for the whole block,
+     survives a reload, and cannot drift from what is on screen. That is what
+     makes "wait for better sand" a real decision rather than a surprise. */
+  CONDITION_ROTATE_MS: 20 * 60 * 1000,
+  CONDITIONS_PER_RUN: 2,
+
+  /* A draft every N rounds. DRAFT_AUTO_EXCHANGES is the grace period before
+     the game picks for you, and it is counted in EXCHANGES rather than
+     milliseconds on purpose: the harness drives exchanges without a wall
+     clock, so a millisecond deadline would never fire there and every sweep
+     would silently measure a champion with no boons. That is the blind spot
+     this project has now found three times. */
+  DRAFT_EVERY_ROUNDS: 5,
+  DRAFT_OPTIONS: 3,
+  DRAFT_AUTO_EXCHANGES: 12,
+  /* What the game picks when you are not there. Survival by default: an absent
+     player wants the run to go deep, and the alternative default - "the first
+     option" - is an arbitrary rule nobody can plan around. */
+  DRAFT_DEFAULT_BUCKET: 'defence'
 };
 
 const FORMULAS = {
@@ -1783,13 +1861,13 @@ const CLASS_DRAWBACK_BONUS = 0.4;
    the Sparring Circle and nothing else. */
 const AUGMENTS = {
   /* --- weapon: what the champion does to the enemy --- */
-  keen:      { slot: 'weapon', label: 'Keen',      icon: 'aug-keen',   cost: 400,  power: 2.0,
+  keen:      { slot: 'weapon', label: 'Keen',      icon: 'aug-keen',   cost: 400,  power: 4.0,
                text: '+5% crit chance', effect: { crit: 0.05 } },
-  cruel:     { slot: 'weapon', label: 'Cruel',     icon: 'flame',      cost: 400,  power: 2.9,
+  cruel:     { slot: 'weapon', label: 'Cruel',     icon: 'flame',      cost: 400,  power: 4.0,
                text: '+10% affliction chance', effect: { affliction: 0.10 } },
-  savage:    { slot: 'weapon', label: 'Savage',    icon: 'aug-savage', cost: 700,  power: 6.5,
+  savage:    { slot: 'weapon', label: 'Savage',    icon: 'aug-savage', cost: 700,  power: 8.3,
                text: '+25% crit damage', effect: { critPower: 0.25 } },
-  heavy:     { slot: 'weapon', label: 'Heavy',     icon: 'anvil',      cost: 400,  power: 3.4,
+  heavy:     { slot: 'weapon', label: 'Heavy',     icon: 'anvil',      cost: 700,  power: 6.8,
                text: '+12% damage, −5% evasion', effect: { damage: 0.12, evasion: -0.05 } },
   /* The one augment that pays outside the arena. It is deliberately TYPED, so
      it speeds weapon training and not the five stat facilities - an untyped
@@ -1801,35 +1879,35 @@ const AUGMENTS = {
   /* Held by the shared per-exchange ceiling in applySustain(). The 8% is still
      8% of damage dealt but reaches the ceiling almost immediately, so the row
      says so rather than implying it scales. */
-  vampiric:  { slot: 'weapon', label: 'Vampiric',  icon: 'drop',       cost: 2300, power: 19.0,
+  vampiric:  { slot: 'weapon', label: 'Vampiric',  icon: 'drop',       cost: 2300, power: 21.4,
                budget: 'sustain',
                text: 'Heal 8% of damage dealt, up to the sustain cap', effect: { lifesteal: 0.08 } },
-  gilded:    { slot: 'weapon', label: 'Gilded',    icon: 'coin',       cost: 1800, power: 15.1,
+  gilded:    { slot: 'weapon', label: 'Gilded',    icon: 'coin',       cost: 1600, power: 14.7,
                text: '+15% gold', effect: { avarice: 0.15 } },
 
   /* --- armour: what the arena does to the champion --- */
-  swift:     { slot: 'armor',  label: 'Swift',     icon: 'hurdle',     cost: 400,  power: 3.3,
+  swift:     { slot: 'armor',  label: 'Swift',     icon: 'hurdle',     cost: 400,  power: 5.0,
                text: '+5% evasion', effect: { evasion: 0.05 } },
-  warded:    { slot: 'armor',  label: 'Warded',    icon: 'aug-warded', cost: 400,  power: 4.9,
+  warded:    { slot: 'armor',  label: 'Warded',    icon: 'aug-warded', cost: 700,  power: 7.8,
                text: '−8% damage taken', effect: { mitigation: 0.08 } },
-  bulwark:   { slot: 'armor',  label: 'Bulwark',   icon: 'aug-bulwark', cost: 700, power: 6.3,
+  bulwark:   { slot: 'armor',  label: 'Bulwark',   icon: 'aug-bulwark', cost: 700, power: 8.0,
                text: '+10% max HP', effect: { vigor: 0.10 } },
   /* Sits exactly at the sustain ceiling on its own, so the number in this text
      is the number the player gets. Before the cap it read 0.5% and, once
      capped, would have been a lie on the shop row. */
-  resilient: { slot: 'armor',  label: 'Resilient', icon: 'heart',      cost: 2500, power: 19.0,
+  resilient: { slot: 'armor',  label: 'Resilient', icon: 'heart',      cost: 2500, power: 21.4,
                budget: 'sustain',
                text: 'Regain 0.08% max HP per exchange', effect: { regen: 0.0008 } },
   /* Out-of-combat regen, so it shortens the wait between runs rather than
      doing anything inside one. That makes it a THROUGHPUT lever like recovery,
      which is the class of bonus this project has twice mispriced - swept, not
      guessed. */
-  mending:   { slot: 'armor',  label: 'Mending',   icon: 'cross-medic', cost: 1500, power: 12.6,
+  mending:   { slot: 'armor',  label: 'Mending',   icon: 'cross-medic', cost: 1500, power: 13.9,
                text: '+30% out-of-combat HP regeneration', effect: { hpRegen: 0.30 } },
-  plated:    { slot: 'armor',  label: 'Plated',    icon: 'aug-plated', cost: 1200,  power: 10.1,
+  plated:    { slot: 'armor',  label: 'Plated',    icon: 'aug-plated', cost: 1300,  power: 12.3,
                text: '−10% damage taken, +8% max HP, −5% evasion',
                effect: { mitigation: 0.10, vigor: 0.08, evasion: -0.05 } },
-  stalwart:  { slot: 'armor',  label: 'Stalwart',  icon: 'hourglass',  cost: 1100, power: 9.3,
+  stalwart:  { slot: 'armor',  label: 'Stalwart',  icon: 'hourglass',  cost: 700, power: 7.1,
                text: '−20% knockout cooldown', effect: { recovery: 0.20 } }
 };
 const AUGMENT_KEYS = Object.keys(AUGMENTS);
@@ -1965,11 +2043,13 @@ const HALL_INSCRIPTIONS = {
 };
 
 /* --- the story ladder (doc 8) -------------------------------
-   Ten tales, five chapters each, one boss per chapter. Chapters gate on
-   ACCOUNT-best arena round (CONST.STORY_GATES), never on the current
-   champion's, because doc 10 requires a tale to survive the death of whoever
-   started it - most stories here will be finished by four or five different
-   gladiators across as many lifetimes.
+   Ten tales, five chapters each, one boss per chapter. Chapters gate on the
+   CHAMPION'S OWN best arena round (CONST.STORY_GATES), and a champion answers
+   for one tale until they have finished it - see chapterBlocked and
+   assignedStoryFor. A tale still survives the death of whoever started it,
+   because what survives is the closed chapters and their attribution; most
+   stories here will still be finished by four or five different gladiators
+   across as many lifetimes, each of whom earned their own way to the gate.
 
    Content only: `index` is stamped on at load and nothing else in this table
    is read by the engine except by id. Adding an eleventh tale needs no code. */
@@ -2294,6 +2374,89 @@ const RANK_UNLOCKS = [
     text: 'Begin every run at ' + Math.round(CONST.SEEDED_ENTRY_FRACTION * 100) +
           '% of your best round' }
 ];
+
+/* --- arena conditions: the sand you are fighting on today ----
+   Two roll per block and they are shown BEFORE you enter, which is the whole
+   point: it turns "start a run" from a button into a decision. Every row has
+   an upside and a cost, so the table is roughly neutral on average and the
+   choice is about what your build wants rather than about waiting for a
+   jackpot.
+
+   `pool` goes through bonus() like everything else. `enemy` is the one thing
+   that cannot - the enemy is not a champion - so it is a pair of named
+   multipliers read by enemyFor(), and deliberately nothing else.
+
+   NOT ALLOWED HERE: `vigor`, `lifesteal`, `regen`. Vigor because a max-HP
+   change mid-run moves the Auto-Yield threshold and the HP bar under the
+   player; the other two because the shared sustain ceiling makes them dead
+   picks for most builds, which is the Dark Knight lesson. Asserted. */
+const ARENA_CONDITIONS = {
+  packedhouse:  { label: 'Packed House',  icon: 'trophy',
+                  text: 'A full house pays better and bays for a finish',
+                  pool: { avarice: 0.15 }, enemy: { dmg: 1.12 } },
+  patronsbox:   { label: "Patron's Box",  icon: 'coin',
+                  text: 'A patron is watching — rich purse, hungrier opponents',
+                  pool: { avarice: 0.25 }, enemy: { dmg: 1.18 } },
+  sunblind:     { label: 'Sunblind',      icon: 'flame',
+                  text: 'Low sun off the sand — nobody sees the strike coming',
+                  pool: { evasion: -0.08 }, enemy: { dmg: 0.95 } },
+  bloodsand:    { label: 'Blood Sand',    icon: 'drop',
+                  text: 'The sand is already wet — wounds open easily, yours too',
+                  pool: { affliction: 0.20, mitigation: -0.06 }, enemy: {} },
+  wornblades:   { label: 'Worn Blades',   icon: 'anvil',
+                  text: 'The armoury is scraping the barrel on both sides',
+                  pool: { damage: -0.10 }, enemy: { hp: 0.88 } },
+  slickfooting: { label: 'Slick Footing', icon: 'hurdle',
+                  text: 'Loose sand — commit to the swing, you cannot step off it',
+                  pool: { damage: 0.12, evasion: -0.07 }, enemy: {} },
+  bracingwind:  { label: 'Bracing Wind',  icon: 'shield',
+                  text: 'Cold and steady — easier to weather, and a quiet crowd',
+                  pool: { mitigation: 0.08, avarice: -0.16 }, enemy: {} },
+  feverpitch:   { label: 'Fever Pitch',   icon: 'aug-savage',
+                  text: 'The crowd is baying — everyone swings for the finish',
+                  pool: { crit: 0.10, mitigation: -0.10 }, enemy: {} },
+  thinranks:    { label: 'Thin Ranks',    icon: 'skull',
+                  text: 'Second-rate opposition, and a purse to match',
+                  pool: { avarice: -0.22 }, enemy: { dmg: 0.90 } },
+  longshadows:  { label: 'Long Shadows',  icon: 'hourglass',
+                  text: 'Late in the day — fewer openings, but they tell',
+                  pool: { critPower: 0.25, crit: -0.06 }, enemy: {} }
+};
+const CONDITION_KEYS = Object.keys(ARENA_CONDITIONS);
+
+/* --- the between-round draft --------------------------------
+   Every CONST.DRAFT_EVERY_ROUNDS rounds you are offered three boons and take
+   one. They STACK - the same boon can be taken again - which is what lets a
+   long run build into something rather than run out of table.
+
+   Buckets exist for one reason: the auto-pick. A player who is not watching
+   still gets a boon, chosen by a preference they set once, and "prefer
+   survival" is a thing somebody can decide in advance in a way that "prefer
+   Iron Guard over Footwork" is not. */
+const DRAFT_BUCKETS = [
+  { id: 'defence', label: 'Survival' },
+  { id: 'offence', label: 'Damage' },
+  { id: 'spoils',  label: 'Gold' }
+];
+const BOONS = {
+  whetstone:    { label: 'Whetstone',     icon: 'anvil',      bucket: 'offence',
+                  text: '+15% damage',            effect: { damage: 0.15 } },
+  killerseye:   { label: "Killer's Eye",  icon: 'aug-keen',   bucket: 'offence',
+                  text: '+8% crit chance',        effect: { crit: 0.08 } },
+  cruelty:      { label: 'Cruelty',       icon: 'aug-savage', bucket: 'offence',
+                  text: '+40% crit damage',       effect: { critPower: 0.40 } },
+  venom:        { label: 'Venom',         icon: 'flame',      bucket: 'offence',
+                  text: '+18% affliction chance', effect: { affliction: 0.18 } },
+  footwork:     { label: 'Footwork',      icon: 'hurdle',     bucket: 'defence',
+                  text: '+6% evasion',            effect: { evasion: 0.06 } },
+  ironguard:    { label: 'Iron Guard',    icon: 'aug-warded', bucket: 'defence',
+                  text: '−10% damage taken',      effect: { mitigation: 0.10 } },
+  secondbreath: { label: 'Second Breath', icon: 'hourglass',  bucket: 'defence',
+                  text: '−12% knockout bench',    effect: { recovery: 0.12 } },
+  crowdspurse:  { label: "Crowd's Purse", icon: 'coin',       bucket: 'spoils',
+                  text: '+25% gold',              effect: { avarice: 0.25 } }
+};
+const BOON_KEYS = Object.keys(BOONS);
 
 /* --- feats (doc 8) ------------------------------------------
    Built FROM the registries rather than transcribed beside them. Fourteen
@@ -2848,6 +3011,11 @@ function defaultAccount() {
        is also what an unlocked-but-unset player has - the unlock grants the
        control, not the behaviour. */
     autoYieldAt: 0,
+    /* Which bucket the between-round draft picks from when nobody is watching.
+       Account-level like Auto-Yield's threshold, and for the same reason: it
+       is a standing preference about how you want runs played, not something a
+       champion owns. */
+    draftPreference: CONST.DRAFT_DEFAULT_BUCKET,
     /* Daily commission. `day` is the local calendar day this record describes,
        `doneOn` the last day actually completed - the streak is measured from
        doneOn, so opening the game without finishing does not keep it alive.
@@ -2864,6 +3032,22 @@ function defaultArena() {
     playerHp: 0, enemyHp: 0, enemyName: '', enemyMaxHp: 0,
     statuses: [], pot: { gold: 0, renown: 0 }, log: [],
     crowd: 0, enemy: null, over: null, totalExchanges: 0,
+    /* This run's own seed. Draft offers are derived from it rather than drawn
+       from the shared rng, so they survive a reload and do not shift the
+       combat sequence behind them - see offerBoons. */
+    seed: 0,
+    /* The sand this run is being fought on, copied off the clock at startRun
+       so a block rolling over mid-fight never changes the fight underneath the
+       player. */
+    conditions: [],
+    /* Boons drafted this run, in the order taken. They STACK, so this is a
+       list rather than a set. Never trusted from a record: migrateArena caps
+       it at draftsEarnedBy(round). */
+    boons: [],
+    /* null, or the offer standing right now: { owed, options, offeredAt }.
+       `owed` is derived from the round and the boons held, never read from a
+       save - see settleDraftOwed. */
+    draft: null,
     /* null for an ordinary run; { story, chapter } while a story boss is up.
        exchange() branches on this alone, so it has to be part of the shape and
        has to survive migration - see migrateArena. */
@@ -3041,6 +3225,11 @@ function migrateAccount(raw) {
      as the game being broken rather than as a setting they chose. */
   a.autoYieldAt = CONST.AUTO_YIELD_STEPS.indexOf(num(raw.autoYieldAt, 0)) === -1
     ? 0 : num(raw.autoYieldAt, 0);
+  /* An unknown bucket falls back to the default rather than being kept: the
+     auto-pick has to name a real one or it silently degrades to "the first
+     option", which is the arbitrary rule the buckets exist to replace. */
+  a.draftPreference = DRAFT_BUCKETS.some(b => b.id === raw.draftPreference)
+    ? raw.draftPreference : CONST.DRAFT_DEFAULT_BUCKET;
   /* Commission, repaired field by field like everything else in the account.
      An unknown or missing task id, or a day key that is not a day key, simply
      rolls a fresh commission on the next refresh - the streak survives that,
@@ -3303,6 +3492,38 @@ function migrateArena(raw, account) {
              a.playerHp > 0 && a.enemyHp > 0 && a.round >= 1 &&
              (!isObj(raw.boss) || !!a.boss);
   a.over = null;
+  a.totalExchanges = Math.max(0, Math.round(num(raw.totalExchanges, 0)));
+  /* The run's draft seed. Restored so a reload is offered the same three
+     boons it was showing; a record without one gets a fresh draw rather than
+     a zero, which would make every legacy run share one offer table. */
+  a.seed = Math.max(0, Math.round(num(raw.seed, Math.floor(rng() * 1e9))));
+
+  /* The sand: real ids only, no duplicates, never more than a run may carry.
+     A hand-edited save stacking eight of them would be a free bonus set. */
+  arr(raw.conditions, []).forEach(id => {
+    if (ARENA_CONDITIONS[id] && a.conditions.indexOf(id) === -1 &&
+        a.conditions.length < CONST.CONDITIONS_PER_RUN) a.conditions.push(id);
+  });
+
+  /* THE BOONS ARE A POWER GRANT, so they get the battleClass treatment rather
+     than the enemy-name treatment: real ids only, and never more of them than
+     the round being fought could have EARNED. draftsEarnedBy is the same
+     function the live game offers from, so a forged list is cut back to what
+     an honest run at that depth would hold. Duplicates are legal here - boons
+     stack on purpose - which is exactly why a length cap is the check that
+     matters. */
+  const boonCap = a.boss ? 0 : draftsEarnedBy(a.round);
+  arr(raw.boons, []).forEach(id => {
+    if (BOONS[id] && a.boons.length < boonCap) a.boons.push(id);
+  });
+
+  /* An offer is restored only if it is still coherent; `owed` is never read
+     from the record at all - settleDraftOwed derives it on load. */
+  if (isObj(raw.draft) && Array.isArray(raw.draft.options)) {
+    const opts = raw.draft.options.filter((id, i, l) => BOONS[id] && l.indexOf(id) === i);
+    if (opts.length) a.draft = { owed: 1, options: opts,
+      offeredAt: Math.max(0, Math.round(num(raw.draft.offeredAt, 0))) };
+  }
   return a;
 }
 
@@ -3355,6 +3576,11 @@ function reconcileUnlocks(s) {
      it once more with the whole state is the difference between trimming a
      legitimately-held augment and keeping it. */
   if (s.character) migrateGear(s.character, s.account);
+  /* Rebind the champion to the run they are in and re-derive the draft from
+     the round they are at. Both halves are derived rather than restored, so a
+     save cannot arrive holding a run bonus it did not earn - and a save
+     written before either mechanic existed picks them up correctly. */
+  if (s.character) { bindRun(s); settleDraftOwed(s); }
   return s;
 }
 function migrate(raw) {
@@ -4158,7 +4384,229 @@ const rollEnemyName = round => pick(ENEMY_GIVEN) + ' the ' + pick(bandFor(round)
    from - which is what keeps doc 10's no-special-cases rule enforceable. */
 function bonus(c, key) {
   if (!c) return 0;
-  return augBonus(c, key) + classBonus(c, key) + renownBonus(c, key);
+  return augBonus(c, key) + classBonus(c, key) + renownBonus(c, key) + runBonus(c, key);
+}
+
+/* --- the run's own modifiers: conditions and drafted boons ----
+   A FOURTH source in the pool, and the same trick that let fame become a third
+   one without any consumer learning about it. Conditions and boons live on the
+   arena because they belong to one fight - but bonus() only ever gets a
+   champion, and threading the arena through maxHpOf, playerDamage,
+   damageTaken, roundReward and applySustain would be eleven call sites and the
+   ninth chance for this build to forget one of them.
+
+   So the champion carries a REFERENCE to the run they are in, not a copy of
+   its numbers. A cached map would need re-syncing at five sites and would be
+   wrong at whichever one got missed; a reference is read live, so a boon taken
+   mid-round is in the next exchange with nothing to remember.
+
+   It is non-enumerable for two reasons that both matter. save() serialises the
+   whole state, so an enumerable pointer would write the arena into the record
+   twice; and a champion cannot then arrive from importSave carrying a
+   fabricated run. This is the strongest available form of "a stored copy of a
+   derived value is a value that drifts" - it cannot be stored at all.
+
+   The gate is `active`: a settled run stops paying the moment settleRun flips
+   the flag, so the modifiers cannot outlive the fight even if nobody unbinds
+   the pointer. */
+function bindRun(s) {
+  const c = s.character;
+  if (!c) return;
+  Object.defineProperty(c, 'runArena', {
+    value: s.arena, writable: true, enumerable: false, configurable: true
+  });
+}
+
+function runBonus(c, key) {
+  const a = c.runArena;
+  if (!a || !a.active) return 0;
+  let n = 0;
+  arr(a.conditions, []).forEach(id => {
+    const cond = ARENA_CONDITIONS[id];
+    if (cond && typeof cond.pool[key] === 'number') n += cond.pool[key];
+  });
+  arr(a.boons, []).forEach(id => {
+    const b = BOONS[id];
+    if (b && typeof b.effect[key] === 'number') n += b.effect[key];
+  });
+  return n;
+}
+
+/* The enemy is not a champion, so the one part of a condition that cannot go
+   through the pool is the part that acts on them. Two named multipliers, read
+   in exactly one place. */
+function enemyMods(a) {
+  const m = { hp: 1, dmg: 1 };
+  if (!a) return m;
+  arr(a.conditions, []).forEach(id => {
+    const cond = ARENA_CONDITIONS[id];
+    if (!cond || !cond.enemy) return;
+    if (typeof cond.enemy.hp === 'number') m.hp *= cond.enemy.hp;
+    if (typeof cond.enemy.dmg === 'number') m.dmg *= cond.enemy.dmg;
+  });
+  return m;
+}
+
+/* --- which sand you are fighting on --------------------------
+   Derived from a clock BLOCK, exactly the way a daily commission is derived
+   from the date: there is no stored "which conditions did we roll", so it is
+   the same for the whole block, it survives a reload, and it cannot drift from
+   what the Arena screen is showing. That is what makes waiting for better sand
+   a real decision instead of a surprise at the door.
+
+   A run LOCKS IN whatever was showing when it started (startRun copies the ids
+   onto the arena), so the block rolling over mid-fight never changes the fight
+   underneath the player. */
+const conditionBlock = now => Math.floor(Math.max(0, num(now, 0)) / CONST.CONDITION_ROTATE_MS);
+
+function conditionsForBlock(block) {
+  const out = [];
+  for (let salt = 0; out.length < CONST.CONDITIONS_PER_RUN && salt < 64; salt++) {
+    const id = CONDITION_KEYS[hashStr(block + ':' + salt) % CONDITION_KEYS.length];
+    if (out.indexOf(id) === -1) out.push(id);
+  }
+  return out;
+}
+const conditionsAt = now => conditionsForBlock(conditionBlock(now));
+/* How long the current sand has left, for the screen that offers the choice. */
+const conditionsLeftMs = now =>
+  CONST.CONDITION_ROTATE_MS - (Math.max(0, num(now, 0)) % CONST.CONDITION_ROTATE_MS);
+
+/* --- the draft -----------------------------------------------
+   THE ONE HOME for "how many boons should a run at this round have had". Every
+   path reads it: a fresh run, a round clear, a Seeded Entry that begins at
+   round 24, and the migration that refuses to trust a saved boon list.
+
+   THIS IS THE SEEDED-ENTRY ANSWER, and it is an answer by construction rather
+   than by a special case. A run that started at round 1 and is now fighting
+   round R was offered a draft on clearing 5, 10, 15 ... which is exactly
+   floor((R-1)/5). A Seeded Entry run that BEGINS at round R has cleared none
+   of them - so if the count came from rounds actually fought, a rank-6 account
+   would arrive at round 24 with zero boons against an enemy scaled to round 24
+   while an ordinary run arrives with four. Seeded Entry, the reward for
+   reaching rank 6, would be a strict penalty.
+
+   Owing the count for the round you are FIGHTING rather than the rounds you
+   personally cleared makes the two identical at the same depth, which is what
+   Seeded Entry promises: not having to re-clear ground already won. It is the
+   same shape as the boss/arena-depth rule - a round number means one thing on
+   one path and another thing on another, and the fix is to name the quantity
+   you actually mean once. */
+const draftsEarnedBy = round =>
+  Math.max(0, Math.floor((Math.max(1, Math.round(num(round, 1))) - 1) / CONST.DRAFT_EVERY_ROUNDS));
+
+function draftPending(a) {
+  return !!(a && a.active && a.draft && a.draft.owed > 0 &&
+            Array.isArray(a.draft.options) && a.draft.options.length > 0);
+}
+
+/* Offers are DERIVED from the run's own seed, the round, and how many boons
+   have already been taken - not drawn from `rng`.
+
+   Two reasons, and the second is why it is written this way. A reload has to
+   show the same three options, and deriving them means that is true even if
+   the offer record itself is lost. And drawing from the shared stream made
+   every draft shift the combat sequence after it, which destroyed the paired
+   comparison the shop's pricing rig depends on: measuring the same augment
+   against two seed sets drifted by 7.3 points, because the two runs stopped
+   rolling the same fight the moment one of them drafted.
+
+   `taken` is in the salt so a Seeded Entry batch - several drafts owed at one
+   round - is not offered the same three boons four times over. */
+function offerBoons(seed, round, taken, count) {
+  const out = [];
+  const stem = seed + ':' + round + ':' + taken + ':';
+  for (let salt = 0; out.length < Math.min(count, BOON_KEYS.length) && salt < 200; salt++) {
+    const id = BOON_KEYS[hashStr(stem + salt) % BOON_KEYS.length];
+    if (out.indexOf(id) === -1) out.push(id);
+  }
+  return out;
+}
+
+/* Idempotent and self-correcting: call it after any round change, after a
+   draft is taken, or on load, and the owed count is right. `owed` is never
+   trusted from a record - it is derived here from the round and the boons
+   already held, the same way renownRank and classLevel are derived. */
+function settleDraftOwed(s) {
+  const a = s.arena;
+  if (!a || !a.active) return null;
+  /* A boss clears no rounds, and a.round on a boss holds the round that GATES
+     its chapter rather than one anybody fought - so drafting off it would hand
+     a chapter-5 boss four free boons for a fight that clears nothing. Same
+     rule, same reason, as the arena-depth guard in settleRun. */
+  if (a.boss) { a.draft = null; return null; }
+  const owed = draftsEarnedBy(a.round) - arr(a.boons, []).length;
+  if (owed <= 0) { a.draft = null; return null; }
+  if (draftPending(a)) { a.draft.owed = owed; return a.draft; }
+  a.draft = {
+    owed: owed,
+    options: offerBoons(num(a.seed, 0), a.round, arr(a.boons, []).length, CONST.DRAFT_OPTIONS),
+    offeredAt: Math.max(0, num(a.totalExchanges, 0))
+  };
+  return a.draft;
+}
+
+/* Returns {ok, msg} like every other core action, so the edge does the
+   flashing and this stays testable. */
+function takeDraft(s, id) {
+  const a = s.arena;
+  if (!draftPending(a)) return { ok: false, msg: 'Nothing to draft.' };
+  if (!BOONS[id]) return { ok: false, msg: 'No such boon.' };
+  if (a.draft.options.indexOf(id) === -1) return { ok: false, msg: 'That one is not on offer.' };
+  a.boons.push(id);
+  /* One batch, one deadline. Seeded Entry owes several at once and they are
+     offered one at a time, so carrying the original stamp forward means the
+     whole batch resolves together for a player who is not there rather than
+     twelve exchanges apart each. */
+  const at = a.draft.offeredAt;
+  a.draft = null;
+  const next = settleDraftOwed(s);
+  if (next) next.offeredAt = at;
+  return { ok: true, id: id, boon: BOONS[id] };
+}
+
+const draftPreferenceOf = s =>
+  DRAFT_BUCKETS.some(b => b.id === (s.account || {}).draftPreference)
+    ? s.account.draftPreference : CONST.DRAFT_DEFAULT_BUCKET;
+
+/* Prefers the bucket, then SPREADS within it - the option already taken
+   fewest times wins, ties going to offer order.
+
+   Taking the first match every time would stack one boon, and two of the eight
+   sit under caps that a stack reaches: `mitigation` against MITIGATION_CAP and
+   `recovery` against RECOVERY_RELIEF_CAP. An auto-pick that walks a player
+   into a saturated key is the Dark Knight mistake made on their behalf, which
+   is worse than making it yourself. */
+function autoPickBoon(s) {
+  const a = s.arena;
+  const opts = a.draft.options;
+  const pref = draftPreferenceOf(s);
+  const held = id => arr(a.boons, []).filter(b => b === id).length;
+  const inBucket = opts.filter(id => BOONS[id] && BOONS[id].bucket === pref);
+  const from = inBucket.length ? inBucket : opts;
+  return from.reduce((best, id) => held(id) < held(best) ? id : best, from[0]);
+}
+
+/* The grace period, spent in EXCHANGES rather than milliseconds. That is what
+   makes the live tick, a throttled tab, a closed one and the harness all do
+   the identical thing: the harness drives exchanges with no wall clock, so a
+   millisecond deadline would never fire there and every sweep would quietly
+   measure a champion who never drafted anything.
+
+   The fight does NOT stall while a draft is up. Stalling would either punish
+   an absent player (the run stops until they look) or make the two paths
+   disagree about how much fighting a given absence buys. Instead the run
+   carries on, the boon applies from the moment it is taken, and picking
+   promptly is worth a few exchanges of having it - a small, real reward for
+   watching that costs an absent player nothing but the choice itself. */
+function resolveOverdueDraft(s) {
+  const a = s.arena;
+  let guard = 0;
+  while (draftPending(a) && guard++ < 64 &&
+         num(a.totalExchanges, 0) - num(a.draft.offeredAt, 0) >= CONST.DRAFT_AUTO_EXCHANGES) {
+    const picked = autoPickBoon(s);
+    if (!takeDraft(s, picked).ok) break;
+  }
 }
 
 /* Doc 3.4 tier scaling: magnitude by tier, and +0.4x on the positives of any
@@ -4514,13 +4962,19 @@ const playerEvadeChance = c =>
   FORMULAS.playerEvade(c.stats.dex, bonus(c, 'evasion'),
     (RACES[c.race] || {}).evasionCap || CONST.EVASION_CAP);
 
-function enemyFor(round) {
+/* `mods` is the enemy half of the arena conditions - the one part of a
+   condition that cannot resolve through the doc 3.4 pool, because the pool
+   belongs to a champion and this is not one. Defaulted so every existing
+   caller and every assertion still describes a plain enemy. */
+function enemyFor(round, mods) {
+  const m = mods || { hp: 1, dmg: 1 };
+  const hp = FORMULAS.enemyHp(round) * (m.hp || 1);
   return {
     name: rollEnemyName(round),
     round: round,
-    maxHp: FORMULAS.enemyHp(round),
-    hp: FORMULAS.enemyHp(round),
-    dmg: FORMULAS.enemyDmg(round)
+    maxHp: hp,
+    hp: hp,
+    dmg: FORMULAS.enemyDmg(round) * (m.dmg || 1)
   };
 }
 
@@ -4615,7 +5069,14 @@ function bossReward(s, chapter) {
   };
 }
 
-function startRun(s, now) {
+/* `conditions` is optional and exists for the harness, the same way the
+   optional `now` on applyRegen does. Omitted - which is every live call site -
+   the sand comes off the clock. Passed, it is used verbatim, which is what
+   lets the shop's pricing rig hold the sand fixed while it varies combat luck:
+   that rig compares augments TO EACH OTHER, so the conditions are a confound
+   rather than a subject, and leaving them free cost it 5.4 points of drift
+   between seed sets against a 3-point tolerance. */
+function startRun(s, now, conditions) {
   const c = s.character;
   if (!c) return null;
   if (benched(c, now)) return null;                            // still on the bench
@@ -4633,7 +5094,15 @@ function startRun(s, now) {
      shape held only because undefined is falsy. `lastExchangeAt` would not have
      been so forgiving: a run that starts without one owes no exchanges. */
   s.arena = Object.assign(defaultArena(), {
-    active: true, round: round, playerHp: c.hp, lastExchangeAt: now
+    active: true, round: round, playerHp: c.hp, lastExchangeAt: now,
+    /* Drawn ONCE, before anything diverges, so two configs compared on the
+       same rng seed get the same draft offers at the same rounds. */
+    seed: Math.floor(rng() * 1e9),
+    /* Locked in from the block that was on screen when the player pressed the
+       button. Copied, not referenced, so the run keeps its sand. */
+    conditions: Array.isArray(conditions)
+      ? conditions.filter(id => !!ARENA_CONDITIONS[id]).slice(0, CONST.CONDITIONS_PER_RUN)
+      : conditionsAt(now)
   });
   beginRound(s, round);
   return s.arena;
@@ -4650,13 +5119,20 @@ function startRound(s) {
 
 function beginRound(s, round) {
   const a = s.arena;
-  const e = enemyFor(round);
   a.round = round;
+  /* Bound HERE rather than at each round change, because every ordinary fight
+     comes through this function - startRun to open one and clearRound to
+     advance it. startBoss builds its arena directly and binds explicitly. */
+  bindRun(s);
+  const e = enemyFor(round, enemyMods(a));
   a.enemy = e;
   a.enemyName = e.name;
   a.enemyMaxHp = e.maxHp;
   a.enemyHp = e.hp;
   a.exchange = 0;
+  /* And the draft is settled from the round we have just arrived at, which is
+     what makes a Seeded Entry start owe the boons it skipped. */
+  settleDraftOwed(s);
   return e;
 }
 
@@ -4686,6 +5162,10 @@ function exchange(s, now) {
      keyed on it would almost never fire - short rounds never reach the fourth
      exchange. */
   a.totalExchanges = (a.totalExchanges || 0) + 1;
+  /* If an offer has been standing for its whole grace period, the game takes
+     one for you. Counted in exchanges, so this fires identically in the live
+     tick, in a catch-up after a night away, and in the harness. */
+  resolveOverdueDraft(s);
 
   /* --- player strikes --- */
   const maxHp = maxHpOf(c);
@@ -4940,14 +5420,26 @@ function settleRun(s, how, now) {
   const unlocked = evaluateRankUnlocks(s);
   const feats = evaluateFeats(s, now);
 
+  /* Flipping this is what ends the run's modifiers - runBonus() gates on it -
+     so it happens AFTER everything above has been paid. The knockout bench in
+     particular reads bonus(c,'recovery'), and Second Breath is a boon: a
+     champion who drafted it must get the shorter bench they drafted it for. */
   a.active = false;
+  a.draft = null;
   a.over = {
     how: how, gold: gold, renown: renown,
     forfeitGold: Math.floor(a.pot.gold) - gold,
     forfeitRenown: Math.floor(a.pot.renown) - renown,
     rounds: cleared, deepest: a.round, racesOpened: racesOpened,
-    boss: a.boss || null, chapter: chapter, unlocked: unlocked, feats: feats
+    boss: a.boss || null, chapter: chapter, unlocked: unlocked, feats: feats,
+    /* Kept for the post-run card: what you fought on and what you built. */
+    conditions: arr(a.conditions, []).slice(), boons: arr(a.boons, []).slice()
   };
+  /* The champion's own HP is written above from a.playerHp; re-clamp it now
+     that the run's `vigor` sources (none today, but the pool allows them) have
+     stopped counting, so nobody can walk out of the arena above their own
+     maximum. */
+  c.hp = Math.min(Math.max(0, c.hp), maxHpOf(c));
   return a.over;
 }
 
@@ -5520,10 +6012,11 @@ function accountRank(s) {
 }
 
 /* --- the story ladder (doc 8) -------------------------------
-   Ten tales, five chapters each, gated on ACCOUNT-best round. Doc 10: "story
-   progress survives retirement, and each completed chapter names the champion
-   who closed it" - so every piece of this lives on the account and the only
-   thing the champion contributes is their name at the moment of closing. */
+   Ten tales, five chapters each. Doc 10: "story progress survives retirement,
+   and each completed chapter names the champion who closed it" - so every
+   piece of the RECORD lives on the account. What the champion contributes is
+   their name at the moment of closing and, since 2026-08-30, the depth that
+   earned them the right to be there at all. */
 const STORY_BY_ID = {};
 STORIES.forEach((st, i) => { st.index = i; STORY_BY_ID[st.id] = st; });
 
@@ -5548,6 +6041,41 @@ function nextChapterOf(account, storyId) {
 function chapterGate(chapter) {
   return CONST.STORY_GATES[clamp(chapter, 0, CONST.STORY_GATES.length - 1)];
 }
+/* --- the tale a champion is answerable for -------------------
+   The account's in-progress tale if there is one, otherwise the next untold
+   one in order. DERIVED, so there is no per-champion field to store, forge or
+   migrate - and it falls out that a successor inherits the half-told tale
+   their predecessor died in the middle of, which is the property doc 10 asks
+   for. Null once every tale is told. */
+function assignedStoryFor(account) {
+  const cur = account.story.currentStory;
+  if (cur && STORY_BY_ID[cur] && !storyIsTold(account, cur)) return cur;
+  const started = STORIES.find(st => !storyIsTold(account, st.id) &&
+                                     storyChaptersClosed(account, st.id) > 0);
+  if (started) return started.id;
+  const next = STORIES.find(st => !storyIsTold(account, st.id));
+  return next ? next.id : null;
+}
+
+/* Has THIS champion closed a tale of their own - meaning they personally
+   fought its final chapter? Derived from the attribution list, which already
+   exists to answer exactly this kind of question, so there is no flag to forge
+   and nothing new in the save.
+
+   It is the FINAL chapter specifically: finishing a tale is what opens the
+   library, and a champion who closed chapters 2 and 3 of somebody else's tale
+   has not finished anything. */
+function championToldATale(s) {
+  const c = s.character;
+  if (!c) return false;
+  const last = CONST.STORY_CHAPTERS - 1;
+  return arr(s.account.story.attribution, []).some(a =>
+    a && a.championId === c.id && num(a.chapter, -1) === last &&
+    STORY_BY_ID[a.story] && storyIsTold(s.account, a.story));
+}
+/* Until then, a champion has one tale and no library. */
+const libraryOpen = s => championToldATale(s);
+
 /* Why a chapter cannot be fought right now, or null if it can. Returning the
    REASON rather than a boolean is what lets the screen show the requirement
    instead of an inert button (doc 3.8's rule, applied to the ladder). */
@@ -5556,12 +6084,32 @@ function chapterBlocked(s, storyId, chapter) {
   if (!st) return 'No such tale.';
   if (chapter < 0 || chapter >= CONST.STORY_CHAPTERS) return 'No such chapter.';
   if (chapterClosed(s.account, storyId, chapter)) return 'Already closed.';
+  if (!s.character) return 'A champion has to answer the call.';
+  /* ONE TALE AT A TIME (Rob, 2026-08-30). A champion answers for the tale the
+     account is in the middle of, and the rest of the library stays shut until
+     they have finished it themselves. Without this a fresh champion could pick
+     whichever of the ten tales had the shallowest open chapter. */
+  if (!libraryOpen(s)) {
+    const mine = assignedStoryFor(s.account);
+    if (mine && storyId !== mine)
+      return 'Finish ' + STORY_BY_ID[mine].title + ' first.';
+  }
   const next = nextChapterOf(s.account, storyId);
   if (next !== chapter) return 'Chapter ' + (next + 1) + ' comes first.';
   const gate = chapterGate(chapter);
-  const best = accountBestRound(s);
+  /* THE CHAMPION'S OWN BEST ROUND, not the account's (Rob, 2026-08-30). This
+     reverses the Phase 9 decision deliberately and the reasoning is worth
+     keeping, because the old comment argued the opposite.
+
+     Phase 9 gated on account-best so that a tale survived the death of whoever
+     started it. It still does - the CLOSED chapters, the attribution and the
+     ladder position are all account state and none of that is touched here.
+     What was wrong was that a successor inherited the right to FIGHT chapter 5
+     without ever having been near round 26, so the deepest bosses in the game
+     were handed to champions who had done nothing. Doc 10 asks that the tale
+     survive, not that every heir be waived past the gate. */
+  const best = Math.max(0, num(s.character.bestRound, 0));
   if (best < gate) return 'Clear round ' + gate + ' in the arena (best: ' + best + ')';
-  if (!s.character) return 'A champion has to answer the call.';
   return null;
 }
 
@@ -5610,6 +6158,12 @@ function startBoss(s, storyId, chapter, now) {
     playerHp: c.hp, enemyHp: e.hp, enemyName: e.name, enemyMaxHp: e.maxHp,
     enemy: e, boss: { story: storyId, chapter: chapter }, lastExchangeAt: now
   });
+  /* A boss builds its arena directly rather than through beginRound, so the
+     bind is explicit here. It matters even though a boss carries no conditions
+     and drafts nothing: without it the champion would still be pointing at the
+     PREVIOUS run, and that only reads as zero because settleRun flipped its
+     `active` flag. Relying on that is relying on an accident. */
+  bindRun(s);
   logLine(s.arena, 'clear', e.name + ' ' + e.title + ' takes the sand.');
   return { ok: true, arena: s.arena, enemy: e };
 }
@@ -6879,27 +7433,39 @@ function renderStory() {
   if (!host) return;
   const restore = keepFocus(host);
   const a = state.account;
-  const best = accountBestRound(state);
+  const c = state.character;
+  /* The champion's OWN depth, because that is what the gate reads now. */
+  const best = c ? Math.max(0, num(c.bestRound, 0)) : 0;
   const closed = arr(a.story.attribution, []).length;
   const total = STORIES.length * CONST.STORY_CHAPTERS;
 
-  /* The tale to lead with: the one in progress, else the first not yet told. */
-  const lead = STORY_BY_ID[a.story.currentStory] ||
-    STORIES.find(st => !storyIsTold(a, st.id) && storyChaptersClosed(a, st.id) > 0) ||
-    STORIES.find(st => !storyIsTold(a, st.id)) || null;
+  /* The tale this champion answers for - the same derivation the gate uses, so
+     the screen and the core can never disagree about which one it is. */
+  const lead = STORY_BY_ID[assignedStoryFor(a)] || null;
+  const open = libraryOpen(state);
 
   host.innerHTML =
     '<div class="panel lp-line"><span class="sub">Chapters closed</span>' +
       '<span class="lp-chip">' + icon('book') +
       '<span>' + closed + ' / ' + total + '</span></span></div>' +
     (lead
-      ? '<div class="panel"><h3 class="sub">' + esc(lead.title) + '</h3>' +
+      ? '<div class="panel"><h3 class="sub">' + esc(lead.title) +
+        (open ? '' : '<span class="tale-tag">your tale</span>') + '</h3>' +
         '<p class="premise">' + esc(lead.premise) + '</p>' +
+        (c ? '' : '<p class="req">A champion has to answer the call.</p>') +
         chapterList(lead, best) + '</div>'
       : '<div class="panel empty">' + icon('laurel') +
         '<h3>Every tale told</h3><p>All ' + total + ' chapters are closed. ' +
         'The Hall remembers who closed each one.</p></div>') +
-    '<div class="panel"><h3 class="sub">Library</h3>' + libraryMarkup(best) + '</div>';
+    '<div class="panel"><h3 class="sub">Library</h3>' +
+      (lead && !open
+        ? '<p class="hp-line">' + (c ? esc(c.name) : 'A champion') +
+          ' answers for <strong>' + esc(lead.title) + '</strong>. ' +
+          'The rest of the library opens once they have finished it themselves — ' +
+          'a tale a predecessor closed is not one you have told.</p>'
+        : '<p class="hp-line">Every tale is open to you. ' +
+          'Chapters still gate on your own best round.</p>') +
+      libraryMarkup(best) + '</div>';
 
   wireStory();
   restore();
@@ -6953,14 +7519,20 @@ function chapterList(st, best) {
 
 function libraryMarkup(best) {
   const a = state.account;
+  const mine = assignedStoryFor(a);
+  const free = libraryOpen(state);
   return STORIES.map(st => {
     const n = storyChaptersClosed(a, st.id);
     const told = storyIsTold(a, st.id);
     const open = openStory === st.id;
-    return '<div class="tale' + (told ? ' is-told' : '') + '">' +
+    /* Shut to THIS champion, but still shown with its premise and its
+       progress: doc 3.8's rule that a locked row keeps its information, which
+       the rank-gated facility rows and the chapter list both follow. */
+    const shut = !told && !free && mine && st.id !== mine;
+    return '<div class="tale' + (told ? ' is-told' : '') + (shut ? ' is-shut' : '') + '">' +
       '<button class="tale-head" type="button" data-tale="' + esc(st.id) + '"' +
         ' aria-expanded="' + (open ? 'true' : 'false') + '">' +
-        icon(told ? 'laurel' : 'book') +
+        icon(told ? 'laurel' : shut ? 'lock' : 'book') +
         '<div><strong>' + esc(st.title) + '</strong>' +
         '<span class="rb-now">' + esc(st.premise) + '</span></div>' +
         '<span class="fact">' + n + '/' + CONST.STORY_CHAPTERS + '</span>' +
@@ -7191,6 +7763,7 @@ function runMarkup(a, c) {
            a player watching a run should not have to leave it to remember
            which ones are in play. */
         '<div class="loadout">' + loadoutChips(c) + '</div>' +
+        boonChips(a) +
         '<div id="ar-pbar">' + hpBar(a.playerHp, max, 'player') + '</div>' +
       '</div>' +
 
@@ -7213,7 +7786,18 @@ function runMarkup(a, c) {
           Math.round(autoYieldArmedAt() * 100) + '% health &middot; ' +
           Math.round(maxHpOf(c) * autoYieldArmedAt()) + ' HP</p>'
         : '') +
-    '</div>';
+    '</div>' +
+    draftMarkup(a) +
+    /* Settable DURING the fight (Rob, 2026-08-30), not only from the idle
+       screen. Deciding whether to let the run walk itself out is a decision
+       about the run you are watching, and the run is the only time you have
+       the information the decision needs - how deep you are, what the sand is
+       doing to you, what you have drafted. The same markup and the same
+       handler as the idle screen, so the two cannot describe the setting
+       differently. */
+    autoYieldMarkup(c) +
+    sandMarkup(a, Date.now()) +
+    commissionMarkup();
 }
 
 /* 0 when locked or switched off. One place, so the run markup and the check in
@@ -7259,7 +7843,8 @@ function idleArenaMarkup(a, c) {
       '<p class="hp-line">Entering ends the current training session — it banks first.</p>' +
       '<button class="btn wide" type="button" id="btn-enter">Enter the arena</button></div>';
 
-  return result + gate + autoYieldMarkup(c) + commissionMarkup();
+  return result + sandMarkup(a, now) + gate +
+         autoYieldMarkup(c) + draftPrefMarkup() + commissionMarkup();
 }
 
 /* Doc 7: "Auto-Yield threshold control once unlocked." Hidden entirely until
@@ -7268,9 +7853,20 @@ function idleArenaMarkup(a, c) {
 function autoYieldMarkup(c) {
   if (!state.account.unlocks.autoYield) return '';
   const at = num(state.account.autoYieldAt, 0);
+  const live = state.arena.active && !state.arena.boss;
+  /* Turning it ON below the threshold walks you out on the next exchange -
+     which is exactly what the setting says it does, but a player deserves to
+     be told before they press it rather than after. */
+  const armsNow = live && at === 0;
   return '<div class="panel"><h3 class="sub">Auto-Yield</h3>' +
     '<p class="hp-line">Walk out automatically once health falls this low. ' +
-    'Yielding keeps ' + Math.round(CONST.YIELD_POT_KEPT * 100) + '% of the pot and costs no bench time.</p>' +
+    'Yielding keeps ' + Math.round(CONST.YIELD_POT_KEPT * 100) + '% of the pot and costs no bench time.' +
+    (armsNow ? ' <strong>Set it above your health now and the run ends this exchange.</strong>' : '') +
+    /* autoYieldCheck refuses on a boss - a story bout is not a purse to
+       protect - so the control must not imply otherwise while one is up. */
+    (state.arena.active && state.arena.boss
+      ? ' <strong>It does not apply to a story bout.</strong>' : '') +
+    '</p>' +
     '<div class="picker">' + CONST.AUTO_YIELD_STEPS.map(v =>
       '<button class="chip-btn' + (v === at ? ' is-on' : '') + '" type="button" ' +
       'data-autoyield="' + v + '" aria-pressed="' + (v === at) + '">' +
@@ -7416,6 +8012,94 @@ function updateArenaLive() {
   const crowd = document.querySelector('.crowd');
   if (crowd) crowd.innerHTML = Array.from({ length: CONST.CROWD_MAX },
     (_, i) => '<i' + (i < a.crowd ? ' class="on"' : '') + '></i>').join('');
+  /* The draft panel appears and disappears under the player, and the boons
+     they hold change - none of which the in-place updates above can express.
+     Re-render only when that SIGNATURE moves, so the common case still costs
+     nothing and the keyboard is not thrown on every tick. This is the same
+     shape as the bench-cleared branch in the idle tick. */
+  const sig = (draftPending(a) ? a.draft.options.join(',') + '|' + a.draft.owed : '-') +
+              '|' + arr(a.boons, []).length;
+  if (sig !== lastDraftSig) { lastDraftSig = sig; renderArena(); return; }
+  /* The grace counter is live text, so it ticks without a re-render. */
+  set('ar-draft-left', String(Math.max(0, CONST.DRAFT_AUTO_EXCHANGES -
+    (num(a.totalExchanges, 0) - (a.draft ? num(a.draft.offeredAt, 0) : 0)))));
+}
+let lastDraftSig = '';
+
+/* --- the sand, the draft, and what you have built ------------- */
+
+function conditionChips(ids) {
+  return arr(ids, []).map(id => {
+    const cond = ARENA_CONDITIONS[id];
+    if (!cond) return '';
+    return '<li class="cond">' + icon(cond.icon) +
+      '<div><strong>' + esc(cond.label) + '</strong>' +
+      '<span>' + esc(cond.text) + '</span></div></li>';
+  }).join('');
+}
+
+/* Idle: what you WOULD fight on, and how long it stands. That is the decision
+   the mechanic exists to create - enter now, or wait for sand that suits the
+   build you are carrying. Mid-run: what this run is locked to. */
+function sandMarkup(a, now) {
+  const live = a.active;
+  const ids = live ? a.conditions : conditionsAt(now);
+  if (!ids.length) return '';
+  return '<div class="panel sand"><h3 class="sub">' + icon('hurdle') +
+    (live ? ' The sand today' : ' The sand today') +
+    (live ? '<span class="sand-when">this run</span>'
+          : '<span class="sand-when">changes in ' + dur(conditionsLeftMs(now)) + '</span>') +
+    '</h3>' +
+    '<ul class="cond-list">' + conditionChips(ids) + '</ul>' +
+    (live ? '' : '<p class="hp-line">A run keeps the sand it started on.</p>') +
+    '</div>';
+}
+
+function boonChips(a) {
+  const held = arr(a.boons, []);
+  if (!held.length) return '';
+  const counts = {};
+  held.forEach(id => { counts[id] = (counts[id] || 0) + 1; });
+  return '<div class="boon-held">' + Object.keys(counts).map(id =>
+    '<span class="boon-chip">' + icon(BOONS[id].icon) + esc(BOONS[id].label) +
+    (counts[id] > 1 ? ' <span class="num">x' + counts[id] + '</span>' : '') +
+    '</span>').join('') + '</div>';
+}
+
+/* The offer. Three buttons, and the run does NOT stop for them - the boon
+   applies from the moment it is taken, so picking promptly is worth a few
+   exchanges of having it and picking nothing costs only the choice. */
+function draftMarkup(a) {
+  if (!draftPending(a)) return '';
+  const d = a.draft;
+  const left = Math.max(0, CONST.DRAFT_AUTO_EXCHANGES -
+    (num(a.totalExchanges, 0) - num(d.offeredAt, 0)));
+  return '<div class="panel draft"><h3 class="sub">' + icon('laurel') + ' Take a boon' +
+    (d.owed > 1 ? '<span class="draft-of">' + d.owed + ' to choose</span>' : '') + '</h3>' +
+    '<p class="hp-line">The crowd throws something into the ring. ' +
+      'In <span class="num" id="ar-draft-left">' + left + '</span> more exchanges the ' +
+      'choice is made for you.</p>' +
+    '<div class="draft-opts">' + d.options.map(id =>
+      '<button class="draft-opt" type="button" data-boon="' + id + '">' +
+      icon(BOONS[id].icon) +
+      '<strong>' + esc(BOONS[id].label) + '</strong>' +
+      '<span>' + esc(BOONS[id].text) + '</span></button>').join('') +
+    '</div></div>';
+}
+
+/* Which bucket the auto-pick prefers. Shown on the idle screen beside
+   Auto-Yield, because both are standing answers to "what should happen while
+   I am not looking". */
+function draftPrefMarkup() {
+  const pref = draftPreferenceOf(state);
+  return '<div class="panel"><h3 class="sub">' + icon('help') + ' While you are away</h3>' +
+    '<p class="hp-line">A boon is offered every ' + CONST.DRAFT_EVERY_ROUNDS +
+      ' rounds. If you are not watching, the game takes the one that fits this ' +
+      'preference — and spreads across the choices rather than stacking one.</p>' +
+    '<div class="picker">' + DRAFT_BUCKETS.map(b =>
+      '<button class="chip-btn' + (b.id === pref ? ' is-on' : '') + '" type="button" ' +
+      'data-draftpref="' + b.id + '" aria-pressed="' + (b.id === pref) + '">' +
+      esc(b.label) + '</button>').join('') + '</div></div>';
 }
 
 /* Sits under the arena card on both of its states - a commission is something
@@ -7464,6 +8148,23 @@ function wireArena() {
       state.account.autoYieldAt = parseFloat(b.dataset.autoyield);
       save('auto-yield-set');
       renderArena();
+    }));
+  document.querySelectorAll('[data-draftpref]').forEach(b =>
+    b.addEventListener('click', () => {
+      state.account.draftPreference = b.dataset.draftpref;
+      save('draft-pref-set');
+      renderArena();
+    }));
+  /* The core returns {ok,msg} and the EDGE does the flashing - the rule
+     startTraining had to learn the hard way when its flash() reached every
+     player from inside the assertion suite. */
+  document.querySelectorAll('[data-boon]').forEach(b =>
+    b.addEventListener('click', () => {
+      const r = takeDraft(state, b.dataset.boon);
+      if (!r.ok) { flash(r.msg || 'No.'); return; }
+      save('draft');
+      renderArena();
+      flash(r.boon.label + ' — ' + r.boon.text);
     }));
   const enter = document.getElementById('btn-enter');
   if (enter) enter.addEventListener('click', () => {
@@ -7538,6 +8239,10 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;',
 /* A full innerHTML rebuild destroys the focused element. Any render that has to
    do one must hand focus back, or the keyboard user is thrown to <body> on
    every click. Returns a restore function to call after the rebuild. */
+/* Named so it can be tested on a detached node rather than by driving the live
+   screen, which assertAll() must never do. */
+const FOCUS_FALLBACK_SEL = 'button:not([disabled]):not([data-tone="danger"])';
+
 function keepFocus(host) {
   const a = document.activeElement;
   let sel = null;
@@ -7563,9 +8268,24 @@ function keepFocus(host) {
        to collect). Focusing a disabled control is a silent no-op, which drops
        the keyboard to <body> just as surely as not restoring at all. */
     if (el && el.disabled) el = null;
+    /* THE FALLBACK MUST NOT BE A DESTRUCTIVE CONTROL. When a control genuinely
+       goes away - taking the last boon on offer removes the whole draft panel -
+       the old fallback took the first enabled button in the host, and on the
+       arena screen that is YIELD. A keyboard user who picked a boon and then
+       pressed Enter out of reflex would have ended their run and forfeited 30%
+       of the pot, having pressed nothing that says so.
+
+       Sixth instance of the focus family in this build, and the first where
+       landing somewhere reasonable was worse than landing on <body>: <body>
+       does nothing. */
     if (!el) el = host.querySelector('.fac-card.is-on, .race-card.is-on') ||
-                  host.querySelector('button:not([disabled])');
-    if (el && typeof el.focus === 'function') el.focus();
+                  host.querySelector(FOCUS_FALLBACK_SEL) ||
+                  host.querySelector('h2, h3');
+    if (el && typeof el.focus === 'function') {
+      /* A heading is only a focus target if something says it is. */
+      if (!el.hasAttribute('tabindex') && /^H[1-6]$/.test(el.tagName)) el.setAttribute('tabindex', '-1');
+      el.focus();
+    }
   };
 }
 const icon = (n, cls) => '<svg class="icon' + (cls ? ' ' + cls : '') + '" aria-hidden="true"><use href="#icon-' + n + '"/></svg>';
@@ -8198,11 +8918,27 @@ function tick(dtMs) {
 function updateArenaIdleLive() {
   const c = state.character;
   if (!c || activeScreen !== 'arena' || state.arena.active) return;
+  const now = Date.now();
   const el = document.getElementById('ar-ko');
-  if (!el) return;
-  const txt = dur(benchLeft(c, Date.now()));
-  if (el.textContent !== txt) el.textContent = txt;
+  if (el) {
+    const txt = dur(benchLeft(c, now));
+    if (el.textContent !== txt) el.textContent = txt;
+  }
+  /* The sand is derived from a clock block, so it changes underneath a player
+     who is sitting on this screen deciding whether to enter. A panel that goes
+     on describing the previous twenty minutes is the frozen-bench-card bug in
+     a new hat: the countdown has to move, and when it reaches zero the sand
+     itself has to be replaced rather than waiting for a navigation. */
+  const when = document.querySelector('.sand-when');
+  if (!when) { lastSandBlock = -1; return; }
+  if (lastSandBlock === -1) lastSandBlock = conditionBlock(now);
+  else if (conditionBlock(now) !== lastSandBlock) {
+    lastSandBlock = conditionBlock(now); renderArena(); return;
+  }
+  const txt = 'changes in ' + dur(conditionsLeftMs(now));
+  if (when.textContent !== txt) when.textContent = txt;
 }
+let lastSandBlock = -1;
 
 function startIdleTick() {
   setInterval(() => {
@@ -8305,7 +9041,17 @@ function simulateRun(config, seed) {
   const s = harnessState(cfg);
   const prev = rng;
   rng = makeRng(seed);
-  const T = 0;
+  /* The harness ran every run at T = 0, which was harmless until the arena
+     conditions started being derived from a clock BLOCK: every simulated run
+     would have been fought on the same two conditions forever, and a sweep
+     that cannot vary the thing being balanced cannot find an imbalance in it.
+
+     One block per seed, so simulate() walks the table as it walks its seeds.
+     This is the same function the live game calls, driven with a different
+     clock - not a second code path that could disagree with it. Everything
+     else here is a difference from T (downMs reads knockoutUntil - T), so a
+     non-zero origin changes nothing else. */
+  const T = seed * CONST.CONDITION_ROTATE_MS;
   /* maxHpOf, not FORMULAS.maxHp(con): the raw-CON form skips every `vigor`
      bonus, which is the one thing maxHpOf exists to fold in. This is the fourth
      place that mistake has been found and the harness is the worst of them -
@@ -8316,7 +9062,7 @@ function simulateRun(config, seed) {
   const cap = cfg.maxExchanges == null ? 200000 : cfg.maxExchanges;
   let exchanges = 0;
 
-  startRun(s, T);
+  startRun(s, T, cfg.conditions);
   while (s.arena.active && exchanges < cap) {
     if (cfg.yieldAtRound && s.arena.round > cfg.yieldAtRound) { settleRun(s, 'yield', T); break; }
     if (cfg.yieldAtHp && s.arena.playerHp / maxHp <= cfg.yieldAtHp) { settleRun(s, 'yield', T); break; }
@@ -8339,8 +9085,8 @@ function simulateRun(config, seed) {
        recovery source in the game measured as worth exactly nothing: Stalwart
        (a 1,500g augment) came back at +0.0% gold/hour at all three stages, and
        the renown ladder's two recovery rungs and the Brute, Thug and Berserker
-       classes were all under-valued the same way. The harness runs at T=0, so
-       knockoutUntil IS the bench length. Fifth instance in this build of a
+       classes were all under-valued the same way. The harness runs the whole
+       run at one instant T, so knockoutUntil - T IS the bench length. Fifth instance in this build of a
        re-derivation quietly disagreeing with the thing it copied. */
     /* AND the time healing back up, which this harness could not see until
        2026-08-28 - the same blind spot as the `recovery` one above, one step
@@ -8565,16 +9311,25 @@ function assertAll() {
     const value = {};
     PRICED.forEach(id => { value[id] = 0; });
     let usable = true;
-    stages.forEach(st => {
-      const cfg = Object.assign({}, st, { battleClass: null, seed: 11 });
-      const base = simulate(cfg, 10).goldPerHour;
+    /* THREE SEEDS, not one, since the draft landed. A run is a much wider
+       distribution than it used to be - it now depends on which boons came up
+       and which sand it was fought on - and a single seed drifted 7.3 points
+       between draws against a 3-point tolerance. Measured at three seeds with
+       deterministic draft offers it drifts under 2, which is what makes the
+       comparisons below mean anything. Kept to five runs a seed so the whole
+       rig stays around a second: a boot check nobody waits for is a boot check
+       that gets removed. */
+    const SEEDS = [11, 29, 47];
+    stages.forEach(st => SEEDS.forEach(seed => {
+      const cfg = Object.assign({}, st, { battleClass: null, seed: seed });
+      const base = simulate(cfg, 5).goldPerHour;
       if (!(base > 0)) { usable = false; return; }
       PRICED.forEach(id => {
         const aug = {}; aug[AUGMENTS[id].slot] = [id];
-        const r = simulate(Object.assign({}, cfg, { augments: aug }), 10).goldPerHour;
-        value[id] += (100 * (r - base) / base) / stages.length;
+        const r = simulate(Object.assign({}, cfg, { augments: aug }), 5).goldPerHour;
+        value[id] += (100 * (r - base) / base) / (stages.length * SEEDS.length);
       });
-    });
+    }));
     ok(usable, 'the augment pricing rig earns nothing, so nothing below means anything');
     if (!usable) return;
 
@@ -9392,6 +10147,411 @@ function assertAll() {
     ok(!!bandFor(r), 'round ' + r + ' falls outside every band'));
   ok(bandFor(5) === ENEMY_BANDS[0] && bandFor(6) === ENEMY_BANDS[1], 'band boundary is off by one');
 
+  /* --- the sand, and the between-round draft ------------------
+     Two mechanics that both resolve through the doc 3.4 pool, so the checks
+     here are the same three the class pool, the legacy perks and the renown
+     ladder all carry: the registry is well formed, every row changes something
+     measurable, and nothing can arrive through a save that was not earned. */
+  (function () {
+    const rig = (over) => {
+      const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+      s.character = newCharacter('human', 'Sand', s.account);
+      s.character.stats = { str: 40, dex: 30, int: 20, con: 40, cha: 15 };
+      s.character.battleClass = null;
+      s.character.hp = maxHpOf(s.character);
+      if (over) over(s);
+      return s;
+    };
+
+    /* --- registry shape --- */
+    CONDITION_KEYS.forEach(id => {
+      const cond = ARENA_CONDITIONS[id];
+      ok(ICON_NAMES.indexOf(cond.icon) !== -1, id + ' names an icon outside the sprite sheet');
+      ok(Object.keys(cond.pool).length + Object.keys(cond.enemy || {}).length > 0,
+         id + ' is a condition with no mechanical effect');
+      Object.keys(cond.pool).forEach(k => ok(!!BONUS_KEYS[k],
+        id + ' grants "' + k + '", which is not a doc 3.4 pool key'));
+      Object.keys(cond.enemy || {}).forEach(k => ok(k === 'hp' || k === 'dmg',
+        id + ' names an enemy modifier "' + k + '" that enemyFor cannot apply'));
+    });
+    BOON_KEYS.forEach(id => {
+      const b = BOONS[id];
+      ok(ICON_NAMES.indexOf(b.icon) !== -1, id + ' names an icon outside the sprite sheet');
+      ok(DRAFT_BUCKETS.some(x => x.id === b.bucket), id + ' is in bucket "' + b.bucket + '", which does not exist');
+      Object.keys(b.effect).forEach(k => ok(!!BONUS_KEYS[k],
+        id + ' grants "' + k + '", which is not a doc 3.4 pool key'));
+    });
+    /* NOT ALLOWED in either table, and both bans are load-bearing. `vigor`
+       moves max HP mid-run, which shifts the Auto-Yield threshold and the HP
+       bar underneath the player. `lifesteal` and `regen` share one ceiling in
+       applySustain, so for most builds they are a pick that does nothing -
+       walking a player into a saturated key is the Dark Knight mistake made on
+       their behalf. */
+    const banned = ['vigor', 'lifesteal', 'regen'];
+    CONDITION_KEYS.forEach(id => banned.forEach(k => ok(typeof ARENA_CONDITIONS[id].pool[k] !== 'number',
+      id + ' moves "' + k + '" mid-run, which the sand must never do')));
+    BOON_KEYS.forEach(id => banned.forEach(k => ok(typeof BOONS[id].effect[k] !== 'number',
+      id + ' drafts "' + k + '", which is capped or moves max HP mid-run')));
+    DRAFT_BUCKETS.forEach(b => ok(BOON_KEYS.some(id => BOONS[id].bucket === b.id),
+      'the "' + b.id + '" draft bucket has no boons in it, so preferring it does nothing'));
+
+    /* --- every row changes something measurable --- */
+    const read = (s) => {
+      const c = s.character;
+      return { dmg: playerDamage(c, false), critDmg: playerDamage(c, true),
+               crit: playerCritChance(c), ev: playerEvadeChance(c),
+               taken: damageTaken(c, 100), gold: roundReward(s, 5).gold,
+               affl: afflictionChance(c), hp: maxHpOf(c) };
+    };
+    const moved = (before, after, key) =>
+      key === 'damage'     ? after.dmg !== before.dmg :
+      key === 'crit'       ? after.crit !== before.crit :
+      key === 'critPower'  ? after.critDmg / after.dmg !== before.critDmg / before.dmg :
+      key === 'evasion'    ? after.ev !== before.ev :
+      key === 'mitigation' ? after.taken !== before.taken :
+      key === 'avarice'    ? after.gold !== before.gold :
+      key === 'affliction' ? after.affl !== before.affl :
+      key === 'recovery'   ? true :        // proved with a real knockout below
+      false;
+
+    CONDITION_KEYS.forEach(id => {
+      const s = rig();
+      startRun(s, 0, []);
+      const before = read(s);
+      const plainEnemyHp = s.arena.enemy.maxHp, plainEnemyDmg = s.arena.enemy.dmg;
+      const t = rig();
+      startRun(t, 0, [id]);
+      const after = read(t);
+      Object.keys(ARENA_CONDITIONS[id].pool).forEach(k => ok(moved(before, after, k),
+        id + ' grants "' + k + '" and it changes nothing measurable'));
+      const em = ARENA_CONDITIONS[id].enemy || {};
+      if (typeof em.hp === 'number') ok(t.arena.enemy.maxHp !== plainEnemyHp,
+        id + ' names an enemy HP multiplier that never reached the enemy');
+      if (typeof em.dmg === 'number') ok(t.arena.enemy.dmg !== plainEnemyDmg,
+        id + ' names an enemy damage multiplier that never reached the enemy');
+    });
+
+    BOON_KEYS.forEach(id => {
+      const s = rig();
+      startRun(s, 0, []);
+      const before = read(s);
+      s.arena.boons.push(id);
+      const after = read(s);
+      Object.keys(BOONS[id].effect).forEach(k => ok(moved(before, after, k),
+        id + ' drafts "' + k + '" and it changes nothing measurable'));
+    });
+    /* recovery has to be probed with an actual knockout: reading bonus() back
+       would compare a number to itself and pass even if settleRun never read
+       the pool. Second Breath is the boon that grants it. */
+    (function () {
+      const bench = (boon) => {
+        const s = rig();
+        startRun(s, 0, []);
+        if (boon) s.arena.boons.push(boon);
+        s.arena.playerHp = 0;
+        settleRun(s, 'knockout', 1000);
+        return s.character.knockoutUntil - 1000;
+      };
+      ok(bench('secondbreath') < bench(null),
+         'Second Breath did not shorten the knockout bench - a boon stopped paying at settle');
+    })();
+    /* And they STACK, which is what lets a long run build into something. */
+    (function () {
+      const s = rig();
+      startRun(s, 0, []);
+      const base = playerDamage(s.character, false);
+      s.arena.boons.push('whetstone');
+      const one = playerDamage(s.character, false);
+      s.arena.boons.push('whetstone');
+      const two = playerDamage(s.character, false);
+      ok(one > base && two > one, 'drafting the same boon twice did not stack');
+      ok(Math.abs((two - one) - (one - base)) < 1e-9, 'a stacked boon is not adding linearly');
+    })();
+
+    /* --- THE DRAFT SCHEDULE, AND THE SEEDED-ENTRY EQUIVALENCE ---
+       The one that matters. A Seeded Entry run BEGINS at round R having
+       cleared nothing, so if the boon count came from rounds personally
+       fought it would arrive at round 24 with zero boons against an enemy
+       scaled to round 24 - while an ordinary run arrives with four. The
+       reward for reaching rank 6 would be a strict penalty.
+
+       draftsEarnedBy() is the one home, and these prove the two paths agree
+       at the same depth rather than proving the function agrees with itself. */
+    ok(draftsEarnedBy(1) === 0, 'a run owes a draft before it has fought anything');
+    ok(draftsEarnedBy(CONST.DRAFT_EVERY_ROUNDS) === 0,
+       'a draft was owed on the round that earns it rather than after clearing it');
+    ok(draftsEarnedBy(CONST.DRAFT_EVERY_ROUNDS + 1) === 1, 'clearing the fifth round owed no draft');
+    ok(draftsEarnedBy(CONST.DRAFT_EVERY_ROUNDS * 4 + 1) === 4, 'the draft schedule is not linear in rounds');
+
+    (function () {
+      /* Fight from round 1 up to the target, counting what was offered. */
+      const target = 24;
+      const walked = rig();
+      startRun(walked, 0, []);
+      let offered = 0, guard = 0;
+      /* Every loop in this block is bounded. Driving CONST.DRAFT_EVERY_ROUNDS
+         to a huge value is a falsification anyone would reach for, and an
+         unbounded `while (round < DRAFT_EVERY_ROUNDS + 1)` hangs the tab
+         instead of reporting - which is the "report and skip, never walk into
+         the bad row" rule in its worst form. */
+      while (walked.arena.round < target && walked.arena.active && guard++ < 500) {
+        if (draftPending(walked.arena)) { offered++; takeDraft(walked, walked.arena.draft.options[0]); }
+        else clearRound(walked, []);
+      }
+      const walkedBoons = walked.arena.boons.length;
+
+      /* And arrive at the same round through Seeded Entry. */
+      const seeded = rig(s => {
+        s.account.unlocks.seededEntry = true;
+        s.character.bestRound = Math.ceil(target / CONST.SEEDED_ENTRY_FRACTION);
+      });
+      startRun(seeded, 0, []);
+      ok(seeded.arena.round === target,
+         'the seeded rig did not land on round ' + target + ' (got ' + seeded.arena.round + ')');
+      let owedAtEntry = 0, g2 = 0;
+      while (draftPending(seeded.arena) && g2++ < 100) { owedAtEntry++; takeDraft(seeded, seeded.arena.draft.options[0]); }
+
+      ok(owedAtEntry === walkedBoons,
+         'Seeded Entry arrives at round ' + target + ' with ' + owedAtEntry +
+         ' boons where a run that fought there has ' + walkedBoons +
+         ' - the deep start is a penalty, not a reward');
+      ok(owedAtEntry === draftsEarnedBy(target),
+         'the entry grant disagrees with draftsEarnedBy, so the two paths have separate rules');
+      ok(owedAtEntry > 0, 'the seeded-entry check is not actually exercising a deep start');
+      /* And it must not OVER-grant either: arriving deep is not a jackpot. */
+      ok(seeded.arena.boons.length === walkedBoons,
+         'Seeded Entry granted more boons than the depth earns');
+    })();
+
+    /* A batch owed at entry shares one deadline, so a player who is not there
+       gets all of them at once rather than twelve exchanges apart each. */
+    (function () {
+      const s = rig(x => {
+        x.account.unlocks.seededEntry = true;
+        x.character.bestRound = Math.ceil(24 / CONST.SEEDED_ENTRY_FRACTION);
+      });
+      startRun(s, 0, []);
+      const owed = s.arena.draft ? s.arena.draft.owed : 0;
+      ok(owed > 1, 'the batch-deadline check is not exercising a batch');
+      for (let i = 0; i < CONST.DRAFT_AUTO_EXCHANGES + 1 && s.arena.active; i++) exchange(s, 0);
+      ok(!draftPending(s.arena) && s.arena.boons.length === owed,
+         'an owed batch did not resolve together when nobody picked from it');
+    })();
+
+    /* --- the auto-pick --- */
+    (function () {
+      const s = rig();
+      startRun(s, 0, []);
+      for (let g = 0; s.arena.round < CONST.DRAFT_EVERY_ROUNDS + 1 && g < 500; g++) clearRound(s, []);
+      ok(draftPending(s.arena), 'no draft was offered after clearing ' + CONST.DRAFT_EVERY_ROUNDS + ' rounds');
+      const before = s.arena.boons.length;
+      exchange(s, 0);
+      ok(s.arena.boons.length === before,
+         'the draft resolved itself immediately - the player never gets to choose');
+      for (let i = 0; i < CONST.DRAFT_AUTO_EXCHANGES + 2 && s.arena.active; i++) exchange(s, 0);
+      ok(s.arena.boons.length > before, 'an unanswered draft never resolved - the run would stall forever');
+    })();
+    /* It honours the preference, and it SPREADS within the bucket rather than
+       stacking one option into a cap. */
+    (function () {
+      DRAFT_BUCKETS.forEach(b => {
+        const s = rig(x => { x.account.draftPreference = b.id; });
+        startRun(s, 0, []);
+        s.arena.draft = { owed: 1, options: BOON_KEYS.slice(0, BOON_KEYS.length), offeredAt: 0 };
+        const picked = autoPickBoon(s);
+        ok(BOONS[picked].bucket === b.id,
+           'the auto-pick ignored the "' + b.id + '" preference and took ' + picked);
+      });
+      const s = rig(x => { x.account.draftPreference = 'offence'; });
+      startRun(s, 0, []);
+      const offence = BOON_KEYS.filter(id => BOONS[id].bucket === 'offence');
+      s.arena.boons = [offence[0], offence[0], offence[0]];
+      s.arena.draft = { owed: 1, options: offence.slice(0, 2), offeredAt: 0 };
+      ok(autoPickBoon(s) === offence[1],
+         'the auto-pick stacked a boon it already held instead of spreading within the bucket');
+    })();
+
+    /* --- a boss drafts nothing and fights on clean sand --- */
+    (function () {
+      const s = rig(x => {
+        x.character.bestRound = 60; x.character.renown = FORMULAS.rankThreshold(6);
+        x.account.story = { chapter: 0, told: [], attribution: [] };
+      });
+      const first = STORIES[0];
+      const r = startBoss(s, first.id, 0, 0);
+      if (r.ok) {
+        ok(s.arena.conditions.length === 0, 'a story boss was fought on arena conditions');
+        ok(!draftPending(s.arena) && s.arena.boons.length === 0,
+           'a story boss offered a draft - a.round on a boss is the round that GATES it, ' +
+           'so drafting off it hands out boons for a fight that clears nothing');
+        ok(runBonus(s.character, 'damage') === 0 && runBonus(s.character, 'avarice') === 0,
+           'a boss fight carried run modifiers');
+      } else {
+        ok(true, 'boss draft check skipped: ' + r.msg);
+      }
+    })();
+
+    /* --- offers are deterministic --- */
+    (function () {
+      const a = offerBoons(12345, 6, 0, CONST.DRAFT_OPTIONS);
+      const b = offerBoons(12345, 6, 0, CONST.DRAFT_OPTIONS);
+      ok(JSON.stringify(a) === JSON.stringify(b),
+         'the same run, round and history offered two different drafts - a reload would change the offer');
+      ok(new Set(a).size === a.length, 'a draft offered the same boon twice in one choice');
+      ok(a.length === CONST.DRAFT_OPTIONS, 'a draft did not offer ' + CONST.DRAFT_OPTIONS + ' options');
+      ok(JSON.stringify(offerBoons(12345, 6, 1, CONST.DRAFT_OPTIONS)) !== JSON.stringify(a),
+         'a batch of owed drafts is offered the same three boons every time');
+    })();
+
+    /* --- the sand rotates, and a run keeps the sand it started on --- */
+    (function () {
+      const seen = {};
+      for (let b = 0; b < 200; b++) conditionsForBlock(b).forEach(id => { seen[id] = true; });
+      ok(Object.keys(seen).length === CONDITION_KEYS.length,
+         'only ' + Object.keys(seen).length + ' of ' + CONDITION_KEYS.length +
+         ' conditions are reachable from the clock');
+      const one = conditionsForBlock(7);
+      ok(one.length === CONST.CONDITIONS_PER_RUN, 'a block rolled the wrong number of conditions');
+      ok(new Set(one).size === one.length, 'a block rolled the same condition twice');
+      ok(JSON.stringify(conditionsForBlock(7)) === JSON.stringify(conditionsForBlock(7)),
+         'the sand is not stable within a block');
+      let changes = 0;
+      for (let b = 0; b < 40; b++)
+        if (JSON.stringify(conditionsForBlock(b)) !== JSON.stringify(conditionsForBlock(b + 1))) changes++;
+      ok(changes > 30, 'the sand barely changes between blocks - waiting for better sand is not a decision');
+      /* The block rolling over mid-fight must not change the fight. */
+      const s = rig();
+      startRun(s, 0);
+      const locked = s.arena.conditions.slice();
+      clearRound(s, []);
+      ok(JSON.stringify(s.arena.conditions) === JSON.stringify(locked),
+         'a run did not keep the sand it started on');
+    })();
+
+    /* --- run modifiers cannot outlive the run, or arrive through a save --- */
+    (function () {
+      const s = rig();
+      startRun(s, 0, ['patronsbox']);          // +30% gold while the run is on
+      const during = roundReward(s, 5).gold;
+      settleRun(s, 'yield', 0);
+      const after = roundReward(s, 5).gold;
+      ok(during > after, 'the arena conditions were not paying during the run');
+      ok(runBonus(s.character, 'avarice') === 0,
+         'a run modifier outlived the run - the champion is still buffed at the forge');
+
+      /* Non-enumerable on purpose: it cannot be written into a save, so it
+         cannot come back out of one. */
+      const t = rig();
+      startRun(t, 0, ['patronsbox']);
+      /* Deep enough to have EARNED the boon. Pushing one onto a round-1 run
+         builds a state the game cannot produce, and migrateArena is right to
+         throw it away - which is how this check first failed. */
+      for (let g = 0; t.arena.round <= CONST.DRAFT_EVERY_ROUNDS && g < 500; g++) clearRound(t, []);
+      t.arena.boons.push('whetstone');
+      ok(t.arena.boons.length <= draftsEarnedBy(t.arena.round),
+         'the round-trip rig is holding more boons than its round earns');
+      const wire = JSON.parse(JSON.stringify(t));
+      ok(wire.character.runArena === undefined,
+         'the run pointer is serialisable - a save would carry the whole arena twice over');
+      const back = migrate(wire);
+      ok(back.arena.active === true, 'the round-trip rig lost its run');
+      ok(runBonus(back.character, 'avarice') > 0 && runBonus(back.character, 'damage') > 0,
+         'a reload mid-run lost the sand and the boons the player had drafted');
+      ok(Math.abs(runBonus(back.character, 'avarice') - runBonus(t.character, 'avarice')) < 1e-9,
+         'a reload rebuilt the run modifiers differently');
+    })();
+
+    /* --- migration refuses a forged boon list --- */
+    (function () {
+      const t = rig();
+      startRun(t, 0, ['patronsbox']);
+      const wire = JSON.parse(JSON.stringify(t));
+      wire.arena.round = 6;                       // earns exactly one
+      wire.arena.boons = ['whetstone', 'whetstone', 'whetstone', 'cruelty', 'nope'];
+      wire.arena.conditions = ['patronsbox', 'patronsbox', 'bloodsand', 'sunblind', 'nope'];
+      wire.arena.draft = { owed: 99, options: ['nope'], offeredAt: 0 };
+      const back = migrate(wire);
+      ok(back.arena.boons.length === draftsEarnedBy(6),
+         'a hand-edited save kept ' + back.arena.boons.length + ' boons at round 6, where ' +
+         draftsEarnedBy(6) + ' are earned');
+      ok(back.arena.boons.every(id => !!BOONS[id]), 'an unknown boon id survived migration');
+      ok(back.arena.conditions.length <= CONST.CONDITIONS_PER_RUN &&
+         new Set(back.arena.conditions).size === back.arena.conditions.length &&
+         back.arena.conditions.every(id => !!ARENA_CONDITIONS[id]),
+         'a forged condition list survived migration');
+      ok(!back.arena.draft || back.arena.draft.owed <= draftsEarnedBy(back.arena.round),
+         'the owed draft count was read from the record instead of being derived');
+    })();
+
+    /* --- the focus fallback must not be a destructive control ---
+       Taking the last boon on offer removes the whole draft panel, so there is
+       no control to hand the keyboard back to and keepFocus falls through.
+       Before this, that fallback took the first enabled button in the host -
+       which on the arena screen is YIELD. A keyboard user who picked a boon
+       and pressed Enter out of reflex forfeited 30% of the pot having pressed
+       nothing that says so.
+
+       Tested on a DETACHED node: assertAll must not touch the screen, and
+       querySelector works perfectly well off-document. */
+    (function () {
+      const box = document.createElement('div');
+      box.innerHTML = '<button data-tone="danger" type="button">Yield</button>' +
+                      '<h3>A heading</h3>';
+      ok(box.querySelector(FOCUS_FALLBACK_SEL) === null,
+         'the focus fallback would land on a destructive control');
+      box.insertAdjacentHTML('beforeend', '<button type="button" id="safe">Safe</button>');
+      const safe = box.querySelector(FOCUS_FALLBACK_SEL);
+      ok(safe && safe.id === 'safe', 'the focus fallback skipped a perfectly good control');
+      box.innerHTML = '<button data-tone="danger" type="button" disabled>Yield</button>';
+      ok(box.querySelector(FOCUS_FALLBACK_SEL) === null, 'the focus fallback would take a disabled control');
+      /* And the hazard is real on this screen rather than hypothetical. */
+      ok(String(runMarkup).indexOf('data-tone="danger"') !== -1,
+         'the arena run screen no longer has a destructive control, so this guard is describing nothing');
+    })();
+
+    /* --- the daily commission is on BOTH arena states ----------
+       Its own comment has said so since it shipped, and it was called only
+       from the idle markup - so it vanished during a run, which is exactly
+       when its rounds, gold and runs counters are moving. Found while adding
+       the draft panel beneath it. */
+    ok(String(runMarkup).indexOf('commissionMarkup') !== -1 &&
+       String(idleArenaMarkup).indexOf('commissionMarkup') !== -1,
+       'the daily commission is missing from one of the two arena states');
+    ok(String(runMarkup).indexOf('sandMarkup') !== -1 &&
+       String(idleArenaMarkup).indexOf('sandMarkup') !== -1,
+       'the sand is not shown on one of the two arena states');
+
+    /* --- and the harness can SEE all of it ---------------------
+       The check this project has now had to write three times. A sweep that
+       cannot observe a mechanic will price everything around it wrongly and
+       say nothing while it does. */
+    (function () {
+      const cfg = { stats: { str: 40, dex: 30, int: 20, con: 40, cha: 15 },
+                    weaponLevel: 6, weaponQuality: 2, armorQuality: 2, battleClass: null, seed: 5 };
+      const rich = simulate(Object.assign({}, cfg, { conditions: ['slickfooting'] }), 8);
+      const poor = simulate(Object.assign({}, cfg, { conditions: ['thinranks'] }), 8);
+      ok(rich.goldPerHour > poor.goldPerHour,
+         'the harness cannot tell a rich sand from a poor one - conditions are invisible to every sweep');
+      /* AND THE GAP HAS TO BE WORTH WAITING FOR. The whole mechanic is a
+         decision at the arena door - enter on this sand or wait twenty minutes
+         for the next - and a table whose rows all measure the same turns that
+         decision into a cosmetic one. Measured at 17 points between the best
+         and worst single condition; this guards the property, not the number. */
+      const gap = 100 * (rich.goldPerHour - poor.goldPerHour) / poor.goldPerHour;
+      ok(gap >= 5, 'the best and worst sand differ by only ' + gap.toFixed(1) +
+         '% - waiting for better sand is not a decision worth making');
+      const drafted = simulate(Object.assign({}, cfg, { conditions: [] }), 8);
+      const keep = CONST.DRAFT_EVERY_ROUNDS;
+      let flat;
+      try {
+        CONST.DRAFT_EVERY_ROUNDS = 1e9;             // a run that never drafts
+        flat = simulate(Object.assign({}, cfg, { conditions: [] }), 8);
+      } finally { CONST.DRAFT_EVERY_ROUNDS = keep; }
+      ok(drafted.medianRound > flat.medianRound,
+         'drafting boons did not take a run deeper - the harness is measuring a champion who never drafts');
+    })();
+  })();
+
   /* --- arena core (doc 4) --- */
   const arig = (over) => {
     const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
@@ -9544,11 +10704,23 @@ function assertAll() {
 
   /* One exchange resolves player-then-enemy and never leaves HP negative. */
   const T = 1700000000000;                       // a realistic wall-clock stamp
-  const aEx = arig(); startRun(aEx, T);
+  const aEx = arig();
   const prevRng = rng;
-  rng = () => 0.99;                 // no crits, no evades
-  for (let i = 0; i < 500 && aEx.arena.active; i++) exchange(aEx, T);
-  rng = prevRng;
+  /* The draft is held OUT of this rig rather than the check being loosened
+     around it. This assertion is about the cooldown's ORIGIN - exchange() once
+     settled without a timestamp and produced a 1970 knockoutUntil - and a
+     drafted Second Breath legitimately changes its LENGTH, which would turn an
+     exact check into a range and cost it most of its teeth. That a boon really
+     does shorten the bench has its own check in the draft block above. */
+  const keepEvery = CONST.DRAFT_EVERY_ROUNDS;
+  try {
+    CONST.DRAFT_EVERY_ROUNDS = 1e9;
+    startRun(aEx, T, []);
+    rng = () => 0.99;               // no crits, no evades
+    for (let i = 0; i < 500 && aEx.arena.active; i++) exchange(aEx, T);
+  } finally { rng = prevRng; CONST.DRAFT_EVERY_ROUNDS = keepEvery; }
+  ok(aEx.arena.boons.length === 0 && aEx.arena.conditions.length === 0,
+     'the cooldown rig drafted or rolled something, so its exact bench is not exact');
   ok(aEx.arena.playerHp >= 0 && aEx.arena.enemyHp >= 0, 'an exchange drove HP negative');
   ok(aEx.arena.log.length <= CONST.LOG_LINES, 'the combat log grew past its 5 lines');
   ok(aEx.arena.over && aEx.arena.over.how === 'knockout', 'a losing fight did not end in a knockout');
@@ -10767,14 +11939,99 @@ function assertAll() {
     s.character.bestRound = CONST.STORY_GATES[0];
     ok(chapterBlocked(s, st.id, 0) === null, 'chapter 1 stayed shut at its own gate');
     ok(chapterBlocked(s, st.id, 1), 'chapter 2 opened at chapter 1 gate');
-    /* The gate is ACCOUNT-best, so a Hall card alone must open it (doc 10:
-       story progress survives the champion who made it). */
+    /* REVERSED 2026-08-30 (Rob). The gate reads the CHAMPION'S OWN best round
+       now, so a Hall card full of dead heroes must NOT open a chapter for an
+       heir who has done nothing. The assertion kept its shape - it still
+       proves the gate reads a specific number rather than passing everyone -
+       and only its direction changed, because the direction is the decision. */
     const s2 = defaultState();
     s2.account.hall.push({ id: 'h', name: 'Gone', race: 'human', bestRound: 30,
       stats: { str: 5, dex: 5, int: 5, con: 5, cha: 5 }, weapons: {} });
     s2.character = newCharacter('human', 'Heir', s2.account);
+    ok(chapterBlocked(s2, st.id, 0) !== null,
+      'a dead predecessor opened a chapter for an heir who has never fought - ' +
+      'the gate is reading the account instead of the champion');
+    ok(/round 5/.test(chapterBlocked(s2, st.id, 0)),
+      'the heir is blocked for some reason other than their own depth');
+    s2.character.bestRound = CONST.STORY_GATES[0];
     ok(chapterBlocked(s2, st.id, 0) === null,
-      'a dead champion best round did not open a chapter - the gate is reading the living one');
+      'the heir earned the depth themselves and the chapter still would not open');
+
+    /* And a successor inherits the PROGRESS, which is the half of doc 10 that
+       did not change: chapters a predecessor closed stay closed, and the heir
+       picks up at the next one rather than starting the tale again. */
+    const s3 = defaultState();
+    s3.character = newCharacter('human', 'First', s3.account);
+    s3.character.bestRound = CONST.STORY_GATES[1];
+    closeChapter(s3, st.id, 0, 1000);
+    const heirName = 'Second';
+    s3.character = newCharacter('human', heirName, s3.account);
+    s3.character.bestRound = CONST.STORY_GATES[1];
+    ok(chapterClosed(s3.account, st.id, 0), 'a closed chapter did not survive the champion who closed it');
+    ok(nextChapterOf(s3.account, st.id) === 1, 'the heir was not handed the next chapter');
+    ok(chapterBlocked(s3, st.id, 1) === null,
+      'an heir deep enough for chapter 2 could not fight it');
+  })();
+
+  /* --- one tale at a time (Rob, 2026-08-30) -------------------
+     A champion answers for the tale the account is in the middle of, and the
+     rest of the library stays shut until they have finished it THEMSELVES.
+     Without this a fresh champion could pick whichever of the ten tales had
+     the shallowest open chapter. */
+  (function () {
+    const deep = (s) => { s.character.bestRound = 99; return s; };
+    const s = deep((function () {
+      const x = defaultState();
+      x.character = newCharacter('human', 'Bound', x.account);
+      return x;
+    })());
+    const mine = assignedStoryFor(s.account);
+    const other = STORIES.find(st => st.id !== mine);
+    ok(mine === STORIES[0].id, 'a fresh account did not assign the first tale');
+    ok(chapterBlocked(s, mine, 0) === null, 'the assigned tale was shut to the champion it was assigned to');
+    ok(chapterBlocked(s, other.id, 0) !== null, 'a second tale was open before the first was finished');
+    ok(/Finish/.test(chapterBlocked(s, other.id, 0)),
+      'the block on another tale does not say which one to finish first');
+    ok(!libraryOpen(s), 'the library was open to a champion who has told nothing');
+
+    /* Closing chapters is not finishing: only the FINAL one opens the library. */
+    for (let i = 0; i < CONST.STORY_CHAPTERS - 1; i++) closeChapter(s, mine, i, 1000);
+    ok(!libraryOpen(s), 'the library opened before the tale was actually told');
+    ok(chapterBlocked(s, other.id, 0) !== null, 'a second tale opened part-way through the first');
+    closeChapter(s, mine, CONST.STORY_CHAPTERS - 1, 1000);
+    ok(storyIsTold(s.account, mine), 'the tale did not read as told after its last chapter');
+    ok(libraryOpen(s), 'the library stayed shut to a champion who finished their tale');
+    ok(chapterBlocked(s, other.id, 0) === null, 'the library did not actually open');
+
+    /* THE PREDECESSOR'S TALE IS NOT YOURS. An heir on an account where a tale
+       was told by somebody else has told nothing, and answers for the next
+       one - which is the whole point of deriving this from attribution rather
+       than from account progress. */
+    const heir = s;
+    heir.character = newCharacter('human', 'Heir', heir.account);
+    heir.character.bestRound = 99;
+    ok(!libraryOpen(heir), 'an heir inherited a library their predecessor earned');
+    const next = assignedStoryFor(heir.account);
+    ok(next && next !== mine, 'the heir was assigned a tale that is already told');
+    ok(chapterBlocked(heir, next, 0) === null, 'the heir cannot start the tale they were assigned');
+    const third = STORIES.find(st => st.id !== mine && st.id !== next);
+    ok(chapterBlocked(heir, third.id, 0) !== null, 'the heir could skip to a third tale');
+    /* A told tale stays readable and stays closed - not shut behind the rule. */
+    ok(chapterBlocked(heir, mine, 0) === 'Already closed.',
+      'a chapter a predecessor closed reads as locked rather than as done');
+
+    /* An heir who takes over a HALF-told tale answers for that one, so the
+       tale survives the death of whoever started it. */
+    const mid = defaultState();
+    mid.character = newCharacter('human', 'Starter', mid.account);
+    mid.character.bestRound = 99;
+    closeChapter(mid, STORIES[0].id, 0, 1000);
+    mid.character = newCharacter('human', 'Finisher', mid.account);
+    mid.character.bestRound = 99;
+    ok(assignedStoryFor(mid.account) === STORIES[0].id,
+      'a half-told tale was not handed to the next champion');
+    ok(chapterBlocked(mid, STORIES[1].id, 0) !== null,
+      'the successor could abandon the half-told tale for a fresh one');
   })();
 
   /* --- the boss encounter --- */
@@ -10969,6 +12226,43 @@ function assertAll() {
     startBoss(s3, STORIES[0].id, 0, 0);
     s3.arena.playerHp = 1;
     ok(!autoYieldCheck(s3, 0), 'Auto-Yield abandoned a story boss');
+
+    /* SETTABLE MID-RUN (Rob, 2026-08-30). The setting is read on every check
+       rather than latched at the start of the run, so switching it off part
+       way through a fight really does stop it - and switching it on really
+       does arm it. That is what makes the control on the run screen mean
+       anything; a latched setting would render a picker that lies. */
+    const s4 = defaultState();
+    s4.character = newCharacter('human', 'Switcher', s4.account);
+    s4.character.bestRound = 30;
+    s4.account.unlocks.autoYield = true;
+    s4.account.autoYieldAt = 0;                       // armed later, mid-fight
+    startRun(s4, 0);
+    s4.arena.playerHp = maxHpOf(s4.character) * 0.10;
+    ok(!autoYieldCheck(s4, 0), 'Auto-Yield fired while switched off mid-run');
+    ok(s4.arena.active, 'the mid-run rig lost its run before the check');
+    s4.account.autoYieldAt = 0.25;                    // switched ON mid-run
+    ok(autoYieldCheck(s4, 0), 'Auto-Yield did not arm when switched on mid-run');
+    ok(!s4.arena.active && s4.arena.over.how === 'yield',
+       'arming Auto-Yield mid-run settled as something other than a yield');
+
+    const s5 = defaultState();
+    s5.character = newCharacter('human', 'Switcher2', s5.account);
+    s5.character.bestRound = 30;
+    s5.account.unlocks.autoYield = true;
+    s5.account.autoYieldAt = 0.25;                    // armed at the start
+    startRun(s5, 0);
+    s5.arena.playerHp = maxHpOf(s5.character) * 0.10;
+    s5.account.autoYieldAt = 0;                       // switched OFF mid-run
+    ok(!autoYieldCheck(s5, 0), 'switching Auto-Yield off mid-run did not stop it');
+    ok(s5.arena.active, 'the run ended after Auto-Yield was switched off');
+
+    /* And the control is on BOTH arena states, which is the whole request.
+       Same check the daily commission gets, and for the same reason: a panel
+       that only one branch renders is a panel that silently disappears. */
+    ok(String(runMarkup).indexOf('autoYieldMarkup') !== -1 &&
+       String(idleArenaMarkup).indexOf('autoYieldMarkup') !== -1,
+       'the Auto-Yield control is missing from one of the two arena states');
   })();
 
   /* --- feats --- */
@@ -12747,6 +14041,11 @@ window.EA = {
   startArenaTick, stopArenaTick, arenaStep, catchUpArena, defaultScreen, startingRenownFor, RENOWN_TOP_RANK,
   AUGMENTS, AUGMENT_KEYS, AUGMENT_SLOTS, AUGMENTS_BY_SLOT, budgetConflict,
   migrateGear, healMs,
+  ARENA_CONDITIONS, CONDITION_KEYS, BOONS, BOON_KEYS, DRAFT_BUCKETS,
+  conditionsForBlock, conditionsAt, conditionBlock, conditionsLeftMs, enemyMods,
+  assignedStoryFor, championToldATale, libraryOpen,
+  draftsEarnedBy, draftPending, offerBoons, settleDraftOwed, takeDraft,
+  autoPickBoon, resolveOverdueDraft, runBonus, bindRun,
   augBonus, augmentSlots, gearUpgradeCost, buyGearUpgrade,
   buyAugment, removeAugment, buyFacility, facilityUpgradeCost, facilityLocked, renownRankFor,
   BONUS_KEYS, CLASSES, CLASS_KEYS, CLASS_TIERS, STATUSES, FLOURISHES,
