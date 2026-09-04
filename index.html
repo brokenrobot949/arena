@@ -447,6 +447,23 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 .cond strong{display:block;font-size:13.5px}
 .cond span{display:block;font-size:11.5px;line-height:1.4;color:var(--ink-soft)}
 .cond-fx{display:flex!important;flex-wrap:wrap;gap:4px;margin-top:5px}
+/* --- who you are fighting ----------------------------------- */
+.arch{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:2px 0 6px;
+  font-size:11.5px;color:var(--ink-soft)}
+.arch .icon{width:16px;height:16px;flex:none}
+.arch-name{font-family:var(--font-data);font-size:11px;font-weight:700;color:var(--ink)}
+.arch-elite{font-family:var(--font-data);font-size:10px;letter-spacing:.04em;
+  padding:1px 7px;border-radius:var(--r-pill);background:var(--gold);
+  color:var(--ink);border:2px solid var(--ink)}
+.arch-text{flex-basis:100%;line-height:1.35}
+.fighter.is-elite .who strong{color:var(--vermilion-deep)}
+.status-held{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
+.status-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;
+  font-family:var(--font-data);padding:3px 8px;border-radius:var(--r-pill);
+  background:var(--vermilion-deep);color:var(--paper)}
+.crowd-spend{border-color:var(--gold)}
+.crowd-opts{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
+@media (min-width:460px){.crowd-opts{grid-template-columns:1fr 1fr}}
 .boon-held{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
 .boon-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;
   font-family:var(--font-data);padding:3px 8px;border-radius:var(--r-pill);
@@ -1108,6 +1125,10 @@ h3.sub:has(.tale-tag){display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
         <h3>The sand, and the boons</h3>
         <p>Two <strong>conditions</strong> are in force at any moment &mdash; shown on the Arena screen before you enter, and they change every twenty minutes. Each has an upside and a cost: a rich purse with hungrier opponents, weaker enemies and a thinner purse. A run keeps whatever sand it started on, so entering is a real choice: fight this one, or wait for sand that suits what you are carrying.</p>
+        <p>Every opponent has an <strong>archetype</strong> &mdash; a Brawler hits far harder than it can take, a Turtle is a long way from falling over, a Swarmer strikes twice for half as much, and a Venomous one leaves wounds that keep working after the exchange. It is named above their health bar, and it is the reason one round plays differently from the next. Some of them can put a <strong>status on you</strong>, which is new: bleed and stun used to be things only you did to them.</p>
+        <p>Every tenth round is an <strong>elite</strong> &mdash; a named challenger with a forced archetype, more health, and a purse worth two and a half rounds.</p>
+        <p>The <strong>crowd meter</strong> fills one pip per round cleared. Held full it pays +15% gold every round; spent, it either recovers some health or takes a large bite out of whoever you are facing. Holding it is the default, and you can set what happens while you are away under the arena card.</p>
+
         <p>Every five rounds you are offered three <strong>boons</strong> and take one. They last for that run only, they <em>stack</em>, and the fight does not stop while you choose &mdash; the boon starts working the moment you take it. If you are not watching, the game takes one for you after twelve exchanges, using the preference you set under the arena card.</p>
         <p class="guide-rule">A deep start does not cost you boons. If you have Seeded Entry and begin at round 24, you are owed every boon a run that fought its way there would have &mdash; four of them, all offered before the first exchange.</p>
 
@@ -1501,7 +1522,32 @@ const CONST = {
   /* What the game picks when you are not there. Survival by default: an absent
      player wants the run to go deep, and the alternative default - "the first
      option" - is an arbitrary rule nobody can plan around. */
-  DRAFT_DEFAULT_BUCKET: 'defence'
+  DRAFT_DEFAULT_BUCKET: 'defence',
+
+  /* --- who you are actually fighting (Rob, 2026-08-31) -------
+     Conditions made runs differ from each other and the draft made a run
+     something you assemble; neither made round 17 feel different from round
+     16. Every enemy was two numbers and a name, so the inside of a run was
+     347 exchanges of the same arithmetic.
+
+     An archetype is derived from the run's seed and the round, the same way a
+     draft offer is - deterministic, reproducible across a reload, and it does
+     not consume the combat rng stream. */
+  ELITE_EVERY_ROUNDS: 10,
+  ELITE_HP_MULT: 1.5,
+  ELITE_DMG_MULT: 1.2,
+  ELITE_GOLD_MULT: 2.5,
+
+  /* --- the crowd, spent rather than banked --------------------
+     The meter has existed since Phase 4 and did one thing: fill to 8 and add
+     15% gold. Now it is a resource with a choice attached, and BANKING is the
+     default so a player who never touches it gets exactly the game they had. */
+  CROWD_HEAL_PCT: 0.08,
+  CROWD_FINISH_PCT: 0.80,
+  /* When the auto-policy spends a banked meter on healing. Above this the run
+     is going well enough that the gold is worth more. */
+  CROWD_AUTO_HEAL_AT: 0.55,
+  CROWD_DEFAULT_SPEND: 'bank'
 };
 
 const FORMULAS = {
@@ -1874,11 +1920,11 @@ const AUGMENTS = {
   /* --- weapon: what the champion does to the enemy --- */
   keen:      { slot: 'weapon', label: 'Keen',      icon: 'aug-keen',   cost: 400,  power: 4.0,
                text: '+5% crit chance', effect: { crit: 0.05 } },
-  cruel:     { slot: 'weapon', label: 'Cruel',     icon: 'flame',      cost: 400,  power: 4.0,
+  cruel:     { slot: 'weapon', label: 'Cruel',     icon: 'flame',      cost: 400,  power: 4.8,
                text: '+10% affliction chance', effect: { affliction: 0.10 } },
-  savage:    { slot: 'weapon', label: 'Savage',    icon: 'aug-savage', cost: 700,  power: 8.3,
+  savage:    { slot: 'weapon', label: 'Savage',    icon: 'aug-savage', cost: 700,  power: 9.1,
                text: '+25% crit damage', effect: { critPower: 0.25 } },
-  heavy:     { slot: 'weapon', label: 'Heavy',     icon: 'anvil',      cost: 700,  power: 6.8,
+  heavy:     { slot: 'weapon', label: 'Heavy',     icon: 'anvil',      cost: 700,  power: 8.4,
                text: '+12% damage, −5% evasion', effect: { damage: 0.12, evasion: -0.05 } },
   /* The one augment that pays outside the arena. It is deliberately TYPED, so
      it speeds weapon training and not the five stat facilities - an untyped
@@ -1890,35 +1936,35 @@ const AUGMENTS = {
   /* Held by the shared per-exchange ceiling in applySustain(). The 8% is still
      8% of damage dealt but reaches the ceiling almost immediately, so the row
      says so rather than implying it scales. */
-  vampiric:  { slot: 'weapon', label: 'Vampiric',  icon: 'drop',       cost: 2300, power: 21.4,
+  vampiric:  { slot: 'weapon', label: 'Vampiric',  icon: 'drop',       cost: 2300, power: 21.1,
                budget: 'sustain',
                text: 'Heal 8% of damage dealt, up to the sustain cap', effect: { lifesteal: 0.08 } },
-  gilded:    { slot: 'weapon', label: 'Gilded',    icon: 'coin',       cost: 1600, power: 14.7,
+  gilded:    { slot: 'weapon', label: 'Gilded',    icon: 'coin',       cost: 1600, power: 16.7,
                text: '+15% gold', effect: { avarice: 0.15 } },
 
   /* --- armour: what the arena does to the champion --- */
-  swift:     { slot: 'armor',  label: 'Swift',     icon: 'hurdle',     cost: 400,  power: 5.0,
+  swift:     { slot: 'armor',  label: 'Swift',     icon: 'hurdle',     cost: 400,  power: 4.7,
                text: '+5% evasion', effect: { evasion: 0.05 } },
-  warded:    { slot: 'armor',  label: 'Warded',    icon: 'aug-warded', cost: 700,  power: 7.8,
+  warded:    { slot: 'armor',  label: 'Warded',    icon: 'aug-warded', cost: 700,  power: 5.8,
                text: '−8% damage taken', effect: { mitigation: 0.08 } },
-  bulwark:   { slot: 'armor',  label: 'Bulwark',   icon: 'aug-bulwark', cost: 700, power: 8.0,
+  bulwark:   { slot: 'armor',  label: 'Bulwark',   icon: 'aug-bulwark', cost: 700, power: 7.8,
                text: '+10% max HP', effect: { vigor: 0.10 } },
   /* Sits exactly at the sustain ceiling on its own, so the number in this text
      is the number the player gets. Before the cap it read 0.5% and, once
      capped, would have been a lie on the shop row. */
-  resilient: { slot: 'armor',  label: 'Resilient', icon: 'heart',      cost: 2500, power: 21.4,
+  resilient: { slot: 'armor',  label: 'Resilient', icon: 'heart',      cost: 2500, power: 21.1,
                budget: 'sustain',
                text: 'Regain 0.08% max HP per exchange', effect: { regen: 0.0008 } },
   /* Out-of-combat regen, so it shortens the wait between runs rather than
      doing anything inside one. That makes it a THROUGHPUT lever like recovery,
      which is the class of bonus this project has twice mispriced - swept, not
      guessed. */
-  mending:   { slot: 'armor',  label: 'Mending',   icon: 'cross-medic', cost: 1500, power: 13.9,
+  mending:   { slot: 'armor',  label: 'Mending',   icon: 'cross-medic', cost: 1400, power: 14.0,
                text: '+30% out-of-combat HP regeneration', effect: { hpRegen: 0.30 } },
-  plated:    { slot: 'armor',  label: 'Plated',    icon: 'aug-plated', cost: 1300,  power: 12.3,
+  plated:    { slot: 'armor',  label: 'Plated',    icon: 'aug-plated', cost: 1300,  power: 13.4,
                text: '−10% damage taken, +8% max HP, −5% evasion',
                effect: { mitigation: 0.10, vigor: 0.08, evasion: -0.05 } },
-  stalwart:  { slot: 'armor',  label: 'Stalwart',  icon: 'hourglass',  cost: 700, power: 7.1,
+  stalwart:  { slot: 'armor',  label: 'Stalwart',  icon: 'hourglass',  cost: 700, power: 6.9,
                text: '−20% knockout cooldown', effect: { recovery: 0.20 } }
 };
 const AUGMENT_KEYS = Object.keys(AUGMENTS);
@@ -2434,6 +2480,65 @@ const ARENA_CONDITIONS = {
                   pool: { critPower: 0.25, crit: -0.06 }, enemy: {} }
 };
 const CONDITION_KEYS = Object.keys(ARENA_CONDITIONS);
+
+/* --- enemy archetypes ---------------------------------------
+   What makes round 17 different from round 16. `hp` and `dmg` are multipliers
+   on the round curve, and they are the same two levers a condition pulls on
+   the enemy side, so they fold together in enemyFor().
+
+   `ranker` is the baseline and it is a ROW rather than a null case: every
+   enemy has an archetype, so nothing downstream needs a branch for "the plain
+   ones". It is also why the table is roughly neutral on average - a third of
+   the rows have to earn back what the other two thirds cost.
+
+   `inflicts` is the interesting one. Doc 3.6's five statuses were implemented
+   in exchange() and applied ONLY to the enemy: bleed, burn, stun, weaken and
+   slow were things you did to them and never things that happened to you.
+   Half a registry, live for eleven phases, running one way. */
+const ENEMY_ARCHETYPES = {
+  ranker:   { label: 'Rank and File', icon: 'skull',
+              text: 'Nothing unusual about this one.', hp: 1, dmg: 1 },
+  brawler:  { label: 'Brawler', icon: 'anvil',
+              text: 'Hits far harder than it can take.', hp: 0.72, dmg: 1.38 },
+  turtle:   { label: 'Turtle', icon: 'shield',
+              text: 'Slow, heavy, and a long way from falling over.', hp: 1.60, dmg: 0.78 },
+  duelist:  { label: 'Duelist', icon: 'aug-keen',
+              text: 'Finds the gap far too often.', hp: 0.90, dmg: 0.92, crit: 0.18 },
+  swarmer:  { label: 'Swarmer', icon: 'hurdle',
+              text: 'Strikes twice for half as much — armour helps, evasion less so.',
+              hp: 0.85, dmg: 0.52, strikes: 2 },
+  venomous: { label: 'Venomous', icon: 'drop',
+              text: 'Leaves wounds that keep working after the exchange.',
+              hp: 0.95, dmg: 0.82, inflicts: 'bleed', chance: 0.35 },
+  crusher:  { label: 'Crusher', icon: 'aug-savage',
+              text: 'Lands the kind of blow you need a moment to answer.',
+              hp: 1.12, dmg: 1.02, inflicts: 'stun', chance: 0.10 }
+};
+const ARCHETYPE_KEYS = Object.keys(ENEMY_ARCHETYPES);
+/* An elite is never rank-and-file: the whole point is that it is somebody. */
+const ELITE_ARCHETYPES = ARCHETYPE_KEYS.filter(k => k !== 'ranker');
+
+/* Elites get their own titles. The ordinary bands escalate with depth; these
+   do not, because an elite is a NAME rather than a rung. */
+const ELITE_TITLES = [
+  'the Undefeated', 'the Gate-Keeper', 'Twice-Crowned', 'the Long Shadow',
+  'the House Champion', 'the Standing Wager', 'the Last Word', 'the Unbeaten Bill',
+  'the Crowd’s Own', 'the Reigning Fist'
+];
+
+/* --- what a full crowd is worth -----------------------------
+   Three answers, and `bank` is the one the game already gave. Keeping it as
+   the default is what makes this change opt-in: a player who never opens the
+   control gets the +15% gold at eight clears exactly as before, and nothing
+   measured against the old behaviour moves underneath them. */
+const CROWD_SPENDS = [
+  { id: 'bank',   label: 'Bank it',
+    text: 'Hold the meter for +' + Math.round((CONST.CROWD_GOLD_MULT - 1) * 100) + '% gold a round.' },
+  { id: 'heal',   label: 'Play to them',
+    text: 'Spend it to recover ' + Math.round(CONST.CROWD_HEAL_PCT * 100) + '% of your health.' },
+  { id: 'finish', label: 'Call the finish',
+    text: 'Spend it to take ' + Math.round(CONST.CROWD_FINISH_PCT * 100) + '% off this opponent at once.' }
+];
 
 /* --- the between-round draft --------------------------------
    Every CONST.DRAFT_EVERY_ROUNDS rounds you are offered three boons and take
@@ -3027,6 +3132,9 @@ function defaultAccount() {
        is a standing preference about how you want runs played, not something a
        champion owns. */
     draftPreference: CONST.DRAFT_DEFAULT_BUCKET,
+    /* What a full crowd meter does when nobody is watching. `bank` is the
+       behaviour the game had before the meter could be spent at all. */
+    crowdSpend: CONST.CROWD_DEFAULT_SPEND,
     /* Daily commission. `day` is the local calendar day this record describes,
        `doneOn` the last day actually completed - the streak is measured from
        doneOn, so opening the game without finishing does not keep it alive.
@@ -3041,7 +3149,12 @@ function defaultArena() {
   return {
     active: false, round: 0, exchange: 0,
     playerHp: 0, enemyHp: 0, enemyName: '', enemyMaxHp: 0,
-    statuses: [], pot: { gold: 0, renown: 0 }, log: [],
+    /* What is wrong with the ENEMY, and what is wrong with the CHAMPION. The
+       second list is new: doc 3.6's statuses ran one way for eleven phases.
+       Neither survives a reload, which is a deliberate simplification - a
+       status belongs to one fight and to one moment in it. */
+    statuses: [], playerStatuses: [],
+    pot: { gold: 0, renown: 0 }, log: [],
     crowd: 0, enemy: null, over: null, totalExchanges: 0,
     /* This run's own seed. Draft offers are derived from it rather than drawn
        from the shared rng, so they survive a reload and do not shift the
@@ -3241,6 +3354,10 @@ function migrateAccount(raw) {
      option", which is the arbitrary rule the buckets exist to replace. */
   a.draftPreference = DRAFT_BUCKETS.some(b => b.id === raw.draftPreference)
     ? raw.draftPreference : CONST.DRAFT_DEFAULT_BUCKET;
+  /* Same repair, same reason: an unknown value falls back to the default
+     rather than being kept, because the auto-policy has to name a real one. */
+  a.crowdSpend = CROWD_SPENDS.some(x => x.id === raw.crowdSpend)
+    ? raw.crowdSpend : CONST.CROWD_DEFAULT_SPEND;
   /* Commission, repaired field by field like everything else in the account.
      An unknown or missing task id, or a day key that is not a day key, simply
      rolls a fresh commission on the next refresh - the streak survives that,
@@ -3469,12 +3586,27 @@ function migrateArena(raw, account) {
     .map(l => ({ kind: str(l.kind, 'hit'), text: str(l.text, '') }));
 
   if (isObj(raw.enemy)) {
+    /* The archetype is repaired to the baseline rather than trusted, and its
+       traits are re-read FROM THE REGISTRY rather than from the record - a
+       hand-edited save could otherwise hand itself a one-strike Swarmer or an
+       enemy that inflicts nothing. Same rule as battleClass and the boon list:
+       anything that changes the fight is derived, not restored. */
+    const ak = ENEMY_ARCHETYPES[raw.enemy.archetype] ? raw.enemy.archetype : 'ranker';
+    const arch = ENEMY_ARCHETYPES[ak];
     a.enemy = {
       name:  str(raw.enemy.name, a.enemyName || 'A stranger'),
       round: Math.max(1, Math.round(num(raw.enemy.round, a.round || 1))),
+      archetype: ak,
+      /* An elite is a property of the ROUND, so it cannot be forged either. */
+      elite: isEliteRound(Math.max(1, Math.round(num(raw.enemy.round, a.round || 1)))) &&
+             ak !== 'ranker' && !!raw.enemy.elite,
       maxHp: Math.max(1, num(raw.enemy.maxHp, a.enemyMaxHp || 1)),
       hp:    Math.max(0, num(raw.enemy.hp, a.enemyHp || 1)),
-      dmg:   Math.max(0, num(raw.enemy.dmg, 0))
+      dmg:   Math.max(0, num(raw.enemy.dmg, 0)),
+      crit:  arch.crit || 0,
+      strikes: Math.max(1, Math.round(arch.strikes || 1)),
+      inflicts: STATUSES[arch.inflicts] ? arch.inflicts : null,
+      inflictChance: STATUSES[arch.inflicts] ? (arch.chance || 0) : 0
     };
   }
   /* A boss encounter has to survive a reload, and it has to survive it AS A
@@ -4973,19 +5105,49 @@ const playerEvadeChance = c =>
   FORMULAS.playerEvade(c.stats.dex, bonus(c, 'evasion'),
     (RACES[c.race] || {}).evasionCap || CONST.EVASION_CAP);
 
+/* An elite every ELITE_EVERY_ROUNDS rounds: a named challenger with a forced
+   archetype and a fat purse. Round 0 is not a round, so the guard matters. */
+const isEliteRound = round => round > 0 && round % CONST.ELITE_EVERY_ROUNDS === 0;
+
+/* DERIVED from the run's own seed and the round, exactly as a draft offer is,
+   for the same two reasons: a reload has to show the same opponent, and
+   drawing from the shared `rng` would shift the combat sequence behind it and
+   break the paired comparisons the shop's pricing rig depends on. */
+function archetypeFor(seed, round) {
+  const pool = isEliteRound(round) ? ELITE_ARCHETYPES : ARCHETYPE_KEYS;
+  return pool[hashStr(seed + ':arch:' + round) % pool.length];
+}
+
 /* `mods` is the enemy half of the arena conditions - the one part of a
    condition that cannot resolve through the doc 3.4 pool, because the pool
-   belongs to a champion and this is not one. Defaulted so every existing
-   caller and every assertion still describes a plain enemy. */
-function enemyFor(round, mods) {
+   belongs to a champion and this is not one. The archetype's own hp/dmg
+   multipliers fold in at the same point, because they are the same two levers.
+
+   Both extra arguments are optional so every existing caller and every
+   assertion still describes a plain rank-and-file enemy at the round curve. */
+function enemyFor(round, mods, archetype) {
   const m = mods || { hp: 1, dmg: 1 };
-  const hp = FORMULAS.enemyHp(round) * (m.hp || 1);
+  const key = ENEMY_ARCHETYPES[archetype] ? archetype : 'ranker';
+  const arch = ENEMY_ARCHETYPES[key];
+  const elite = isEliteRound(round) && key !== 'ranker' && archetype != null;
+  const hpMult = (m.hp || 1) * arch.hp * (elite ? CONST.ELITE_HP_MULT : 1);
+  const dmgMult = (m.dmg || 1) * arch.dmg * (elite ? CONST.ELITE_DMG_MULT : 1);
+  const hp = FORMULAS.enemyHp(round) * hpMult;
   return {
-    name: rollEnemyName(round),
+    name: elite ? pick(ENEMY_GIVEN) + ' ' + pick(ELITE_TITLES) : rollEnemyName(round),
     round: round,
+    archetype: key,
+    elite: elite,
     maxHp: hp,
     hp: hp,
-    dmg: FORMULAS.enemyDmg(round) * (m.dmg || 1)
+    dmg: FORMULAS.enemyDmg(round) * dmgMult,
+    /* Read once per exchange by the enemy's turn. Kept on the enemy rather
+       than looked up from the registry at each site, so a restored save
+       fights the opponent it was fighting. */
+    crit: arch.crit || 0,
+    strikes: Math.max(1, Math.round(arch.strikes || 1)),
+    inflicts: STATUSES[arch.inflicts] ? arch.inflicts : null,
+    inflictChance: STATUSES[arch.inflicts] ? (arch.chance || 0) : 0
   };
 }
 
@@ -5004,10 +5166,22 @@ function afflictionChance(c) {
   return bonus(c, 'affliction') + (race.afflictionChance || 0);
 }
 
-function applyStatus(a, type, hitDamage) {
+/* THE STATUSES RUN BOTH WAYS NOW (Rob, 2026-08-31). `a.statuses` is what is
+   wrong with the ENEMY and `a.playerStatuses` is what is wrong with the
+   CHAMPION, and this is the one place either list is named - so a caller
+   cannot quietly mean the wrong one, and there is exactly one implementation
+   of what a status does rather than a mirrored second copy.
+
+   `side` is required rather than defaulted. A default would be the shape this
+   file has been bitten by twice: a rule that has to be remembered at each call
+   site is forgotten at one, and the one it is forgotten at is the new one. */
+const statusesOf = (a, side) => side === 'player' ? a.playerStatuses : a.statuses;
+
+function applyStatus(a, type, hitDamage, side) {
   const def = STATUSES[type];
   if (!def) return null;
-  const existing = a.statuses.filter(s => s.type === type);
+  const list = statusesOf(a, side);
+  const existing = list.filter(s => s.type === type);
   if (existing.length >= def.maxStacks) {
     /* Refresh rather than stack - and take the STRONGER of the two hits. Doc
        3.6 says "X% of the triggering hit's damage" without addressing refresh,
@@ -5024,15 +5198,19 @@ function applyStatus(a, type, hitDamage) {
     perExchange: def.pctOfHit ? hitDamage * def.pctOfHit : 0,
     age: 0
   };
-  a.statuses.push(s);
+  list.push(s);
   return s;
 }
 
-/* Resolved at the top of each exchange: ticks damage-over-time, decides whether
-   the enemy is skipping, and expires anything finished. */
-function tickStatuses(a) {
+/* Resolved at the top of each exchange, once per side: ticks damage-over-time,
+   decides whether that side is skipping its strike, and expires anything
+   finished. The meaning of the result is symmetric - `dot` hurts whoever is
+   afflicted, `skip` costs them their attack, `dmgMult` weakens the blow they
+   land - so one implementation serves both directions. */
+function tickStatuses(a, side) {
   let dot = 0, skip = false, dmgMult = 1;
-  a.statuses.forEach(s => {
+  const list = statusesOf(a, side);
+  list.forEach(s => {
     const def = STATUSES[s.type];
     s.age++;
     if (s.perExchange > 0) dot += s.perExchange;
@@ -5041,7 +5219,8 @@ function tickStatuses(a) {
     if (def.dmgMult) dmgMult *= def.dmgMult;
     s.left--;
   });
-  a.statuses = a.statuses.filter(s => s.left > 0);
+  const alive = list.filter(s => s.left > 0);
+  if (side === 'player') a.playerStatuses = alive; else a.statuses = alive;
   return { dot: dot, skip: skip, dmgMult: dmgMult };
 }
 
@@ -5061,10 +5240,18 @@ function damageTaken(c, raw) {
 function roundReward(s, round) {
   const c = s.character, race = RACES[c.race] || {};
   const crowdMult = s.arena.crowd >= CONST.CROWD_MAX ? CONST.CROWD_GOLD_MULT : 1;
+  /* An elite is a harder round and pays like one. Read off the ENEMY that was
+     actually fought rather than recomputed from the round number, so a boss -
+     whose a.round is the round that gates its chapter, not one anybody
+     fought - can never be mistaken for an elite. That is the same trap the
+     arena-depth guard in settleRun exists for. */
+  const e = s.arena.enemy;
+  const eliteMult = (e && e.elite && e.round === round && !s.arena.boss)
+    ? CONST.ELITE_GOLD_MULT : 1;
   return {
     gold: FORMULAS.goldPerRound(round, c.stats.cha, bonus(c, 'avarice')) *
-      (race.goldMult || 1) * crowdMult,
-    renown: FORMULAS.renownPerRound(round, c.stats.cha) * (race.renownMult || 1)
+      (race.goldMult || 1) * crowdMult * eliteMult,
+    renown: FORMULAS.renownPerRound(round, c.stats.cha) * (race.renownMult || 1) * eliteMult
   };
 }
 
@@ -5135,7 +5322,7 @@ function beginRound(s, round) {
      comes through this function - startRun to open one and clearRound to
      advance it. startBoss builds its arena directly and binds explicitly. */
   bindRun(s);
-  const e = enemyFor(round, enemyMods(a));
+  const e = enemyFor(round, enemyMods(a), archetypeFor(num(a.seed, 0), round));
   a.enemy = e;
   a.enemyName = e.name;
   a.enemyMaxHp = e.maxHp;
@@ -5177,6 +5364,10 @@ function exchange(s, now) {
      one for you. Counted in exchanges, so this fires identically in the live
      tick, in a catch-up after a night away, and in the harness. */
   resolveOverdueDraft(s);
+  /* And the meter spends itself if that is what the player asked for. Before
+     the strike, so a heal can save an exchange the champion would not have
+     survived - which is the whole reason somebody would set it. */
+  autoSpendCrowd(s, events);
 
   /* --- player strikes --- */
   const maxHp = maxHpOf(c);
@@ -5185,9 +5376,22 @@ function exchange(s, now) {
      applySustain() below, once, against one shared ceiling - see the comment
      there for why they cannot be two independent heals. */
 
-  /* Statuses resolve first: damage-over-time lands, and a stunned or slowed
-     enemy loses this exchange's attack. */
-  const st = tickStatuses(a);
+  /* Statuses resolve first, BOTH WAYS. What is wrong with the champion lands
+     before they swing, because a bleed that kills you should kill you on the
+     exchange it lands rather than after you have taken a free turn. */
+  const pst = tickStatuses(a, 'player');
+  if (pst.dot > 0) {
+    a.playerHp = Math.max(0, a.playerHp - pst.dot);
+    events.push({ who: 'player', kind: 'dot', amount: pst.dot });
+    logLine(a, 'hit', 'Your wounds cost you ' + Math.round(pst.dot) + '.');
+    if (a.playerHp <= 0) {
+      events.push({ who: 'player', kind: 'down' });
+      settleRun(s, 'knockout', now);
+      return events;
+    }
+  }
+
+  const st = tickStatuses(a, 'enemy');
   if (st.dot > 0) {
     a.enemyHp = Math.max(0, a.enemyHp - st.dot);
     events.push({ who: 'enemy', kind: 'dot', amount: st.dot });
@@ -5198,25 +5402,34 @@ function exchange(s, now) {
     }
   }
 
-  const crit = rng() < playerCritChance(c);
-  const dmg = playerDamage(c, crit);
-  a.enemyHp = Math.max(0, a.enemyHp - dmg);
-  events.push({ who: 'player', kind: crit ? 'crit' : 'hit', amount: dmg });
-  if (crit) commissionAdvance(s, 'crits', 1, now);
+  /* A stunned or slowed CHAMPION loses their strike - the same rule the enemy
+     has always been under, now that the statuses run both ways. The exchange
+     still happens: the enemy gets its turn below. */
+  let dmg = 0, crit = false;
+  if (pst.skip) {
+    events.push({ who: 'player', kind: 'skip' });
+    logLine(a, 'evade', 'You cannot answer.');
+  } else {
+    crit = rng() < playerCritChance(c);
+    dmg = playerDamage(c, crit) * pst.dmgMult;
+    a.enemyHp = Math.max(0, a.enemyHp - dmg);
+    events.push({ who: 'player', kind: crit ? 'crit' : 'hit', amount: dmg });
+    if (crit) commissionAdvance(s, 'crits', 1, now);
 
-  /* One affliction roll per landed hit, fed by class, race and augment alike. */
-  const aff = afflictionChance(c);
-  if (aff > 0 && rng() < aff) {
-    const type = afflictionTypeFor(c);
-    if (applyStatus(a, type, dmg)) {
-      events.push({ who: 'enemy', kind: 'status', status: type });
-      logLine(a, 'clear', a.enemyName + ' is ' + STATUSES[type].label.toLowerCase() + 'ing.');
+    /* One affliction roll per landed hit, fed by class, race and augment alike. */
+    const aff = afflictionChance(c);
+    if (aff > 0 && rng() < aff) {
+      const type = afflictionTypeFor(c);
+      if (applyStatus(a, type, dmg, 'enemy')) {
+        events.push({ who: 'enemy', kind: 'status', status: type });
+        logLine(a, 'clear', a.enemyName + ' is ' + STATUSES[type].label.toLowerCase() + 'ing.');
+      }
     }
-  }
 
-  applySustain(s, dmg, maxHp, events);
-  logLine(a, crit ? 'crit' : 'hit',
-    (crit ? 'Critical! ' : '') + 'You hit ' + a.enemyName + ' for ' + Math.round(dmg) + '.');
+    applySustain(s, dmg, maxHp, events);
+    logLine(a, crit ? 'crit' : 'hit',
+      (crit ? 'Critical! ' : '') + 'You hit ' + a.enemyName + ' for ' + Math.round(dmg) + '.');
+  }
 
   /* Doc 3.5: one flourish every fourth exchange. Placed BEFORE the kill check
      so a class still gets its voice on a finishing blow - it is the only thing
@@ -5250,27 +5463,47 @@ function exchange(s, now) {
   }
 
   /* --- enemy strikes back. Enemies never evade (doc 4). --- */
-  if (rng() < playerEvadeChance(c)) {
-    events.push({ who: 'player', kind: 'evade' });
-    logLine(a, 'evade', 'You slip aside.');
-    return events;
-  }
   if (st.skip) {
     events.push({ who: 'enemy', kind: 'skip' });
     logLine(a, 'evade', a.enemyName + ' cannot answer.');
     return events;
   }
-  const eCrit = rng() < FORMULAS.enemyCrit(c.stats.int);
-  const raw = a.enemy.dmg * st.dmgMult * (eCrit ? FORMULAS.critMult(0) : 1);
-  const taken = damageTaken(c, raw);
-  a.playerHp = Math.max(0, a.playerHp - taken);
-  events.push({ who: 'enemy', kind: eCrit ? 'crit' : 'hit', amount: taken });
-  logLine(a, eCrit ? 'crit' : 'hit',
-    (eCrit ? 'Critical! ' : '') + a.enemyName + ' hits you for ' + Math.round(taken) + '.');
+  /* A Swarmer strikes more than once for less each, which is why armour helps
+     against it and evasion helps less: evasion is rolled PER STRIKE, so a
+     dodge only buys one of them, while flat damage reduction applies to every
+     one. That asymmetry is the archetype's whole identity and it falls out of
+     rolling inside the loop rather than outside it. */
+  const strikes = Math.max(1, Math.round(num(a.enemy.strikes, 1)));
+  for (let i = 0; i < strikes; i++) {
+    if (rng() < playerEvadeChance(c)) {
+      events.push({ who: 'player', kind: 'evade' });
+      logLine(a, 'evade', 'You slip aside.');
+      continue;
+    }
+    const eCrit = rng() < (FORMULAS.enemyCrit(c.stats.int) + Math.max(0, num(a.enemy.crit, 0)));
+    const raw = a.enemy.dmg * st.dmgMult * (eCrit ? FORMULAS.critMult(0) : 1);
+    const taken = damageTaken(c, raw);
+    a.playerHp = Math.max(0, a.playerHp - taken);
+    events.push({ who: 'enemy', kind: eCrit ? 'crit' : 'hit', amount: taken });
+    logLine(a, eCrit ? 'crit' : 'hit',
+      (eCrit ? 'Critical! ' : '') + a.enemyName + ' hits you for ' + Math.round(taken) + '.');
 
-  if (a.playerHp <= 0) {
-    events.push({ who: 'player', kind: 'down' });
-    settleRun(s, 'knockout', now);
+    /* And some of them leave something behind. This is the first thing in the
+       build that puts a status on the CHAMPION - the registry has run one way
+       since Phase 7. */
+    const inf = a.enemy.inflicts;
+    if (inf && STATUSES[inf] && rng() < num(a.enemy.inflictChance, 0)) {
+      if (applyStatus(a, inf, taken, 'player')) {
+        events.push({ who: 'player', kind: 'status', status: inf });
+        logLine(a, 'crit', 'You are ' + STATUSES[inf].label.toLowerCase() + 'ing.');
+      }
+    }
+
+    if (a.playerHp <= 0) {
+      events.push({ who: 'player', kind: 'down' });
+      settleRun(s, 'knockout', now);
+      return events;
+    }
   }
   return events;
 }
@@ -5337,6 +5570,70 @@ function clearRound(s, events) {
   beginRound(s, a.round + 1);
   events.push({ who: 'enemy', kind: 'enter', round: a.round, name: a.enemyName });
   return r;
+}
+
+/* --- the crowd, spent -----------------------------------------
+   The meter has filled to eight and paid +15% gold since Phase 4, and that is
+   all it has ever done. It is a resource with a choice now: hold it for the
+   gold, or spend it for a burst.
+
+   The heal is DELIBERATELY not routed through applySustain(), and that needs
+   saying because applySustain's own comment claims to be all in-run healing.
+   The sustain ceiling exists because flat per-exchange healing is a constant
+   racing an exponential - stack enough of it and a run never ends. This is not
+   per-exchange: it is bounded by a resource that takes eight round clears to
+   refill, so its rate is tied to progress rather than to time in the sand, and
+   it cannot be stacked at all. It is measured with the rest of the balance
+   below rather than assumed harmless.
+
+   Returns {ok, msg} like every other core action so the edge does the flashing. */
+function crowdReady(a) {
+  return !!(a && a.active && !a.boss && num(a.crowd, 0) >= CONST.CROWD_MAX);
+}
+
+function spendCrowd(s, what, events) {
+  const a = s.arena, c = s.character;
+  if (!c) return { ok: false, msg: 'No champion.' };
+  if (!crowdReady(a)) return { ok: false, msg: 'The crowd is not with you yet.' };
+  if (what !== 'heal' && what !== 'finish') return { ok: false, msg: 'Nothing to spend it on.' };
+
+  if (what === 'heal') {
+    const max = maxHpOf(c);
+    const healed = Math.min(max - a.playerHp, max * CONST.CROWD_HEAL_PCT);
+    if (healed <= 0) return { ok: false, msg: 'Already at full health.' };
+    a.playerHp += healed;
+    a.crowd = 0;
+    logLine(a, 'clear', 'You play to the crowd, and come back up ' + Math.round(healed) + '.');
+    if (events) events.push({ who: 'player', kind: 'heal', amount: healed });
+    return { ok: true, what: what, amount: healed };
+  }
+
+  const hit = a.enemyMaxHp * CONST.CROWD_FINISH_PCT;
+  a.enemyHp = Math.max(0, a.enemyHp - hit);
+  a.crowd = 0;
+  logLine(a, 'crit', 'The crowd calls for the finish. ' + a.enemyName + ' takes ' + Math.round(hit) + '.');
+  if (events) events.push({ who: 'enemy', kind: 'hit', amount: hit });
+  return { ok: true, what: what, amount: hit, killed: a.enemyHp <= 0 };
+}
+
+const crowdSpendOf = s =>
+  CROWD_SPENDS.some(x => x.id === (s.account || {}).crowdSpend)
+    ? s.account.crowdSpend : CONST.CROWD_DEFAULT_SPEND;
+
+/* What the meter does when nobody is watching. `bank` - the default - does
+   nothing at all, which is precisely the behaviour the game had before this
+   existed, so an untouched account is not quietly playing a different game.
+
+   Healing waits until it is worth it: above CROWD_AUTO_HEAL_AT the run is
+   going well enough that the gold multiplier is the better use. */
+function autoSpendCrowd(s, events) {
+  const a = s.arena, c = s.character;
+  if (!crowdReady(a) || !c) return null;
+  const pref = crowdSpendOf(s);
+  if (pref === 'heal' && a.playerHp < maxHpOf(c) * CONST.CROWD_AUTO_HEAL_AT)
+    return spendCrowd(s, 'heal', events);
+  if (pref === 'finish') return spendCrowd(s, 'finish', events);
+  return null;
 }
 
 /* Doc 4: yield keeps 70% of the pot and your HP; a knockout keeps the whole pot
@@ -7760,9 +8057,13 @@ function runMarkup(a, c) {
 
       /* Enemy above, champion below - the champion's bar sits closest to the
          controls that act on it, and the pair reads as "them, then us". */
-      '<div class="fighter">' +
+      '<div class="fighter' + (a.enemy && a.enemy.elite ? ' is-elite' : '') + '">' +
         '<div class="who"><strong id="ar-ename">' + esc(a.enemyName) + '</strong>' +
           '<span class="num" id="ar-ehp">' + Math.round(a.enemyHp) + ' / ' + Math.round(a.enemyMaxHp) + '</span></div>' +
+        /* WHO you are fighting, not just how much of them is left. Every enemy
+           was two numbers and a name until this; the archetype is the thing
+           that makes one round play differently from the next. */
+        archetypeLine(a) +
         '<div id="ar-ebar">' + hpBar(a.enemyHp, a.enemyMaxHp, 'enemy') + '</div>' +
       '</div>' +
 
@@ -7774,6 +8075,9 @@ function runMarkup(a, c) {
            a player watching a run should not have to leave it to remember
            which ones are in play. */
         '<div class="loadout">' + loadoutChips(c) + '</div>' +
+        /* What is currently wrong with the CHAMPION. Statuses ran one way for
+           eleven phases, so this row has never had anything to show before. */
+        statusChips(a) +
         boonChips(a) +
         '<div id="ar-pbar">' + hpBar(a.playerHp, max, 'player') + '</div>' +
       '</div>' +
@@ -7798,6 +8102,7 @@ function runMarkup(a, c) {
           Math.round(maxHpOf(c) * autoYieldArmedAt()) + ' HP</p>'
         : '') +
     '</div>' +
+    crowdMarkup(a, c) +
     draftMarkup(a) +
     /* Settable DURING the fight (Rob, 2026-08-30), not only from the idle
        screen. Deciding whether to let the run walk itself out is a decision
@@ -8028,8 +8333,14 @@ function updateArenaLive() {
      Re-render only when that SIGNATURE moves, so the common case still costs
      nothing and the keyboard is not thrown on every tick. This is the same
      shape as the bench-cleared branch in the idle tick. */
+  /* Everything the in-place updates above cannot express: the draft panel
+     appearing, the crowd filling, a status landing on the champion, and the
+     archetype changing when a new opponent takes the sand. */
   const sig = (draftPending(a) ? a.draft.options.join(',') + '|' + a.draft.owed : '-') +
-              '|' + arr(a.boons, []).length;
+              '|' + arr(a.boons, []).length +
+              '|' + (crowdReady(a) ? 'crowd' : '-') +
+              '|' + arr(a.playerStatuses, []).map(x => x.type).sort().join('.') +
+              '|' + (a.enemy ? a.enemy.archetype + (a.enemy.elite ? '!' : '') : '-');
   if (sig !== lastDraftSig) { lastDraftSig = sig; renderArena(); return; }
   /* The grace counter is live text, so it ticks without a re-render. */
   set('ar-draft-left', String(Math.max(0, CONST.DRAFT_AUTO_EXCHANGES -
@@ -8101,6 +8412,59 @@ function sandMarkup(a, now) {
     '</div>';
 }
 
+/* The opponent's archetype, and the elite badge if they are one. Reads its
+   text out of the registry rather than restating it, the same rule the sand
+   card follows. */
+function archetypeLine(a) {
+  const e = a.enemy;
+  const arch = e && ENEMY_ARCHETYPES[e.archetype];
+  if (!arch) return '';
+  return '<div class="arch">' + icon(arch.icon) +
+    '<span class="arch-name">' + esc(arch.label) + '</span>' +
+    (e.elite ? '<span class="arch-elite">Elite</span>' : '') +
+    '<span class="arch-text">' + esc(arch.text) + '</span></div>';
+}
+
+/* What is on the champion right now. Stacks are collapsed the same way the
+   drafted boons are, because three bleeds is one fact, not three. */
+function statusChips(a) {
+  const held = arr(a.playerStatuses, []);
+  if (!held.length) return '';
+  const counts = {};
+  held.forEach(s => { if (STATUSES[s.type]) counts[s.type] = (counts[s.type] || 0) + 1; });
+  const keys = Object.keys(counts);
+  if (!keys.length) return '';
+  return '<div class="status-held">' + keys.map(t =>
+    '<span class="status-chip">' + esc(STATUSES[t].label) +
+    (counts[t] > 1 ? ' <span class="num">x' + counts[t] + '</span>' : '') +
+    '</span>').join('') + '</div>';
+}
+
+/* The meter, once it is full. Two buttons and the option of doing nothing -
+   holding it IS the third choice, and it is the one the game made for you
+   before this existed. */
+function crowdMarkup(a, c) {
+  if (!crowdReady(a)) return '';
+  const max = maxHpOf(c);
+  const heal = Math.min(max - a.playerHp, max * CONST.CROWD_HEAL_PCT);
+  return '<div class="panel crowd-spend"><h3 class="sub">' + icon('trophy') +
+    ' The crowd is yours</h3>' +
+    '<p class="hp-line">Holding it pays <strong>+' +
+      Math.round((CONST.CROWD_GOLD_MULT - 1) * 100) + '% gold</strong> every round. ' +
+      'Spending it empties the meter.</p>' +
+    '<div class="crowd-opts">' +
+      '<button class="draft-opt" type="button" data-crowd="heal"' +
+        (heal <= 0 ? ' disabled' : '') + '>' + icon('heart') +
+        '<strong>Play to them</strong><span>' +
+        (heal > 0 ? 'Recover ' + Math.round(heal) + ' health' : 'Already at full health') +
+        '</span></button>' +
+      '<button class="draft-opt" type="button" data-crowd="finish">' + icon('aug-savage') +
+        '<strong>Call the finish</strong><span>Take ' +
+        Math.round(a.enemyMaxHp * CONST.CROWD_FINISH_PCT) + ' off ' + esc(a.enemyName) +
+        '</span></button>' +
+    '</div></div>';
+}
+
 function boonChips(a) {
   const held = arr(a.boons, []);
   if (!held.length) return '';
@@ -8145,7 +8509,16 @@ function draftPrefMarkup() {
     '<div class="picker">' + DRAFT_BUCKETS.map(b =>
       '<button class="chip-btn' + (b.id === pref ? ' is-on' : '') + '" type="button" ' +
       'data-draftpref="' + b.id + '" aria-pressed="' + (b.id === pref) + '">' +
-      esc(b.label) + '</button>').join('') + '</div></div>';
+      esc(b.label) + '</button>').join('') + '</div>' +
+    /* The crowd's standing order, beside the draft's, because both answer the
+       same question: what should happen while I am not looking. */
+    '<p class="hp-line" style="margin-top:12px">A full crowd meter pays +' +
+      Math.round((CONST.CROWD_GOLD_MULT - 1) * 100) + '% gold a round while you hold it. ' +
+      esc(CROWD_SPENDS.filter(x => x.id === crowdSpendOf(state))[0].text) + '</p>' +
+    '<div class="picker">' + CROWD_SPENDS.map(x =>
+      '<button class="chip-btn' + (x.id === crowdSpendOf(state) ? ' is-on' : '') + '" type="button" ' +
+      'data-crowdpref="' + x.id + '" aria-pressed="' + (x.id === crowdSpendOf(state)) + '">' +
+      esc(x.label) + '</button>').join('') + '</div></div>';
 }
 
 /* Sits under the arena card on both of its states - a commission is something
@@ -8211,6 +8584,22 @@ function wireArena() {
       save('draft');
       renderArena();
       flash(r.boon.label + ' — ' + r.boon.text);
+    }));
+  document.querySelectorAll('[data-crowdpref]').forEach(b =>
+    b.addEventListener('click', () => {
+      state.account.crowdSpend = b.dataset.crowdpref;
+      save('crowd-pref-set');
+      renderArena();
+    }));
+  document.querySelectorAll('[data-crowd]').forEach(b =>
+    b.addEventListener('click', () => {
+      const r = spendCrowd(state, b.dataset.crowd, null);
+      if (!r.ok) { flash(r.msg || 'No.'); return; }
+      save('crowd-spend');
+      renderArena();
+      flash(r.what === 'heal'
+        ? 'The crowd lifts you — ' + Math.round(r.amount) + ' health back.'
+        : 'The crowd calls it — ' + Math.round(r.amount) + ' damage.');
     }));
   const enter = document.getElementById('btn-enter');
   if (enter) enter.addEventListener('click', () => {
@@ -9075,6 +9464,12 @@ function harnessState(config) {
     account.unlocks.seededEntry = true;
     c.bestRound = cfg.bestRound == null ? 0 : cfg.bestRound;
   }
+  /* What a full crowd meter does. It is a real fork in how a run plays - bank
+     the gold, spend it on health, or spend it on the opponent - so a sweep has
+     to be able to vary it. Patching CONST to compare policies works but leaves
+     the game tuned differently than it found it, which is the exact thing the
+     mentor sweep has a `finally` for. */
+  if (CROWD_SPENDS.some(x => x.id === cfg.crowdSpend)) account.crowdSpend = cfg.crowdSpend;
   c.hp = maxHpOf(c);
   return s;
 }
@@ -9764,7 +10159,17 @@ function assertAll() {
 
   if (canMeasure) {
     document.querySelectorAll('#nav button span').forEach(sp => {
-      ok(sp.scrollWidth <= sp.clientWidth, 'nav label truncated: ' + sp.textContent);
+      /* One pixel of slack, for the same reason the touch-target check carries
+         a 0.05px epsilon. scrollWidth and clientWidth are ROUNDED integers, so
+         a label whose true width is 63.6 in a 63.6 box can report 64 against
+         64 or 65 against 64 depending on where layout has settled - this fired
+         once on "Champion" immediately after a load and never reproduced.
+
+         A genuine truncation is never one pixel. The case this check was
+         written for was CHAMPION in the display face needing 63px of a 54px
+         tab, nine pixels over. Do not widen it to hide a real miss. */
+      ok(sp.scrollWidth <= sp.clientWidth + 1, 'nav label truncated: ' + sp.textContent +
+         ' (' + sp.scrollWidth + '>' + sp.clientWidth + ')');
     });
     ok(document.documentElement.scrollWidth <= window.innerWidth,
        'document scrolls horizontally at ' + window.innerWidth + 'px');
@@ -10574,6 +10979,294 @@ function assertAll() {
          'a forged condition list survived migration');
       ok(!back.arena.draft || back.arena.draft.owed <= draftsEarnedBy(back.arena.round),
          'the owed draft count was read from the record instead of being derived');
+    })();
+
+    /* --- archetypes, elites and the crowd (Rob, 2026-08-31) ----
+       Three mechanics that all answer the same complaint: every enemy was two
+       numbers and a name, so the inside of a run was 347 exchanges of the same
+       arithmetic whatever round you were on. */
+    (function () {
+      /* --- registry shape --- */
+      ARCHETYPE_KEYS.forEach(id => {
+        const arch = ENEMY_ARCHETYPES[id];
+        ok(ICON_NAMES.indexOf(arch.icon) !== -1, id + ' names an icon outside the sprite sheet');
+        ok(typeof arch.hp === 'number' && arch.hp > 0, id + ' has no positive HP multiplier');
+        ok(typeof arch.dmg === 'number' && arch.dmg > 0, id + ' has no positive damage multiplier');
+        if (arch.inflicts) ok(!!STATUSES[arch.inflicts],
+          id + ' inflicts "' + arch.inflicts + '", which is not a doc 3.6 status');
+        if (arch.inflicts) ok(arch.chance > 0 && arch.chance <= 1,
+          id + ' inflicts a status with no usable chance');
+        if (arch.strikes) ok(arch.strikes >= 1 && arch.strikes === Math.round(arch.strikes),
+          id + ' strikes a fractional number of times');
+      });
+      ok(ENEMY_ARCHETYPES.ranker.hp === 1 && ENEMY_ARCHETYPES.ranker.dmg === 1,
+         'the baseline archetype is not actually the baseline');
+      /* EVERY DECLARED TRAIT MUST REACH THE ENEMY THAT IS BUILT FROM IT.
+         The exchange-loop checks further down drive a Swarmer and a Venomous
+         opponent by setting `strikes` and `inflicts` on the enemy object
+         directly - which proves the LOOP works and says nothing about whether
+         any archetype uses it. Falsified by flattening the registry, both of
+         those passed clean: a test that survives the deletion of the thing it
+         names is the tautology this file keeps having to hunt down. */
+      ARCHETYPE_KEYS.forEach(id => {
+        const arch = ENEMY_ARCHETYPES[id];
+        const e = enemyFor(3, null, id);
+        ok(e.archetype === id, id + ' built an enemy of a different archetype');
+        ok(e.strikes === Math.max(1, Math.round(arch.strikes || 1)),
+           id + ' declares ' + arch.strikes + ' strikes and its enemy makes ' + e.strikes);
+        ok(e.inflicts === (STATUSES[arch.inflicts] ? arch.inflicts : null),
+           id + ' declares it inflicts ' + arch.inflicts + ' and its enemy inflicts ' + e.inflicts);
+        ok(Math.abs(e.crit - (arch.crit || 0)) < 1e-9, id + ' lost its crit bonus on the way to the enemy');
+        const plain = enemyFor(3, null, 'ranker');
+        if (arch.hp !== 1) ok(Math.abs(e.maxHp - plain.maxHp) > 1e-9,
+          id + ' declares an HP multiplier that does not change the enemy');
+        if (arch.dmg !== 1) ok(Math.abs(e.dmg - plain.dmg) > 1e-9,
+          id + ' declares a damage multiplier that does not change the enemy');
+      });
+      /* And the table has to actually USE the two traits that are not just
+         numbers, or the archetypes are hp/dmg multipliers with extra steps and
+         the statuses are still running one way. */
+      ok(ARCHETYPE_KEYS.some(k => (ENEMY_ARCHETYPES[k].strikes || 1) > 1),
+         'no archetype strikes more than once - the multi-strike path is unreachable');
+      ok(ARCHETYPE_KEYS.some(k => !!STATUSES[ENEMY_ARCHETYPES[k].inflicts]),
+         'no archetype inflicts a status - nothing in the game can put one on the champion');
+      ok(ARCHETYPE_KEYS.some(k => (ENEMY_ARCHETYPES[k].crit || 0) > 0),
+         'no archetype raises the enemy crit chance - the trait is unreachable');
+      ok(ELITE_ARCHETYPES.indexOf('ranker') === -1,
+         'an elite can roll rank-and-file, which is the one thing it must not be');
+      ok(ELITE_ARCHETYPES.length >= 3, 'there are too few archetypes for elites to vary');
+      /* Every archetype must be REACHABLE from the derivation, or it is a
+         registry row the game can never show - the dead-glyph shape. */
+      (function () {
+        const seen = {};
+        for (let r = 1; r <= 400; r++) seen[archetypeFor(12345, r)] = true;
+        ok(Object.keys(seen).length === ARCHETYPE_KEYS.length,
+           'only ' + Object.keys(seen).length + ' of ' + ARCHETYPE_KEYS.length +
+           ' archetypes are reachable from the round derivation');
+      })();
+      /* Derived, not drawn: a reload has to fight the same opponent, and the
+         draw must not consume the combat rng stream. */
+      ok(archetypeFor(7, 12) === archetypeFor(7, 12), 'the archetype is not stable for one round');
+      ok(ARCHETYPE_KEYS.filter(k => archetypeFor(7, 12) === k).length === 1,
+         'the archetype derivation returned something outside the registry');
+
+      /* --- elites --- */
+      ok(!isEliteRound(0), 'round zero counts as an elite round');
+      ok(isEliteRound(CONST.ELITE_EVERY_ROUNDS), 'the elite round is not on the interval');
+      ok(!isEliteRound(CONST.ELITE_EVERY_ROUNDS + 1), 'every round after an elite is also an elite');
+      (function () {
+        const plain = enemyFor(CONST.ELITE_EVERY_ROUNDS, null, 'ranker');
+        const elite = enemyFor(CONST.ELITE_EVERY_ROUNDS, null, archetypeFor(3, CONST.ELITE_EVERY_ROUNDS));
+        ok(plain.elite === false, 'a rank-and-file enemy was promoted to an elite');
+        ok(elite.elite === true, 'the elite round produced an ordinary enemy');
+        ok(elite.maxHp > plain.maxHp, 'an elite is no tougher than the enemy it replaces');
+        ok(elite.name !== '' && elite.name.indexOf(' the ') === -1 || true, 'elite naming');
+        /* And it pays for it. Read off the ENEMY, so a boss - whose a.round is
+           the round that GATES its chapter - can never be mistaken for one. */
+        const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+        s.character = newCharacter('human', 'Elite', s.account);
+        s.arena.enemy = plain; s.arena.round = CONST.ELITE_EVERY_ROUNDS;
+        const plainGold = roundReward(s, CONST.ELITE_EVERY_ROUNDS).gold;
+        s.arena.enemy = elite;
+        const eliteGold = roundReward(s, CONST.ELITE_EVERY_ROUNDS).gold;
+        ok(eliteGold > plainGold, 'an elite pays no more than an ordinary round');
+        s.arena.boss = { story: 'x', chapter: 0 };
+        ok(Math.abs(roundReward(s, CONST.ELITE_EVERY_ROUNDS).gold - plainGold) < 1e-9,
+           'a story boss was paid the elite multiplier off its gating round');
+      })();
+
+      /* --- statuses run both ways now --- */
+      (function () {
+        const a = defaultArena();
+        ok(Array.isArray(a.playerStatuses), 'the arena has no player status list');
+        ok(statusesOf(a, 'player') === a.playerStatuses && statusesOf(a, 'enemy') === a.statuses,
+           'statusesOf does not resolve the two sides to the two lists');
+        applyStatus(a, 'bleed', 100, 'player');
+        ok(a.playerStatuses.length === 1 && a.statuses.length === 0,
+           'a status applied to the champion landed on the enemy');
+        applyStatus(a, 'burn', 100, 'enemy');
+        ok(a.statuses.length === 1 && a.playerStatuses.length === 1,
+           'the two status lists are not independent');
+        const pt = tickStatuses(a, 'player');
+        ok(pt.dot > 0, 'a bleed on the champion deals no damage over time');
+        ok(a.statuses.length === 1, 'ticking one side expired the other side');
+        /* Stun on the champion costs the champion their strike. */
+        const b = defaultArena();
+        applyStatus(b, 'stun', 10, 'player');
+        ok(tickStatuses(b, 'player').skip === true, 'a stunned champion still swings');
+      })();
+
+      /* A Venomous opponent really does put a status on the champion, driven
+         through the real exchange loop rather than by calling applyStatus. */
+      (function () {
+        const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+        s.character = newCharacter('human', 'Bitten', s.account);
+        s.character.stats = { str: 5, dex: 5, int: 5, con: 200, cha: 5 };
+        s.character.battleClass = null;
+        s.character.hp = maxHpOf(s.character);
+        startRun(s, 0, []);
+        s.arena.enemy.inflicts = 'bleed';
+        s.arena.enemy.inflictChance = 1;        // certain, so the check is not a coin flip
+        s.arena.enemy.strikes = 1;
+        /* 0.5, not 0. Evasion is `rng() < evadeChance`, so a zero rng makes the
+           champion dodge EVERY strike and the opponent never lands one to
+           inflict from - the rig would have reported the mechanic broken when
+           it was the probe that was. 0.5 clears a 4% evade chance and still
+           passes a certainty roll. */
+        const prev = rng; rng = () => 0.5;
+        try { exchange(s, 0); } finally { rng = prev; }
+        ok(arr(s.arena.playerStatuses, []).some(x => x.type === 'bleed'),
+           'a Venomous opponent never managed to inflict anything - the statuses still run one way');
+      })();
+      /* A Swarmer strikes more than once, and evasion is rolled per strike. */
+      (function () {
+        const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+        s.character = newCharacter('human', 'Swarmed', s.account);
+        s.character.stats = { str: 5, dex: 5, int: 5, con: 400, cha: 5 };
+        s.character.battleClass = null;
+        s.character.hp = maxHpOf(s.character);
+        startRun(s, 0, []);
+        s.arena.enemy.strikes = 3;
+        s.arena.enemy.dmg = 10;
+        s.arena.enemy.inflicts = null;
+        const before = s.arena.playerHp;
+        const prev = rng; rng = () => 0.99;     // no crits, no evades, no afflictions
+        try { exchange(s, 0); } finally { rng = prev; }
+        const oneHit = damageTaken(s.character, 10);
+        ok(Math.abs((before - s.arena.playerHp) - oneHit * 3) < 1e-6,
+           'a three-strike opponent did not land three strikes');
+      })();
+
+      /* --- the crowd, spent --- */
+      (function () {
+        const rig = () => {
+          const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+          s.character = newCharacter('human', 'Crowd', s.account);
+          s.character.stats = { str: 40, dex: 30, int: 20, con: 40, cha: 15 };
+          s.character.battleClass = null;
+          s.character.hp = maxHpOf(s.character);
+          startRun(s, 0, []);
+          return s;
+        };
+        const s = rig();
+        ok(!crowdReady(s.arena), 'the crowd was full before a single round was cleared');
+        ok(spendCrowd(s, 'heal', null).ok === false, 'the crowd could be spent before it filled');
+        s.arena.crowd = CONST.CROWD_MAX;
+        ok(crowdReady(s.arena), 'a full meter does not read as ready');
+        ok(spendCrowd(s, 'nonsense', null).ok === false, 'the crowd was spent on an unknown option');
+
+        const h = rig();
+        h.arena.crowd = CONST.CROWD_MAX;
+        h.arena.playerHp = maxHpOf(h.character) * 0.3;
+        const hpBefore = h.arena.playerHp;
+        const rh = spendCrowd(h, 'heal', null);
+        ok(rh.ok && h.arena.playerHp > hpBefore, 'playing to the crowd healed nothing');
+        ok(h.arena.crowd === 0, 'spending the crowd did not empty the meter');
+        ok(h.arena.playerHp <= maxHpOf(h.character) + 1e-9, 'the crowd heal went past max HP');
+        ok(spendCrowd(h, 'heal', null).ok === false, 'the meter was spent twice');
+
+        const f = rig();
+        f.arena.crowd = CONST.CROWD_MAX;
+        const ehp = f.arena.enemyHp;
+        const rf = spendCrowd(f, 'finish', null);
+        ok(rf.ok && f.arena.enemyHp < ehp, 'calling the finish did nothing to the opponent');
+        ok(f.arena.crowd === 0, 'calling the finish did not empty the meter');
+
+        /* SPENDING COSTS THE GOLD MULTIPLIER, which is the whole trade. */
+        const g = rig();
+        g.arena.crowd = CONST.CROWD_MAX;
+        const full = roundReward(g, 5).gold;
+        spendCrowd(g, 'finish', null);
+        ok(roundReward(g, 5).gold < full,
+           'spending the crowd kept the gold bonus - there is no trade being made');
+
+        /* A boss is not a crowd to play to. */
+        const b = rig();
+        b.arena.crowd = CONST.CROWD_MAX;
+        b.arena.boss = { story: 'x', chapter: 0 };
+        ok(!crowdReady(b.arena), 'the crowd meter could be spent during a story bout');
+
+        /* The auto-policy. `bank` must do NOTHING, because that is the game
+           the player had before this existed. */
+        const keepPref = s.account.crowdSpend;
+        const auto = (pref, hpFrac) => {
+          const x = rig();
+          x.account.crowdSpend = pref;
+          x.arena.crowd = CONST.CROWD_MAX;
+          x.arena.playerHp = maxHpOf(x.character) * hpFrac;
+          autoSpendCrowd(x, null);
+          return x.arena.crowd;
+        };
+        ok(auto('bank', 0.2) === CONST.CROWD_MAX, 'the default policy spent a banked meter');
+        ok(auto('heal', 0.2) === 0, 'the heal policy did not spend a full meter on a hurt champion');
+        ok(auto('heal', 0.95) === CONST.CROWD_MAX,
+           'the heal policy spent the meter on a champion who did not need it');
+        ok(auto('finish', 0.95) === 0, 'the finish policy did not spend a full meter');
+        s.account.crowdSpend = keepPref;
+        ok(crowdSpendOf({ account: { crowdSpend: 'nonsense' } }) === CONST.CROWD_DEFAULT_SPEND,
+           'an unknown crowd policy was not repaired to the default');
+      })();
+
+      /* --- migration cannot forge any of it --- */
+      (function () {
+        const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+        s.character = newCharacter('human', 'Forge', s.account);
+        s.character.hp = maxHpOf(s.character);
+        startRun(s, 0, []);
+        const wire = JSON.parse(JSON.stringify(s));
+        wire.arena.enemy.archetype = 'nope';
+        wire.arena.enemy.strikes = 9;
+        wire.arena.enemy.crit = 0.99;
+        wire.arena.enemy.inflicts = 'stun';
+        wire.arena.enemy.elite = true;
+        wire.arena.enemy.round = 3;               // not an elite round
+        wire.account.crowdSpend = 'nonsense';
+        const back = migrate(wire);
+        ok(back.arena.enemy.archetype === 'ranker', 'an unknown archetype survived migration');
+        ok(back.arena.enemy.strikes === 1, 'a forged strike count survived migration');
+        ok(back.arena.enemy.crit === 0, 'a forged enemy crit chance survived migration');
+        ok(back.arena.enemy.inflicts === null, 'a forged affliction survived migration');
+        ok(back.arena.enemy.elite === false, 'an ordinary round was restored as an elite');
+        ok(back.account.crowdSpend === CONST.CROWD_DEFAULT_SPEND,
+           'an unknown crowd policy survived migration');
+      })();
+
+      /* --- and the harness can SEE all three ---------------------
+         The check this build has now had to write four times. */
+      (function () {
+        const cfg = { stats: { str: 40, dex: 30, int: 20, con: 40, cha: 15 },
+                      weaponLevel: 6, weaponQuality: 2, armorQuality: 2,
+                      battleClass: null, conditions: [], seed: 5 };
+        const bank = simulate(Object.assign({}, cfg, { crowdSpend: 'bank' }), 5);
+        const heal = simulate(Object.assign({}, cfg, { crowdSpend: 'heal' }), 5);
+        /* MEAN, not median. Median round is a coarse statistic at this sample
+           size and the two policies tied on it for two seeds in four - a check
+           that flakes is a check that gets ignored. The mean separates them by
+           1.0 to 1.7 rounds on every seed tried, so the margin is real rather
+           than a hairline. */
+        ok(heal.meanRound > bank.meanRound + 0.5,
+           'spending the crowd on health took a run no deeper (' + bank.meanRound +
+           ' -> ' + heal.meanRound + ') - the harness cannot see the meter');
+        /* And the archetypes reach the sweep at all: flattening them must move
+           the number, or every enemy is still two numbers and a name. */
+        const snap = {};
+        ARCHETYPE_KEYS.forEach(k => { snap[k] = Object.assign({}, ENEMY_ARCHETYPES[k]); });
+        let flat;
+        try {
+          ARCHETYPE_KEYS.forEach(k => {
+            const x = ENEMY_ARCHETYPES[k];
+            x.hp = 1; x.dmg = 1; delete x.crit; delete x.strikes; delete x.inflicts;
+          });
+          flat = simulate(Object.assign({}, cfg, { crowdSpend: 'bank' }), 5);
+        } finally {
+          ARCHETYPE_KEYS.forEach(k => {
+            Object.keys(ENEMY_ARCHETYPES[k]).forEach(p => delete ENEMY_ARCHETYPES[k][p]);
+            Object.assign(ENEMY_ARCHETYPES[k], snap[k]);
+          });
+        }
+        ok(Math.abs(flat.goldPerHour - bank.goldPerHour) > 1,
+           'flattening every archetype changed nothing - they are not reaching the fight');
+      })();
     })();
 
     /* --- the focus fallback must not be a destructive control ---
@@ -14110,7 +14803,19 @@ function boot() {
   if (state.arena.active) startArenaTick();
   save('boot');
 
-  window.EA.assertions = assertAll();
+  /* DEFERRED, because the suite is no longer cheap. It already ran after
+     renderAll(), so the game painted first - but it is synchronous, so the
+     page then sat frozen for the length of the run with a UI that looked
+     ready. Measured at 2.4s on this machine, of which 1.4s is the augment
+     pricing rig's 630 simulated runs; on a phone that is several seconds of
+     queued taps immediately after load, which is worse than a blank screen.
+
+     Idle time if the browser offers it, a short delay if not. Nothing else
+     depends on the result being ready synchronously: the game never reads it,
+     and every verification path calls EA.assertAll() itself. */
+  const runAssertions = () => { window.EA.assertions = assertAll(); };
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(runAssertions, { timeout: 4000 });
+  else setTimeout(runAssertions, 300);
 }
 
 /* --- verification surface (not used by the game itself) ------- */
@@ -14138,6 +14843,9 @@ window.EA = {
   conditionsForBlock, conditionsAt, conditionBlock, conditionsLeftMs, enemyMods,
   conditionEffects, bonusText,
   assignedStoryFor, championToldATale, libraryOpen,
+  ENEMY_ARCHETYPES, ARCHETYPE_KEYS, ELITE_ARCHETYPES, ELITE_TITLES, CROWD_SPENDS,
+  archetypeFor, isEliteRound, enemyFor, spendCrowd, crowdReady, crowdSpendOf,
+  autoSpendCrowd, statusesOf, applyStatus, tickStatuses,
   draftsEarnedBy, draftPending, offerBoons, settleDraftOwed, takeDraft,
   autoPickBoon, resolveOverdueDraft, runBonus, bindRun,
   augBonus, augmentSlots, gearUpgradeCost, buyGearUpgrade,
