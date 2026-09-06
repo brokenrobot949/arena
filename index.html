@@ -653,21 +653,68 @@ h3.sub:has(.tale-tag){display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .round-line{display:flex;align-items:center;gap:9px;margin-bottom:12px}
 .round-line .sub{margin:0}
 .round-line .round{font-family:var(--font-display);font-size:26px;line-height:1}
-.crowd{margin-left:auto;display:flex;gap:3px}
-.crowd i{width:8px;height:14px;border:var(--bd-thin);border-radius:3px;background:var(--paper)}
-.crowd i.on{background:var(--gold)}
+/* The crowd meter (Rob, 2026-09-05). Eight pips could only ever show whole
+   round clears; a crit and a dodge move it by a fraction now, so it is a bar
+   with the pip boundaries drawn on it - the old reading survives (one clear is
+   one notch) and the movement between clears becomes visible. */
+.crowd-meter{margin:0 0 13px}
+.crowd-top{display:flex;align-items:baseline;gap:9px;margin-bottom:4px}
+.crowd-top .sub{margin:0;flex:none}
+.crowd-state{margin-left:auto;min-width:0;font-family:var(--font-data);
+  font-size:11px;color:var(--ink-soft);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.crowd{position:relative;height:14px;background:var(--paper);
+  border:var(--bd-thin);border-radius:var(--r-pill);overflow:hidden}
+.crowd-fill{display:block;height:100%;background:var(--gold);
+  transition:width .3s ease-out}
+.crowd-ticks{position:absolute;inset:0;pointer-events:none}
+.crowd-ticks i{position:absolute;top:0;bottom:0;width:2px;
+  background:var(--ink);opacity:.26}
+/* A full meter is the one thing on this screen the player is meant to act on,
+   so it keeps moving until they do. */
+.crowd.is-bump .crowd-fill{animation:crowd-bump .34s ease-out}
+.crowd.is-full .crowd-fill{animation:crowd-roar 1.15s ease-in-out infinite}
+@keyframes crowd-bump{from{filter:brightness(1.5)}to{filter:none}}
+@keyframes crowd-roar{0%,100%{filter:none}50%{filter:brightness(1.2)}}
 
+/* A hit lands ON somebody, so the block it landed on moves. Capped at 7px
+   against the panel's 16px padding, so the jolt is absorbed inside the panel
+   and can never widen the document - the sideways-scroll assertion has guarded
+   that since Phase 1 and a transform is exactly the thing that could sneak
+   past it. */
 .fighter{margin-bottom:13px;position:relative}
+.fighter.is-hit{animation:jolt .24s ease-out}
+.fighter.is-crit{animation:jolt-hard .42s ease-out}
+@keyframes jolt{
+  0%{transform:translateX(0)}30%{transform:translateX(-4px)}
+  65%{transform:translateX(3px)}100%{transform:translateX(0)}
+}
+@keyframes jolt-hard{
+  0%{transform:translateX(0)}14%{transform:translateX(-7px)}
+  34%{transform:translateX(6px)}56%{transform:translateX(-4px)}
+  78%{transform:translateX(2px)}100%{transform:translateX(0)}
+}
 .who{display:flex;align-items:baseline;gap:9px;margin-bottom:5px}
 .who strong{font-family:var(--font-display);font-size:15px;flex:1;min-width:0;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .who .num{font-size:13px}
-.hpbar{height:20px;background:var(--paper);border:var(--bd-thin);
-  border-radius:var(--r-pill);overflow:hidden}
-.hpbar span{display:block;height:100%;transition:width .25s ease-out}
+.hpbar{position:relative;height:20px;background:var(--paper);
+  border:var(--bd-thin);border-radius:var(--r-pill);overflow:hidden}
+/* The trail. A second fill BEHIND the first, transitioning slower and on a
+   delay, so a hit leaves a gold streak the width of what it cost before the
+   bar settles. Pure CSS timing: reduced motion collapses both transitions and
+   the two land together, which is the right degradation rather than a
+   special case. */
+.hpbar b{position:absolute;left:0;top:0;height:100%;background:var(--gold);
+  transition:width .5s ease-out .25s}
+.hpbar span{position:relative;display:block;height:100%;
+  transition:width .18s ease-out}
 .hpbar[data-tone="player"] span{background:var(--jade)}
 .hpbar[data-tone="player"].is-low span{background:var(--vermilion)}
 .hpbar[data-tone="enemy"] span{background:var(--vermilion)}
+/* The floating numbers are positioned against the bar they belong to, so they
+   stack upward from it rather than from the whole fighter block. */
+#ar-pbar,#ar-ebar{position:relative}
 
 .armed{margin:9px 0 0;font-family:var(--font-data);font-size:11px;text-align:center;
   color:var(--ink-soft)}
@@ -691,18 +738,32 @@ h3.sub:has(.tale-tag){display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .log{list-style:none;margin:0 0 13px;padding:10px;min-height:104px;
   background:var(--paper);border:var(--bd-thin);border-radius:10px;
   font-size:12.5px;line-height:1.5;display:flex;flex-direction:column;justify-content:flex-end;gap:2px}
-.log li{color:var(--ink-soft)}
+.log li{color:var(--ink-soft);padding-left:8px;border-left:3px solid transparent}
 .log li:last-child{color:var(--ink);font-weight:600}
-.log .l-crit{color:var(--vermilion-deep);font-weight:700}
-.log .l-clear{color:var(--jade-deep);font-weight:700}
+.log .l-crit{color:var(--vermilion-deep);font-weight:700;border-left-color:var(--vermilion-deep)}
+.log .l-clear{color:var(--jade-deep);font-weight:700;border-left-color:var(--jade-deep)}
+.log .l-evade{font-style:italic;border-left-color:var(--ink-faint)}
+.log .l-flourish{font-style:italic;color:var(--cobalt);border-left-color:var(--cobalt)}
 .forfeit{font-size:12px;font-weight:400;display:block}
 
+/* Floating combat text. Until now an exchange showed at most one number - the
+   damage - so a dodge, a heal, a bleed tick and a status landing all happened
+   in silence while the log scrolled past them. They stack upward because
+   several of them can land in one exchange, and two numbers on the same pixel
+   is one number. */
 .dmg{
-  position:absolute;right:12px;top:-4px;pointer-events:none;
+  position:absolute;right:12px;top:-4px;pointer-events:none;white-space:nowrap;
   font-family:var(--font-data);font-weight:700;font-size:15px;color:var(--ink);
   animation:float-up .9s ease-out forwards;
 }
 .dmg.crit{font-size:21px;color:var(--gold);-webkit-text-stroke:1px var(--ink)}
+.dmg.heal{color:var(--jade-deep)}
+.dmg.dot{color:var(--vermilion-deep);font-size:13px}
+.dmg.miss{color:var(--ink-soft);font-size:12.5px;letter-spacing:.05em;
+  text-transform:uppercase}
+.dmg.status{font-size:12px;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--paper);background:var(--vermilion-deep);
+  border:2px solid var(--ink);border-radius:var(--r-pill);padding:1px 7px}
 @keyframes float-up{
   from{opacity:1;transform:translateY(0)}
   to{opacity:0;transform:translateY(-30px)}
@@ -716,13 +777,24 @@ h3.sub:has(.tale-tag){display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   padding:12px 20px;transform:skewX(-6deg) translateX(-110%);
   display:flex;align-items:baseline;gap:12px;opacity:0;
 }
-#banner .r{font-family:var(--font-display);font-size:26px;text-transform:uppercase}
+#banner .r{font-family:var(--font-display);font-size:26px;text-transform:uppercase;
+  white-space:nowrap;flex:none}
+#banner .e{font-family:var(--font-display);font-size:13px;letter-spacing:.06em;
+  text-transform:uppercase;white-space:nowrap;flex:none;align-self:center;
+  padding:3px 9px;border-radius:var(--r-pill);border:2px solid var(--ink);
+  background:var(--ink);color:var(--gold)}
 /* 19px/700 clears WCAG's large-text threshold (18.66px bold), where white on
    --vermilion's 4.00:1 is acceptable. At 15px/400 it was not - and Arial
    Black's heaviness does not register as a bold `font-weight` to the rule. */
 #banner .n{font-family:var(--font-display);font-size:19px;font-weight:700;
   text-transform:uppercase;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* An elite is a different fight, so it gets a different banner rather than the
+   same slam with a badge somewhere below it. Gold on ink, which is the palette
+   the elite badge and the crowd meter already use for "this one matters", and
+   ink-on-gold measures 12.6:1 so the large-text allowance is not being leaned
+   on here at all. */
+#banner.is-elite{background:var(--gold);color:var(--ink)}
 #banner.is-in{animation:slam 1.2s cubic-bezier(.2,.9,.2,1) forwards}
 @keyframes slam{
   0%{transform:skewX(-6deg) translateX(-110%);opacity:0}
@@ -1127,7 +1199,7 @@ h3.sub:has(.tale-tag){display:flex;align-items:center;gap:8px;flex-wrap:wrap}
         <p>Two <strong>conditions</strong> are in force at any moment &mdash; shown on the Arena screen before you enter, and they change every twenty minutes. Each has an upside and a cost: a rich purse with hungrier opponents, weaker enemies and a thinner purse. A run keeps whatever sand it started on, so entering is a real choice: fight this one, or wait for sand that suits what you are carrying.</p>
         <p>Every opponent has an <strong>archetype</strong> &mdash; a Brawler hits far harder than it can take, a Turtle is a long way from falling over, a Swarmer strikes twice for half as much, and a Venomous one leaves wounds that keep working after the exchange. It is named above their health bar, and it is the reason one round plays differently from the next. Some of them can put a <strong>status on you</strong>, which is new: bleed and stun used to be things only you did to them.</p>
         <p>Every tenth round is an <strong>elite</strong> &mdash; a named challenger with a forced archetype, more health, and a purse worth two and a half rounds.</p>
-        <p>The <strong>crowd meter</strong> fills one pip per round cleared. Held full it pays +15% gold every round; spent, it either recovers some health or takes a large bite out of whoever you are facing. Holding it is the default, and you can set what happens while you are away under the arena card.</p>
+        <p>The <strong>crowd meter</strong> fills a full notch for every round you clear, and a fraction of one every time you land a critical hit or slip a blow — so a flashy fighter wins it over sooner. Held full it pays +15% gold every round; spent, it either recovers some health or takes a large bite out of whoever you are facing. Holding it is the default, and you can set what happens while you are away under the arena card.</p>
 
         <p>Every five rounds you are offered three <strong>boons</strong> and take one. They last for that run only, they <em>stack</em>, and the fight does not stop while you choose &mdash; the boon starts working the moment you take it. If you are not watching, the game takes one for you after twelve exchanges, using the preference you set under the arena card.</p>
         <p class="guide-rule">A deep start does not cost you boons. If you have Seeded Entry and begin at round 24, you are owed every boon a run that fought its way there would have &mdash; four of them, all offered before the first exchange.</p>
@@ -1547,7 +1619,25 @@ const CONST = {
   /* When the auto-policy spends a banked meter on healing. Above this the run
      is going well enough that the gold is worth more. */
   CROWD_AUTO_HEAL_AT: 0.55,
-  CROWD_DEFAULT_SPEND: 'bank'
+  CROWD_DEFAULT_SPEND: 'bank',
+
+  /* --- what fills the meter (Rob, 2026-09-05) -----------------
+     The meter moved once a round and nothing else in a ~350-exchange run
+     touched it, so the one number on the screen that is meant to represent a
+     watching crowd sat still for fourteen exchanges at a time. A crit and a
+     dodge are the two moments in an exchange a crowd would actually react to,
+     so they fill it too - by a FRACTION of a pip, because a round clear has to
+     stay the thing that fills it. Asserted: both are strictly smaller than a
+     clear and strictly greater than zero.
+
+     Under the default `bank` policy this is nearly free economically: the
+     meter fills once and stays full, so all these buy is reaching full a few
+     rounds earlier, and early rounds pay almost nothing on a 1.12^round
+     curve. It is the `heal` and `finish` policies that refill repeatedly, and
+     those are the ones the sweep below had to hold in place. */
+  CROWD_PER_CLEAR: 1,
+  CROWD_PER_CRIT: 0.08,
+  CROWD_PER_EVADE: 0.05
 };
 
 const FORMULAS = {
@@ -3570,7 +3660,13 @@ function migrateArena(raw, account) {
   a.enemyHp    = Math.max(0, num(raw.enemyHp, 0));
   a.enemyMaxHp = Math.max(0, num(raw.enemyMaxHp, 0));
   a.enemyName  = str(raw.enemyName, '');
-  a.crowd      = clamp(Math.round(num(raw.crowd, 0)), 0, CONST.CROWD_MAX);
+  /* NOT rounded any more. The meter has been a whole number of pips since
+     Phase 4 and became a fraction on 2026-09-05, so Math.round() here would
+     quietly throw away up to half a pip of a real run on every reload - and
+     it would have done it silently, because a rounded meter is still a legal
+     meter. Clamped and finite-checked exactly as before; only the quantising
+     is gone. */
+  a.crowd      = clamp(num(raw.crowd, 0), 0, CONST.CROWD_MAX);
   /* The arena's clock. A record without one - anything written before the run
      learned to fight on its own - resumes from the moment it is loaded rather
      than being owed the whole absence, which is what the game did before this
@@ -5414,7 +5510,13 @@ function exchange(s, now) {
     dmg = playerDamage(c, crit) * pst.dmgMult;
     a.enemyHp = Math.max(0, a.enemyHp - dmg);
     events.push({ who: 'player', kind: crit ? 'crit' : 'hit', amount: dmg });
-    if (crit) commissionAdvance(s, 'crits', 1, now);
+    if (crit) {
+      commissionAdvance(s, 'crits', 1, now);
+      /* The crowd came for this. A fraction of a pip, so a round clear stays
+         the thing that fills the meter and this is the thing that keeps it
+         moving between clears. */
+      fillCrowd(a, CONST.CROWD_PER_CRIT);
+    }
 
     /* One affliction roll per landed hit, fed by class, race and augment alike. */
     const aff = afflictionChance(c);
@@ -5476,6 +5578,10 @@ function exchange(s, now) {
   const strikes = Math.max(1, Math.round(num(a.enemy.strikes, 1)));
   for (let i = 0; i < strikes; i++) {
     if (rng() < playerEvadeChance(c)) {
+      /* Rolled PER STRIKE, so a Swarmer's second swing is a second chance to
+         be cheered for - which is the same asymmetry that makes evasion weak
+         against it defensively, seen from the other side. */
+      fillCrowd(a, CONST.CROWD_PER_EVADE);
       events.push({ who: 'player', kind: 'evade' });
       logLine(a, 'evade', 'You slip aside.');
       continue;
@@ -5551,7 +5657,7 @@ function clearRound(s, events) {
   const r = roundReward(s, a.round);
   a.pot.gold += r.gold;
   a.pot.renown += r.renown;
-  a.crowd = Math.min(CONST.CROWD_MAX, a.crowd + 1);
+  fillCrowd(a, CONST.CROWD_PER_CLEAR);
   /* Time in the sand teaches the weapon in your hand. Routed through applyTp
      so it takes the same level-up path, the same NaN and Infinity guards, and
      the same child-weapon unlocks the Sparring Circle uses - a second
@@ -5589,6 +5695,25 @@ function clearRound(s, events) {
    Returns {ok, msg} like every other core action so the edge does the flashing. */
 function crowdReady(a) {
   return !!(a && a.active && !a.boss && num(a.crowd, 0) >= CONST.CROWD_MAX);
+}
+
+/* THE one place the meter goes up. It has three sources now - a round clear, a
+   crit and a dodge - and this file has twice paid for a rule that had to be
+   remembered at each call site (the knockout bench, hand-rolled in six places
+   and simply absent from two more). Clamping, the non-finite guard and the
+   "never below zero" rule live here so a fourth source cannot arrive without
+   them. The two spends set the meter to 0 directly; they are the only other
+   writers and there is an assertion that nothing else assigns to a.crowd.
+
+   Returns what was actually added, so the render layer can tell a tick from a
+   jump without re-deriving it. */
+function fillCrowd(a, amount) {
+  if (!a) return 0;
+  const want = num(amount, 0);
+  if (!(want > 0)) return 0;
+  const before = clamp(num(a.crowd, 0), 0, CONST.CROWD_MAX);
+  a.crowd = clamp(before + want, 0, CONST.CROWD_MAX);
+  return a.crowd - before;
 }
 
 function spendCrowd(s, what, events) {
@@ -8039,21 +8164,64 @@ function hpBar(cur, max, tone) {
   const pct = max > 0 ? Math.max(0, Math.min(1, cur / max)) : 0;
   /* Doc 7: the player's bar runs jade -> vermilion as it drops. */
   const low = tone === 'player' && pct <= 0.3;
+  const w = (pct * 100).toFixed(1) + '%';
   return '<div class="hpbar' + (low ? ' is-low' : '') + '" data-tone="' + tone + '">' +
-    '<span style="width:' + (pct * 100).toFixed(1) + '%"></span></div>';
+    /* The trail sits behind the fill and lags it - see the CSS. Both start at
+       the same width so a freshly rendered bar shows no phantom streak. */
+    '<b style="width:' + w + '"></b>' +
+    '<span style="width:' + w + '"></span></div>';
+}
+
+/* Doc 7's crowd meter, as a bar rather than eight pips (Rob, 2026-09-05). The
+   pips could only express whole round clears; the meter moves on crits and
+   dodges now, so it needs a surface that can show a fraction.
+
+   role="progressbar" is honest here - it IS a bounded quantity with a current
+   value - and aria-valuetext carries the pip reading, because "4.3" on its own
+   says nothing about what full means. That is the Phase 1 lesson about roles
+   that promise behaviour they do not have, applied to one that does. */
+function crowdBarMarkup(a) {
+  const cur = clamp(num(a.crowd, 0), 0, CONST.CROWD_MAX);
+  const full = cur >= CONST.CROWD_MAX;
+  const ticks = Array.from({ length: CONST.CROWD_MAX - 1 }, (_, i) =>
+    '<i style="left:' + (((i + 1) / CONST.CROWD_MAX) * 100).toFixed(3) + '%"></i>').join('');
+  return '<div class="crowd-meter">' +
+    '<div class="crowd-top"><span class="sub">Crowd</span>' +
+      '<span class="crowd-state" id="ar-crowd-state">' + esc(crowdStateText(a)) + '</span></div>' +
+    '<div class="crowd' + (full ? ' is-full' : '') + '" id="ar-crowd" role="progressbar" ' +
+      'aria-label="Crowd" aria-valuemin="0" aria-valuemax="' + CONST.CROWD_MAX + '" ' +
+      'aria-valuenow="' + cur.toFixed(1) + '" ' +
+      'aria-valuetext="' + cur.toFixed(1) + ' of ' + CONST.CROWD_MAX + '">' +
+      '<span class="crowd-fill" style="width:' + crowdPct(a).toFixed(2) + '%"></span>' +
+      '<span class="crowd-ticks" aria-hidden="true">' + ticks + '</span>' +
+    '</div></div>';
+}
+
+const crowdPct = a =>
+  (clamp(num(a.crowd, 0), 0, CONST.CROWD_MAX) / CONST.CROWD_MAX) * 100;
+
+/* What the meter is worth right now, in ONE place, so the rendered bar and the
+   in-place live update cannot describe it differently - the same rule the
+   yield line and the sand card follow. A story bout says so outright rather
+   than showing a meter that quietly cannot be spent: crowdReady() refuses on a
+   boss, so without this the panel simply never appears and nothing explains
+   why. */
+function crowdStateText(a) {
+  const pct = Math.round((CONST.CROWD_GOLD_MULT - 1) * 100);
+  if (a.boss) return 'Not spendable in a story bout';
+  if (num(a.crowd, 0) >= CONST.CROWD_MAX) return 'Full · +' + pct + '% gold a round';
+  return '+' + pct + '% gold at full';
 }
 
 function runMarkup(a, c) {
   const max = maxHpOf(c);
   const y = yieldPreview(state);
-  const crowdPips = Array.from({ length: CONST.CROWD_MAX }, (_, i) =>
-    '<i' + (i < a.crowd ? ' class="on"' : '') + '></i>').join('');
 
   return '' +
     '<div class="panel fight">' +
       '<div class="round-line"><span class="sub">Round</span>' +
-        '<span class="round num" id="ar-round">' + a.round + '</span>' +
-        '<span class="crowd" title="Crowd">' + crowdPips + '</span></div>' +
+        '<span class="round num" id="ar-round">' + a.round + '</span></div>' +
+      crowdBarMarkup(a) +
 
       /* Enemy above, champion below - the champion's bar sits closest to the
          controls that act on it, and the pair reads as "them, then us". */
@@ -8194,7 +8362,7 @@ function autoYieldMarkup(c) {
    one place the animation budget is spent - and it is gated on reduced motion,
    which the CSS media query alone cannot do for a JS-driven element. */
 let bannerTimer = null;
-function roundBanner(round, name) {
+function roundBanner(round, name, elite) {
   if (activeScreen !== 'arena') return;
   let el = document.getElementById('banner');
   if (!el) {
@@ -8203,7 +8371,18 @@ function roundBanner(round, name) {
     el.setAttribute('aria-hidden', 'true');
     document.body.appendChild(el);
   }
-  el.innerHTML = '<span class="r num">Round ' + round + '</span><span class="n">' + esc(name) + '</span>';
+  /* An elite gets its own banner rather than the same slam with a badge
+     somewhere further down the screen. It is the one round in ten that is a
+     different fight, and the banner is the only thing the player is guaranteed
+     to be looking at when it starts. */
+  el.classList.toggle('is-elite', !!elite);
+  /* The word goes in its own badge rather than into the round line. Folded in
+     as "Elite · Round 20" it wrapped the 26px display face onto two lines at
+     375px and pushed the round number under the enemy's name - looked at, not
+     measured, which is the only way this has ever been caught. */
+  el.innerHTML = (elite ? '<span class="e">Elite</span>' : '') +
+    '<span class="r num">Round ' + round + '</span>' +
+    '<span class="n">' + esc(name) + '</span>';
   if (reducedMotion()) return;            // instant state change, no slam
   el.classList.remove('is-in');
   void el.offsetWidth;                     // restart the animation
@@ -8221,11 +8400,46 @@ function setBar(hostId, cur, max, tone) {
   if (!host) return;
   const bar = host.querySelector('.hpbar');
   const sp = bar && bar.querySelector('span');
+  const trail = bar && bar.querySelector('b');
   if (!sp) { host.innerHTML = hpBar(cur, max, tone); return; }
   const pct = max > 0 ? Math.max(0, Math.min(1, cur / max)) : 0;
   const w = (pct * 100).toFixed(1) + '%';
   if (sp.style.width !== w) sp.style.width = w;
+  /* The trail is set to the SAME width and gets there later, by its own longer
+     transition and delay in the CSS. Driving the lag from JS timers would put
+     a second clock in the render layer for no gain. */
+  if (trail && trail.style.width !== w) trail.style.width = w;
   if (tone === 'player') bar.classList.toggle('is-low', pct <= 0.3);
+}
+
+/* The crowd meter, mutated in place - the same discipline the HP bars follow,
+   and the reason the fill can ease at all. It moves several times a round now,
+   so rebuilding it would be the frozen-bar mistake in reverse.
+
+   The bump is re-armed by removing the class, forcing a reflow and adding it
+   back, exactly as the round banner does; without the reflow a second crit
+   inside the animation would play nothing. */
+function setCrowdMeter(a) {
+  const bar = document.getElementById('ar-crowd');
+  if (!bar) return;
+  const cur = clamp(num(a.crowd, 0), 0, CONST.CROWD_MAX);
+  const fill = bar.querySelector('.crowd-fill');
+  const w = crowdPct(a).toFixed(2) + '%';
+  if (fill && fill.style.width !== w) {
+    const grew = crowdPct(a) > (parseFloat(fill.style.width) || 0);
+    fill.style.width = w;
+    if (grew && !reducedMotion()) {
+      bar.classList.remove('is-bump');
+      void bar.offsetWidth;
+      bar.classList.add('is-bump');
+    }
+  }
+  bar.classList.toggle('is-full', cur >= CONST.CROWD_MAX);
+  bar.setAttribute('aria-valuenow', cur.toFixed(1));
+  bar.setAttribute('aria-valuetext', cur.toFixed(1) + ' of ' + CONST.CROWD_MAX);
+  const st = document.getElementById('ar-crowd-state');
+  const txt = crowdStateText(a);
+  if (st && st.textContent !== txt) st.textContent = txt;
 }
 
 /* Doc 2 and doc 7 both call for the pot to roll rather than snap, and doc 6
@@ -8247,15 +8461,71 @@ function rollCounter(el, to) {
   el._roll = requestAnimationFrame(frame);
 }
 
-function floatDamage(sel, amount, crit) {
+/* Floating combat text, for every kind of thing that happens in an exchange
+   rather than only for damage. They STACK upward: several can land at once -
+   a bleed tick, a dodge and a status in the same 1.1s - and two of them drawn
+   on the same pixel is one of them. */
+function floatText(sel, text, cls) {
   if (reducedMotion() || activeScreen !== 'arena') return;
   const host = document.querySelector(sel);
   if (!host) return;
   const n = document.createElement('span');
-  n.className = 'dmg' + (crit ? ' crit' : '');
-  n.textContent = '-' + Math.round(amount);
+  n.className = 'dmg' + (cls ? ' ' + cls : '');
+  n.style.top = (-4 - host.querySelectorAll('.dmg').length * 15) + 'px';
+  n.textContent = text;
   host.appendChild(n);
   setTimeout(() => n.remove(), 900);
+}
+
+/* WHERE an event is drawn. `who` on an event is the ACTOR for hit and crit and
+   the SUBJECT for dot, heal, evade, skip and status - a wrinkle in the event
+   shape rather than in the drawing, so it is resolved once here instead of at
+   each of the seven kinds. */
+function floatHostFor(ev) {
+  const subject = (ev.kind === 'hit' || ev.kind === 'crit')
+    ? (ev.who === 'player' ? 'enemy' : 'player')   // the one being struck
+    : ev.who;                                       // dot, heal, evade, status
+  return subject === 'player' ? '#ar-pbar' : '#ar-ebar';
+}
+
+/* A hit should be felt on the fighter it landed on. Re-armed with a reflow
+   between the remove and the add, the same way the round banner is, so a
+   second hit inside the animation still plays. */
+function impact(sel, heavy) {
+  if (reducedMotion() || activeScreen !== 'arena') return;
+  const host = document.querySelector(sel);
+  const box = host && host.closest ? host.closest('.fighter') : null;
+  if (!box) return;
+  box.classList.remove('is-hit', 'is-crit');
+  void box.offsetWidth;
+  box.classList.add(heavy ? 'is-crit' : 'is-hit');
+  if (box._jolt) clearTimeout(box._jolt);
+  box._jolt = setTimeout(() => box.classList.remove('is-hit', 'is-crit'),
+                         heavy ? 440 : 260);
+}
+
+/* One event, drawn. Split out of the tick so the mapping is one list rather
+   than a chain of conditions inside a loop inside a timer. */
+function drawEvent(ev, a) {
+  if (ev.kind === 'enter') {
+    roundBanner(ev.round, a.enemyName, !!(a.enemy && a.enemy.elite));
+    return;
+  }
+  const host = floatHostFor(ev);
+  if (ev.kind === 'hit' || ev.kind === 'crit') {
+    floatText(host, '-' + Math.round(ev.amount), ev.kind === 'crit' ? 'crit' : '');
+    impact(host, ev.kind === 'crit');
+  } else if (ev.kind === 'dot') {
+    floatText(host, '-' + Math.round(ev.amount), 'dot');
+  } else if (ev.kind === 'heal') {
+    floatText(host, '+' + Math.round(ev.amount), 'heal');
+  } else if (ev.kind === 'evade') {
+    floatText(host, 'Miss', 'miss');
+  } else if (ev.kind === 'skip') {
+    floatText(host, 'No answer', 'miss');
+  } else if (ev.kind === 'status' && STATUSES[ev.status]) {
+    floatText(host, STATUSES[ev.status].label, 'status');
+  }
 }
 
 /* One exchange per ARENA_TICK_MS - doc 6's second clock, and the only pacing
@@ -8281,13 +8551,7 @@ function arenaStep() {
      and a snowstorm of damage numbers at a player who just came back is not
      information, it is noise. The events are settled silently and the screen is
      brought up to date instead. */
-  if (res.steps === 1) {
-    res.events.forEach(ev => {
-      if (ev.kind === 'enter') roundBanner(ev.round, a.enemyName);
-      if (ev.who === 'enemy' && (ev.kind === 'hit' || ev.kind === 'crit')) floatDamage('#ar-pbar', ev.amount, ev.kind === 'crit');
-      if (ev.who === 'player' && (ev.kind === 'hit' || ev.kind === 'crit')) floatDamage('#ar-ebar', ev.amount, ev.kind === 'crit');
-    });
-  }
+  if (res.steps === 1) res.events.forEach(ev => drawEvent(ev, a));
   if (res.cleared > 0) save('round-clear');
   /* The topbar health gauge tracks the fight, not the tick that happens to
      follow it. */
@@ -8325,9 +8589,7 @@ function updateArenaLive() {
   setBar('ar-ebar', a.enemyHp, a.enemyMaxHp, 'enemy');
   const log = document.getElementById('ar-log');
   if (log) log.innerHTML = logMarkup(a.log);
-  const crowd = document.querySelector('.crowd');
-  if (crowd) crowd.innerHTML = Array.from({ length: CONST.CROWD_MAX },
-    (_, i) => '<i' + (i < a.crowd ? ' class="on"' : '') + '></i>').join('');
+  setCrowdMeter(a);
   /* The draft panel appears and disappears under the player, and the boons
      they hold change - none of which the in-place updates above can express.
      Re-render only when that SIGNATURE moves, so the common case still costs
@@ -11267,6 +11529,232 @@ function assertAll() {
         ok(Math.abs(flat.goldPerHour - bank.goldPerHour) > 1,
            'flattening every archetype changed nothing - they are not reaching the fight');
       })();
+
+      /* --- what fills the meter (Rob, 2026-09-05) ---------------
+         The meter moved once a round and then sat still for the fourteen
+         exchanges in between, which is a poor showing for the one thing on
+         the screen that is supposed to represent a watching crowd. A crit and
+         a dodge fill it too now, by a FRACTION of a pip.
+
+         Two properties carry the design and each is checked through the real
+         exchange loop rather than by calling fillCrowd: a round clear must
+         stay the dominant source, and the fractions must actually arrive. */
+      (function () {
+        ok(CONST.CROWD_PER_CRIT > 0, 'a crit fills the crowd by nothing at all');
+        ok(CONST.CROWD_PER_EVADE > 0, 'a dodge fills the crowd by nothing at all');
+        ok(CONST.CROWD_PER_CRIT < CONST.CROWD_PER_CLEAR &&
+           CONST.CROWD_PER_EVADE < CONST.CROWD_PER_CLEAR,
+           'a crit or a dodge is worth as much as clearing a round - the clear is decorative');
+
+        /* fillCrowd is the one home, so it is where the clamp and the guards
+           live. Every one of these was a live defect shape somewhere in this
+           file before it had a named home. */
+        const a = defaultArena();
+        ok(Math.abs(fillCrowd(a, 0.25) - 0.25) < 1e-9 && Math.abs(a.crowd - 0.25) < 1e-9,
+           'fillCrowd did not add a fraction of a pip');
+        fillCrowd(a, 999);
+        ok(a.crowd === CONST.CROWD_MAX, 'fillCrowd let the meter past full');
+        ok(fillCrowd(a, 5) === 0, 'a full meter reported gaining more');
+        const b = defaultArena();
+        fillCrowd(b, -4);
+        ok(b.crowd === 0, 'fillCrowd took the meter below empty');
+        fillCrowd(b, 'lots');
+        ok(b.crowd === 0, 'fillCrowd accepted a non-numeric amount');
+        /* REFUSED, not clamped to full - and my first version of this check
+           expected the clamp, which is the wrong reading of the Phase 3 rule.
+           An Infinity is junk input, not a very large number: `applyTp` spun
+           forever on one because a finite cost never reduces an infinite bank,
+           and num() has rejected non-finite values ever since. A junk fill
+           leaves the meter exactly where it was. */
+        fillCrowd(b, 4);
+        fillCrowd(b, Infinity);
+        ok(b.crowd === 4, 'an infinite fill was treated as a number rather than refused');
+
+        /* A rig where nothing can die, so a round clear cannot pay and the
+           only thing that can move the meter is the flourish being measured. */
+        const rigF = over => {
+          const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+          s.character = newCharacter('human', 'Flash', s.account);
+          s.character.stats = Object.assign({ str: 5, dex: 5, int: 5, con: 400, cha: 5 }, over || {});
+          s.character.battleClass = null;
+          s.character.hp = maxHpOf(s.character);
+          startRun(s, 0, []);
+          s.arena.enemyMaxHp = s.arena.enemyHp = 1e9;
+          s.arena.enemy.strikes = 1;
+          s.arena.enemy.dmg = 0.0001;
+          s.arena.enemy.inflicts = null;
+          return s;
+        };
+        /* ISOLATED, not both at once. Driving rng to 0 makes every roll succeed
+           and would let either term cover for the other - which is exactly the
+           tautology the Swarmer and Venomous checks were caught being a week
+           ago. A value between the two chances crits without dodging, or the
+           other way round, so each fraction is measured on its own. */
+        const oneExchange = (s, r) => {
+          const prev = rng;
+          try { rng = () => r; exchange(s, 0); } finally { rng = prev; }
+        };
+        const critRig = rigF({ int: 300, dex: 1 });
+        const pc = playerCritChance(critRig.character), pce = playerEvadeChance(critRig.character);
+        ok(pc > pce, 'the crit probe cannot separate a crit from a dodge (' + pc + ' vs ' + pce + ')');
+        oneExchange(critRig, (pc + pce) / 2);
+        ok(critRig.arena.round === 1, 'the crit probe cleared a round - the reading is not isolated');
+        ok(Math.abs(critRig.arena.crowd - CONST.CROWD_PER_CRIT) < 1e-9,
+           'a critical hit filled the crowd by ' + critRig.arena.crowd + ', not ' + CONST.CROWD_PER_CRIT);
+
+        const evadeRig = rigF({ int: 1, dex: 300 });
+        const ec = playerCritChance(evadeRig.character), ee = playerEvadeChance(evadeRig.character);
+        ok(ee > ec, 'the dodge probe cannot separate a dodge from a crit (' + ee + ' vs ' + ec + ')');
+        oneExchange(evadeRig, (ec + ee) / 2);
+        ok(evadeRig.arena.round === 1, 'the dodge probe cleared a round - the reading is not isolated');
+        ok(Math.abs(evadeRig.arena.crowd - CONST.CROWD_PER_EVADE) < 1e-9,
+           'slipping a blow filled the crowd by ' + evadeRig.arena.crowd + ', not ' + CONST.CROWD_PER_EVADE);
+
+        /* And a round clear still pays its whole pip, which is the term the
+           other two are only ever allowed to supplement. */
+        (function () {
+          const s = rigF();
+          s.arena.enemyHp = 0.0001;
+          const before = s.arena.crowd;
+          const prev = rng;
+          try { rng = () => 0.999; exchange(s, 0); } finally { rng = prev; }
+          ok(s.arena.round === 2, 'the round-clear probe did not clear its round');
+          ok(Math.abs(s.arena.crowd - (before + CONST.CROWD_PER_CLEAR)) < 1e-9,
+             'clearing a round no longer fills a whole notch of the meter');
+        })();
+
+        /* THE POINT OF THE WHOLE CHANGE: a flashy champion wins the crowd
+           over sooner. Same champion, same seed, same fight - only the two
+           fractions differ - and the flourishing run must reach full first.
+           Bounded, because "drive a CONST to a silly value" is the first
+           falsification anyone reaches for and an unbounded loop here stops
+           the page rather than reporting. */
+        const roundAtFull = () => {
+          const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+          s.character = newCharacter('human', 'Showman', s.account);
+          s.character.stats = { str: 40, dex: 30, int: 20, con: 400, cha: 15 };
+          s.character.battleClass = null;
+          s.character.hp = maxHpOf(s.character);
+          const prev = rng;
+          try {
+            rng = makeRng(11);
+            startRun(s, 0, []);
+            let n = 0;
+            while (s.arena.active && !crowdReady(s.arena) && n < 4000) { exchange(s, 0); n++; }
+          } finally { rng = prev; }
+          return crowdReady(s.arena) ? s.arena.round : null;
+        };
+        const withFlourish = roundAtFull();
+        const keepCrit = CONST.CROWD_PER_CRIT, keepEvade = CONST.CROWD_PER_EVADE;
+        let clearsOnly;
+        try {
+          CONST.CROWD_PER_CRIT = 0; CONST.CROWD_PER_EVADE = 0;
+          clearsOnly = roundAtFull();
+        } finally {
+          CONST.CROWD_PER_CRIT = keepCrit; CONST.CROWD_PER_EVADE = keepEvade;
+        }
+        ok(withFlourish != null && clearsOnly != null,
+           'the crowd meter never filled on either setting - the probe proves nothing');
+        ok(withFlourish < clearsOnly,
+           'crits and dodges bought the crowd nothing: full at round ' + withFlourish +
+           ' either way (' + clearsOnly + ' on clears alone)');
+
+        /* The gold multiplier is still all or nothing. A meter that paid a
+           proportion of the bonus would be a different mechanic, and it is
+           the sort of thing a well-meaning edit turns it into. */
+        (function () {
+          const s = rigF();
+          s.arena.crowd = CONST.CROWD_MAX - 0.01;
+          const nearly = roundReward(s, 6).gold;
+          s.arena.crowd = CONST.CROWD_MAX;
+          ok(roundReward(s, 6).gold > nearly,
+             'a full meter paid no more than an almost-full one');
+          s.arena.crowd = CONST.CROWD_MAX / 2;
+          ok(Math.abs(roundReward(s, 6).gold - nearly) < 1e-9,
+             'the crowd bonus is being paid in proportion rather than at full');
+        })();
+
+        /* A fraction has to survive a reload. Math.round() here would have
+           thrown away up to half a pip on every load, silently, because a
+           rounded meter is still a legal meter. */
+        ok(Math.abs(migrateArena({ crowd: 3.5 }).crowd - 3.5) < 1e-9,
+           'a fractional crowd meter was rounded away by migration');
+        ok(migrateArena({ crowd: -2 }).crowd === 0, 'a negative crowd meter survived migration');
+        ok(migrateArena({ crowd: 'lots' }).crowd === 0, 'a junk crowd meter survived migration');
+      })();
+
+      /* --- the meter is a bar, and it says what it is worth -----
+         String checks against the rendered markup, never the live screen:
+         assertAll() must not touch what the player is looking at, and a row's
+         markup is the honest thing to test anyway. */
+      (function () {
+        const a = defaultArena();
+        a.active = true;
+        const at = v => { a.crowd = v; return crowdBarMarkup(a); };
+        ok(at(0).indexOf('class="crowd-fill" style="width:0.00%"') !== -1,
+           'an empty crowd meter did not render an empty bar');
+        ok(at(CONST.CROWD_MAX / 2).indexOf('style="width:50.00%"') !== -1,
+           'a half-full crowd meter did not render half a bar');
+        ok(at(CONST.CROWD_MAX).indexOf('style="width:100.00%"') !== -1,
+           'a full crowd meter did not render a full bar');
+        ok(/class="crowd is-full"/.test(at(CONST.CROWD_MAX)),
+           'a full crowd meter is not marked full, so it never draws attention to itself');
+        ok(!/is-full/.test(at(CONST.CROWD_MAX - 0.01)),
+           'an almost-full crowd meter reads as full');
+        /* The pip boundaries are what preserve the old reading - one clear is
+           one notch - so there must be exactly one fewer than there are pips. */
+        ok((at(1).match(/<i style="left:/g) || []).length === CONST.CROWD_MAX - 1,
+           'the crowd bar does not draw one boundary per pip');
+        /* role="progressbar" promises a current value against a maximum, and
+           unlike the tablist roles deleted in Phase 1 this one is true - so it
+           has to keep being true. */
+        const m = at(4.3);
+        ok(m.indexOf('role="progressbar"') !== -1, 'the crowd bar carries no role');
+        ok(m.indexOf('aria-valuenow="4.3"') !== -1 && m.indexOf('aria-valuemax="8"') !== -1,
+           'the crowd bar reports the wrong value to a screen reader');
+        ok(m.indexOf('aria-valuetext="4.3 of 8"') !== -1,
+           'the crowd bar gives a bare number with nothing saying what full is');
+
+        /* And it says what it is worth, in one place. A story bout has no
+           purse to play to - crowdReady refuses on a boss - so the bar has to
+           say so rather than filling up and never offering anything. */
+        const g = defaultArena(); g.active = true; g.crowd = 0;
+        ok(/at full/.test(crowdStateText(g)), 'a filling meter does not say what full is worth');
+        g.crowd = CONST.CROWD_MAX;
+        ok(/Full/.test(crowdStateText(g)), 'a full meter does not say it is full');
+        g.boss = { story: 'x', chapter: 0 };
+        ok(/story bout/.test(crowdStateText(g)),
+           'a story bout shows a crowd meter with no explanation that it cannot be spent');
+      })();
+
+      /* --- the fight reads at a glance -------------------------- */
+      (function () {
+        /* The HP bar's damage trail. Both start at the same width, or a bar
+           that has just been rendered shows a phantom streak of damage that
+           was never dealt. */
+        const bar = hpBar(50, 100, 'player');
+        ok(bar.indexOf('<b style="width:50.0%"></b>') !== -1, 'the HP bar has no damage trail');
+        ok(bar.indexOf('<span style="width:50.0%">') !== -1,
+           'the trail and the fill do not start together - a fresh bar shows damage nobody dealt');
+
+        /* WHERE a floating number is drawn. `who` on an event is the ACTOR for
+           hit and crit and the SUBJECT for everything else, so this mapping is
+           the one place that wrinkle is resolved - and getting it backwards
+           would draw the champion's own bleed on the opponent, which reads as
+           the fight running the wrong way round. */
+        ok(floatHostFor({ who: 'player', kind: 'hit' }) === '#ar-ebar',
+           'damage the champion DEALT was drawn on their own bar');
+        ok(floatHostFor({ who: 'enemy', kind: 'crit' }) === '#ar-pbar',
+           'damage the champion TOOK was drawn on the opponent');
+        ok(floatHostFor({ who: 'player', kind: 'dot' }) === '#ar-pbar',
+           "the champion's own bleed was drawn on the opponent");
+        ok(floatHostFor({ who: 'player', kind: 'heal' }) === '#ar-pbar',
+           'a heal on the champion was drawn on the opponent');
+        ok(floatHostFor({ who: 'player', kind: 'evade' }) === '#ar-pbar',
+           'the champion dodging was reported on the opponent');
+        ok(floatHostFor({ who: 'enemy', kind: 'status' }) === '#ar-ebar',
+           'a status landing on the opponent was drawn on the champion');
+      })();
     })();
 
     /* --- the focus fallback must not be a destructive control ---
@@ -13843,12 +14331,44 @@ function assertAll() {
       ok(!el._roll, 'a reduced-motion counter still scheduled an animation frame');
       el.remove();
 
-      /* 2. Floating damage numbers are not created at all. */
+      /* 2. Floating combat text is not created at all.
+
+         THIS CHECK WAS A TAUTOLOGY UNTIL 2026-09-05. It counted `.floater`,
+         a class no floating number has ever carried - they are `.dmg` - so
+         both sides of the comparison were 0 whatever the gate did, and it
+         would have passed with the reduced-motion branch deleted outright.
+         Sixth instance in this file of an assertion that could not fail, and
+         it sat inside the block written to prove a gate is not an off switch.
+
+         It also needs a host of its own: floatText() resolves a selector
+         against the live document and bails when nothing matches, so pointing
+         it at #ar-pbar passed for the second reason that it was not there. */
       activeScreen = 'arena';
-      const before = document.querySelectorAll('.floater').length;
-      floatDamage('#ar-pbar', 42, true);
-      ok(document.querySelectorAll('.floater').length === before,
-        'a reduced-motion run still spawned a floating damage number');
+      const probe = document.createElement('div');
+      probe.id = 'ea-float-probe';
+      document.body.appendChild(probe);
+      try {
+        floatText('#ea-float-probe', '-42', 'crit');
+        ok(probe.querySelectorAll('.dmg').length === 0,
+          'a reduced-motion run still spawned a floating damage number');
+        force(false);
+        floatText('#ea-float-probe', '-42', 'crit');
+        ok(probe.querySelectorAll('.dmg').length === 1,
+          'floating numbers never appear at all - the gate is an off switch');
+        /* And they stack rather than landing on each other, which is the
+           whole reason an exchange can now report more than one thing. */
+        floatText('#ea-float-probe', '+9', 'heal');
+        /* The LAST two, not the first two. A broken gate above leaves an extra
+           number in the host, and a check that then reports "drawn on the same
+           line" is naming the wrong defect three checks from its cause - the
+           confusing-cascade shape the pricing guard was fixed out of. */
+        const tops = Array.from(probe.querySelectorAll('.dmg')).map(n => n.style.top);
+        ok(tops.length >= 2 && tops[tops.length - 1] !== tops[tops.length - 2],
+          'two floating numbers in one exchange were drawn on the same line');
+      } finally {
+        probe.remove();
+        force(true);
+      }
 
       /* 3. The round banner shows its text without slamming. */
       roundBanner(3, 'Vokrun');
@@ -13877,7 +14397,12 @@ function assertAll() {
       if (bannerTimer) clearTimeout(bannerTimer);
       const b = document.getElementById('banner');
       if (b) b.remove();
-      document.querySelectorAll('.floater').forEach(n => n.remove());
+      /* The `.floater` sweep that used to be here is gone with the tautology
+         above: it named a class no floating number has ever had, so it swept
+         nothing. Correcting it to `.dmg` would be worse than deleting it - a
+         suite run mid-fight would wipe the numbers the player was watching,
+         and assertAll() must not touch the screen. The probe's own host is
+         removed with its children, which is the whole cleanup this needs. */
     }
   })();
   /* --- no dead tunables -------------------------------------
@@ -14846,6 +15371,7 @@ window.EA = {
   ENEMY_ARCHETYPES, ARCHETYPE_KEYS, ELITE_ARCHETYPES, ELITE_TITLES, CROWD_SPENDS,
   archetypeFor, isEliteRound, enemyFor, spendCrowd, crowdReady, crowdSpendOf,
   autoSpendCrowd, statusesOf, applyStatus, tickStatuses,
+  fillCrowd, crowdBarMarkup, crowdStateText, crowdPct, floatHostFor,
   draftsEarnedBy, draftPending, offerBoons, settleDraftOwed, takeDraft,
   autoPickBoon, resolveOverdueDraft, runBonus, bindRun,
   augBonus, augmentSlots, gearUpgradeCost, buyGearUpgrade,
