@@ -427,6 +427,9 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 .aug-row .ar-t span{display:block;font-size:11.5px;line-height:1.4;color:var(--ink-soft)}
 .aug-row .ar-buy{margin-left:auto}
 .aug-row.is-fitted .ar-t strong::after{content:' ●';color:var(--aug-accent);font-size:11px}
+/* What the row is worth to the champion reading it, as opposed to in the
+   abstract. Deliberately quieter than the warning beneath it. */
+.ar-you{display:block!important;margin-top:3px;font-style:italic}
 .ar-warn{display:flex!important;align-items:center;gap:5px;margin-top:3px;
   color:var(--vermilion-deep)!important;font-weight:700}
 .ar-warn .icon{width:14px;height:14px;flex:none}
@@ -3499,18 +3502,43 @@ const STAT_KEYS = ['str', 'dex', 'int', 'con', 'cha'];
    slot count. Runs on load and on import, so a hand-edited save cannot arrive
    holding six augments in two slots.
 
-   `account` is optional because migrateCharacter runs before the account is
-   necessarily to hand; without it the racial slot still counts and only the
-   Heirloom Fitting perk's extra slot is missed, which can only ever trim MORE
-   than needed - reconcileGear() re-runs with the account at the end of
-   migrate() and restores it. */
-function migrateGear(c, account) {
+   THE TWO HALVES NEED DIFFERENT AMOUNTS OF THE WORLD, and conflating them
+   silently deleted a real player's augment on every single load (Rob,
+   2026-09-06). The SHAPE repairs - real ids, no duplicates, each augment on
+   its own piece - need nothing but the champion. The LENGTH trim needs the
+   account, because Heirloom Fitting grants a weapon slot, and it needs the
+   rank unlocks settled, because Early Fitting grants another; neither exists
+   when migrateCharacter runs.
+
+   The previous version trimmed in BOTH places, and the comment here claimed
+   the second pass "restores" what the first dropped. It cannot. The first pass
+   TRUNCATES THE ARRAY, so by the time the second one runs with the whole state
+   there is nothing left to restore from - it sees a short list and four slots
+   and correctly does nothing. Measured: a dwarf with a Legendary weapon and
+   Heirloom Fitting has four slots and lost the fourth augment on every load; a
+   human with the perk lost the fifth; a champion holding Early Fitting lost the
+   slot the rank had just bought them. Only the base quality tier and the human
+   racial slot - the two terms migrateCharacter can see - survived.
+
+   THAT IS THIS FILE'S OLDEST MISTAKE IN A NEW PLACE: a comment describing a
+   repair the code does not perform. The comment is not the check, and the
+   check the suite had was on the SLOT COUNT rather than on whether an augment
+   in that slot survives a round trip - so every Heirloom Fitting assertion
+   passed the whole time.
+
+   So the trim happens ONCE, in reconcileUnlocks(), where the whole state
+   exists. repairAugmentLists() is what migrateCharacter gets. */
+function repairAugmentLists(c) {
   if (!c || !c.gear) return;
   const seen = {};
   const keep = {};
+  AUGMENT_SLOTS.forEach(sl => { keep[sl] = []; });
+  /* Relocation is unconditional now rather than gated on there being room:
+     the trim below is what enforces the slot count, and appending a displaced
+     augment LAST means it is still the first thing dropped when there is not
+     room for it. Same outcome, one rule instead of two. */
   const displaced = [];
   AUGMENT_SLOTS.forEach(sl => {
-    keep[sl] = [];
     (c.gear[sl].augments || []).forEach(id => {
       const a = AUGMENTS[id];
       if (!a || seen[id]) return;            // unknown, or already held elsewhere
@@ -3518,15 +3546,21 @@ function migrateGear(c, account) {
       if (a.slot === sl) keep[sl].push(id); else displaced.push(id);
     });
   });
+  displaced.forEach(id => { keep[AUGMENTS[id].slot].push(id); });
+  AUGMENT_SLOTS.forEach(sl => { c.gear[sl].augments = keep[sl]; });
+}
+
+/* Shape, then length. `account` is REQUIRED here in the sense that matters:
+   passing null under-reports the slot count and therefore destroys augments,
+   so every caller passes the real one and there is an assertion that a
+   perk-granted slot survives a save round trip. */
+function migrateGear(c, account) {
+  if (!c || !c.gear) return;
+  repairAugmentLists(c);
   AUGMENT_SLOTS.forEach(sl => {
     const max = slotsAtQuality(c, sl, c.gear[sl].quality, account);
-    if (keep[sl].length > max) keep[sl].length = max;
+    if (c.gear[sl].augments.length > max) c.gear[sl].augments.length = max;
   });
-  displaced.forEach(id => {
-    const sl = AUGMENTS[id].slot;
-    if (keep[sl].length < slotsAtQuality(c, sl, c.gear[sl].quality, account)) keep[sl].push(id);
-  });
-  AUGMENT_SLOTS.forEach(sl => { c.gear[sl].augments = keep[sl]; });
 }
 
 function migrateCharacter(raw) {
@@ -3623,10 +3657,12 @@ function migrateCharacter(raw) {
   c.unlocks = {
     earlyAugment: bool(isObj(raw.unlocks) ? raw.unlocks.earlyAugment : false, false)
   };
-  /* AFTER c.unlocks, because Early Fitting is one of the terms slotsAtQuality
-     counts. reconcileUnlocks() runs this again with the account once both
-     branches exist, which is what restores the Heirloom Fitting slot. */
-  migrateGear(c);
+  /* SHAPE ONLY - no length trim. There is no account here to count Heirloom
+     Fitting with and the rank unlocks are not settled yet, so any trim taken
+     at this point is taken against an under-counted slot total, and a trim is
+     not reversible. reconcileUnlocks() does the one trim with the whole state
+     to hand. */
+  repairAugmentLists(c);
 
   /* A battleClass must name a real class AND be EARNED by this champion's own
      weapon proficiencies. Checking only that the name existed let a hand-edited
@@ -3809,11 +3845,12 @@ function reconcileUnlocks(s) {
   });
   /* A threshold is meaningless without the control it belongs to. */
   if (!s.account.unlocks.autoYield) s.account.autoYieldAt = 0;
-  /* Re-run the gear repair now that BOTH branches exist. migrateCharacter has
-     no account to hand, so it cannot see the Heirloom Fitting slot; and
-     Early Fitting is a rank unlock this function has only just settled. Running
-     it once more with the whole state is the difference between trimming a
-     legitimately-held augment and keeping it. */
+  /* THE trim, and the only one. It has to be here and nowhere earlier:
+     migrateCharacter has no account to count Heirloom Fitting with, and Early
+     Fitting is a rank unlock the loop above has only just settled. Trimming
+     before either is known destroys an augment the champion legitimately
+     holds, and a trim cannot be undone by a later pass however well commented.
+     Placed AFTER the unlock loop for exactly that reason. */
   if (s.character) migrateGear(s.character, s.account);
   /* Rebind the champion to the run they are in and re-derive the draft from
      the round they are at. Both halves are derived rather than restored, so a
@@ -7463,6 +7500,41 @@ function firstSlotQuality() {
   return CONST.GEAR_MAX_QUALITY;
 }
 
+/* "Regain 0.08% max HP per exchange" is true and unreadable, and Rob asked
+   what it was actually worth after watching it heal what looked like nothing.
+   It is 0.35 HP an exchange on a 441 HP champion - too small to read one at a
+   time and 116 HP over a run, which is a different sentence entirely.
+
+   So a sustain row says both, computed FOR THIS CHAMPION through the same
+   applySustain ceiling the fight uses rather than from the augment's own
+   number - the shop has told a generic champion's story once already (Phase 6:
+   a dwarf's Legendary armour showed −24% when it was really −30%), and a row
+   that re-derives its own effect is the mistake this file has caught six
+   times. Keyed on `budget: 'sustain'`, which already names exactly the
+   augments held by that ceiling, so a third one is covered by joining the
+   budget rather than by editing this. */
+function sustainForYou(c, id) {
+  const a = AUGMENTS[id];
+  if (!a || a.budget !== 'sustain') return '';
+  const max = maxHpOf(c);
+  /* The same two terms and the same ceiling applySustain uses, so the row
+     cannot describe a heal the fight would not give. Lifesteal is priced
+     against THIS champion's damage, which is the whole reason Vampiric and
+     Resilient are not interchangeable at low damage.
+
+     Per MINUTE rather than per round: an exchange is exactly ARENA_TICK_MS, so
+     that figure is derived, where "a round" would need a guess at how many
+     exchanges a round takes - and it takes 19 fresh and 11 late. */
+  const want = max * Math.max(0, num(a.effect.regen, 0)) +
+               playerDamage(c, false) * Math.max(0, num(a.effect.lifesteal, 0));
+  const per = Math.min(want, max * CONST.SUSTAIN_CAP_PCT_MAXHP);
+  if (!(per > 0)) return '';
+  return '<span class="ar-you">For you: ' + per.toFixed(2) + ' HP an exchange — about ' +
+    Math.round(per * (60000 / CONST.ARENA_TICK_MS)) + ' a minute' +
+    (want > per * 1.0001 ? ', already at the shared cap' : '') +
+    '. A trickle, not a heal.</span>';
+}
+
 function augmentSlotSection(c, slot) {
   const max = augmentSlots(c, slot, state.account);
   const fitted = c.gear[slot].augments;
@@ -7519,7 +7591,7 @@ function augmentSlotSection(c, slot) {
        instead of the markup. */
     return '<div class="' + cls + '">' + icon(a.icon) +
       '<div class="ar-t"><strong>' + esc(a.label) + '</strong>' +
-      '<span>' + esc(a.text) + '</span>' + warn + '</div>' +
+      '<span>' + esc(a.text) + '</span>' + sustainForYou(c, id) + warn + '</div>' +
       '<div class="ar-buy"><button class="btn small" type="button" ' +
       'data-aug="' + slot + '|' + id + '"' +
       ' aria-label="' + (here ? 'Remove ' + esc(a.label) + ' from ' : 'Fit ' + esc(a.label) + ' to ') +
@@ -8504,6 +8576,15 @@ function impact(sel, heavy) {
                          heavy ? 440 : 260);
 }
 
+/* The fraction of a healed point that has not been shown yet, and the run it
+   belongs to. Reset on the run rather than left to accumulate across runs, so
+   a new fight never opens owing a point of somebody else's healing. */
+let healBank = 0, healBankSeed = null;
+function resetHealBank(a) {
+  const seed = a && a.active ? a.seed : null;
+  if (seed !== healBankSeed) { healBankSeed = seed; healBank = 0; }
+}
+
 /* One event, drawn. Split out of the tick so the mapping is one list rather
    than a chain of conditions inside a loop inside a timer. */
 function drawEvent(ev, a) {
@@ -8518,7 +8599,21 @@ function drawEvent(ev, a) {
   } else if (ev.kind === 'dot') {
     floatText(host, '-' + Math.round(ev.amount), 'dot');
   } else if (ev.kind === 'heal') {
-    floatText(host, '+' + Math.round(ev.amount), 'heal');
+    /* BANKED, not rounded (Rob, 2026-09-06). The sustain ceiling is 0.08% of
+       max HP an exchange, so Resilient heals a 441 HP champion 0.35 - a real
+       116 HP over a run, and `Math.round` reports it as "+0" every single
+       exchange. A number that reads zero is the game telling a player their
+       2,500g augment does nothing, which is exactly how it was reported.
+
+       Whole points are floated as they accrue and the fraction carries, so the
+       total shown is the total healed - a trickle reads as "+1" every third
+       exchange instead of "+0" on all three, and a real heal (a crowd
+       play-to-them, lifesteal off a big hit) still shows its own number at
+       once. Render-layer state, like lastDraftSig: derived from events, never
+       stored, and reset with the run. */
+    healBank += Math.max(0, num(ev.amount, 0));
+    const show = Math.floor(healBank);
+    if (show >= 1) { healBank -= show; floatText(host, '+' + show, 'heal'); }
   } else if (ev.kind === 'evade') {
     floatText(host, 'Miss', 'miss');
   } else if (ev.kind === 'skip') {
@@ -8551,6 +8646,7 @@ function arenaStep() {
      and a snowstorm of damage numbers at a player who just came back is not
      information, it is noise. The events are settled silently and the screen is
      brought up to date instead. */
+  resetHealBank(a);
   if (res.steps === 1) res.events.forEach(ev => drawEvent(ev, a));
   if (res.cleared > 0) save('round-clear');
   /* The topbar health gauge tracks the fight, not the tick that happens to
@@ -11755,6 +11851,82 @@ function assertAll() {
         ok(floatHostFor({ who: 'enemy', kind: 'status' }) === '#ar-ebar',
            'a status landing on the opponent was drawn on the champion');
       })();
+
+      /* --- a trickle must not read as nothing (Rob, 2026-09-06) --
+         Resilient sits exactly at the sustain ceiling, which is 0.08% of max
+         HP an exchange - 0.35 HP on a 441 HP champion. Rounded, that is "+0"
+         on every single exchange, which is the game reporting that a 2,500g
+         augment does nothing. It is a real 116 HP over a run.
+
+         The whole points are banked and floated as they accrue, so what is
+         shown adds up to what was healed. These check both halves of that:
+         nothing is drawn until there is a point to draw, and nothing is lost
+         on the way. */
+      (function () {
+        const rig = () => {
+          const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+          s.character = newCharacter('human', 'Trickle', s.account);
+          s.character.stats = { str: 40, dex: 30, int: 20, con: 40, cha: 15 };
+          s.character.gear.armor.quality = 4;
+          s.character.gear.armor.augments = ['resilient'];
+          s.character.hp = maxHpOf(s.character);
+          startRun(s, 0, []);
+          s.arena.playerHp = maxHpOf(s.character) * 0.5;
+          return s;
+        };
+        /* THE MECHANIC WORKS - there is no HP floor and never was. Proved
+           first, so a failure below is read as a display problem rather than
+           sending the next person hunting for a threshold that does not
+           exist. */
+        const s = rig();
+        const max = maxHpOf(s.character);
+        const healed = applySustain(s, 100, max, null);
+        ok(healed > 0, 'Resilient healed nothing at all - the sustain path is broken, not the display');
+        ok(Math.abs(healed - max * CONST.SUSTAIN_CAP_PCT_MAXHP) < 1e-9,
+           'Resilient does not sit exactly at the sustain ceiling, which its shop row promises');
+        /* And it is smaller than one point, which is the fact the display has
+           to survive. If this ever stops being true the banking below is
+           harmless, but the reason for it is gone. */
+        ok(healed < 1,
+           'the sustain trickle is now a whole point per exchange - the display bank is no longer needed');
+
+        /* The bank. Driven through drawEvent so it is the real path, with the
+           screen elsewhere so floatText draws nothing: this measures what the
+           bank does with the numbers, not what the DOM does with them. */
+        const keepScreen = activeScreen, keepBank = healBank, keepSeed = healBankSeed;
+        try {
+          /* The screen is deliberately elsewhere, so floatText draws nothing:
+             this measures what the BANK does with the numbers, and assertAll()
+             must not touch what the player is looking at. What was shown is
+             fed minus banked - no spy needed, and the property that matters is
+             the conservation rather than the count. */
+          activeScreen = 'nowhere';
+          healBank = 0; healBankSeed = null;
+          let fed = 0;
+          for (let i = 0; i < 10; i++) {
+            fed += 0.35;
+            drawEvent({ who: 'player', kind: 'heal', amount: 0.35 }, s.arena);
+          }
+          ok(Math.abs((fed - healBank) - 3) < 1e-9,
+             'ten 0.35 heals showed ' + (fed - healBank) + ' points, not the 3 that had accrued');
+          ok(healBank > 0 && healBank < 1,
+             'the fraction left over after banking was lost rather than carried');
+          /* A real heal is not held back by the trickle: it shows its own
+             number at once, plus whatever was owed. */
+          const owed = healBank;
+          drawEvent({ who: 'player', kind: 'heal', amount: 62 }, s.arena);
+          ok(Math.abs((62 + owed - healBank) - Math.floor(62 + owed)) < 1e-9 && healBank < 1,
+             'a real heal was held back by the trickle bank');
+        } finally {
+          activeScreen = keepScreen; healBank = keepBank; healBankSeed = keepSeed;
+        }
+
+        /* A new run does not open owing somebody else's healing. */
+        healBank = 0.9; healBankSeed = 'other';
+        const fresh = rig();
+        resetHealBank(fresh.arena);
+        ok(healBank === 0, 'the heal bank carried a fraction across into a new run');
+      })();
     })();
 
     /* --- the focus fallback must not be a destructive control ---
@@ -12218,10 +12390,19 @@ function assertAll() {
   /* MIGRATION: a save written before the split can hold Stalwart on a weapon.
      It must be RELOCATED, not deleted - the player paid 2,500g for it. */
   (function () {
-    const wide = migrateCharacter(Object.assign(JSON.parse(JSON.stringify(shopRig().character)), {
-      gear: { weapon: { quality: 4, augments: ['stalwart', 'keen'] },
-              armor:  { quality: 4, augments: ['gilded', 'swift'] } }
-    }));
+    /* Through migrate(), NOT migrateCharacter, and that distinction is the
+       whole point of the fix below. The length trim no longer happens inside
+       migrateCharacter - it cannot, because the account and the rank unlocks
+       that decide how many slots there are do not exist yet - so a check that
+       only ran the character branch would be asserting against a deliberately
+       half-repaired champion. migrate() is what a save actually goes through. */
+    const loaded = gear => {
+      const s = shopRig();
+      s.character.gear = gear;
+      return migrate(JSON.parse(JSON.stringify(s))).character;
+    };
+    const wide = loaded({ weapon: { quality: 4, augments: ['stalwart', 'keen'] },
+                          armor:  { quality: 4, augments: ['gilded', 'swift'] } });
     ok(wide.gear.weapon.augments.indexOf('stalwart') === -1 &&
        wide.gear.armor.augments.indexOf('stalwart') !== -1,
        'a displaced armour augment was not relocated to the armour');
@@ -12235,21 +12416,84 @@ function assertAll() {
        has no slots at all, so an armour augment sitting on a Legendary weapon
        has to go - and that is honest, because the alternative is a champion
        holding more augments than slots. */
-    const tight = migrateCharacter(Object.assign(JSON.parse(JSON.stringify(shopRig().character)), {
-      gear: { weapon: { quality: 4, augments: ['stalwart'] }, armor: { quality: 0, augments: [] } }
-    }));
+    const tight = loaded({ weapon: { quality: 4, augments: ['stalwart'] },
+                           armor: { quality: 0, augments: [] } });
     ok(tight.gear.weapon.augments.length === 0 && tight.gear.armor.augments.length === 0,
        'a displaced augment survived with nowhere legal to sit');
-    /* And the list invariants migrateGear now owns for everybody. */
-    const junk = migrateCharacter(Object.assign(JSON.parse(JSON.stringify(shopRig().character)), {
-      gear: { weapon: { quality: 4, augments: ['keen', 'keen', 'nope', 'heavy', 'gilded', 'cruel'] },
-              armor:  { quality: 2, augments: ['swift', 'swift'] } }
-    }));
+    /* And the list invariants migrateGear owns for everybody. */
+    const junk = loaded({ weapon: { quality: 4, augments: ['keen', 'keen', 'nope', 'heavy', 'gilded', 'cruel'] },
+                          armor:  { quality: 2, augments: ['swift', 'swift'] } });
     ok(junk.gear.weapon.augments.indexOf('nope') === -1, 'an unknown augment id survived migration');
     ok(new Set(junk.gear.weapon.augments).size === junk.gear.weapon.augments.length,
        'a duplicated augment survived migration');
-    ok(junk.gear.weapon.augments.length <= slotsAtQuality(junk, 'weapon', 4, null),
+    ok(junk.gear.weapon.augments.length <= augmentSlots(junk, 'weapon', defaultAccount()),
        'a champion came back holding more augments than slots');
+
+    /* --- A SLOT YOU EARNED MUST STILL BE THERE AFTER A RELOAD ------
+       (Rob, 2026-09-06.) He reported fitting Keen to his fourth weapon slot
+       and finding it gone again, repeatedly. It was: migrateCharacter trimmed
+       the list against a slot count that could not see Heirloom Fitting (no
+       account yet) or Early Fitting (rank unlocks not settled yet), and a trim
+       is not reversible - the second pass at the end of migrate() saw a short
+       list and four slots and correctly did nothing. Measured before the fix:
+       a dwarf with the perk lost the fourth augment on EVERY load.
+
+       EVERY EXISTING HEIRLOOM FITTING CHECK PASSED THROUGHOUT, because they all
+       asked whether the perk grants a slot and none asked whether an augment in
+       that slot survives being saved. So this walks the sources of a slot and
+       proves the augment comes back - which is the property a player has, and
+       the slot count is only how it is delivered. */
+    (function () {
+      const survives = (label, build, want) => {
+        const s = shopRig();
+        build(s);
+        const slots = augmentSlots(s.character, 'weapon', s.account);
+        s.character.gear.weapon.augments = want.slice(0, slots);
+        const before = s.character.gear.weapon.augments.slice();
+        /* A RIG THAT FITTED NOTHING PROVES NOTHING. "a reload dropped none of
+           them" is a true sentence about an empty list, and the Early Fitting
+           case passed that way until it was looked at - it computed zero slots
+           because the unlock it depends on is granted during the load. */
+        ok(before.length > 0 && before.length === slots,
+           label + ': the rig could not fill its own slots (' + before.length + '/' + slots + ')');
+        const after = migrate(JSON.parse(JSON.stringify(s))).character.gear.weapon.augments;
+        ok(before.every(id => after.indexOf(id) !== -1),
+           label + ': a reload dropped ' + before.filter(id => after.indexOf(id) === -1).join(',') +
+           ' from ' + slots + ' earned slots (kept ' + after.length + ')');
+      };
+      const five = ['gilded', 'vampiric', 'savage', 'keen', 'cruel'];
+      survives('base quality alone', s => { s.character.gear.weapon.quality = 4; }, five);
+      survives('the human racial slot', s => {
+        s.character = newCharacter('human', 'H', s.account);
+        s.character.gear.weapon.quality = 4;
+      }, five);
+      survives('Heirloom Fitting', s => {
+        s.character.gear.weapon.quality = 4;
+        s.account.legacyPerks.fitting = 1;
+      }, five);
+      survives('Heirloom Fitting at its maximum', s => {
+        s.character.gear.weapon.quality = 4;
+        s.account.legacyPerks.fitting = LEGACY_PERKS.fitting.max;
+      }, five.concat(['heavy', 'honed']));
+      /* Early Fitting: the flag AND the renown that justifies it. Setting only
+         the renown was my first version of this rig and it was a tautology -
+         slotsAtQuality reads c.unlocks.earlyAugment, which reconcileUnlocks
+         does not set until DURING the load, so the rig computed zero slots,
+         fitted zero augments and passed on an empty list. `before.length ===
+         slots` above is the line that would have caught it and did not,
+         because 0 === 0. It carries a real augment now.
+
+         Setting only the flag would be equally useless in the other direction:
+         reconcileUnlocks revokes an unlock the rank does not justify, so the
+         slot goes with it - which is correct, and measured. */
+      survives('Early Fitting', s => {
+        s.character.gear.weapon.quality = 1;         // Sturdy: no slot without it
+        s.character.unlocks.earlyAugment = true;
+        s.character.renown = FORMULAS.rankThreshold(
+          (RANK_UNLOCKS.filter(u => u.key === 'earlyAugment')[0] || { rank: 0 }).rank);
+        s.character.renownRank = renownRankFor(s.character.renown);
+      }, five);
+    })();
   })();
   const goldBefore = sf.character.gold;
   ok(removeAugment(sf, 'weapon', 'keen').ok === true, 'a fitted augment could not be removed');
@@ -15363,7 +15607,7 @@ window.EA = {
   playerDamage, playerCritChance, playerEvadeChance, damageTaken, profOf,
   startArenaTick, stopArenaTick, arenaStep, catchUpArena, defaultScreen, startingRenownFor, RENOWN_TOP_RANK,
   AUGMENTS, AUGMENT_KEYS, AUGMENT_SLOTS, AUGMENTS_BY_SLOT, budgetConflict,
-  migrateGear, healMs,
+  migrateGear, repairAugmentLists, healMs, sustainForYou,
   ARENA_CONDITIONS, CONDITION_KEYS, BOONS, BOON_KEYS, DRAFT_BUCKETS,
   conditionsForBlock, conditionsAt, conditionBlock, conditionsLeftMs, enemyMods,
   conditionEffects, bonusText,
