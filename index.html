@@ -41,6 +41,30 @@
   --vermilion-deep: #992716;
   --jade-deep:      #136349;
 
+  /* GEAR QUALITY (Rob, 2026-09-06): the tier should be legible as a colour
+     before it is read as a word. Grey, green, blue, amber, orange-red - the
+     ladder players already know - and Legendary carries a soft glow on top.
+
+     Every one of them is DARK, and that is not a stylistic choice. A literal
+     "yellow" for Master measures 3.2:1 and a bright orange for Legendary 3.3:1
+     against the beds this text lands on, both well under AA; the readable
+     versions are a bronze and a brick. Pinned against all four surfaces, not
+     just the one they happen to render on today - a one-bed contrast check is
+     barely a check, and this file has shipped that mistake once already.
+
+     Worst-case ratios: crude 5.41, sturdy 5.04, fine 5.45, master 5.10,
+     legendary 4.82 - all on --gold, which is the harshest bed. There is a boot
+     assertion over all five against all four.
+
+     The colour is never the only signal: the tier NAME is always beside it,
+     so a player who cannot separate the bronze from the brick reads "Master"
+     and "Legendary" exactly as before. */
+  --q-crude:     #4F4A59;
+  --q-sturdy:    #115C43;
+  --q-fine:      #1F3FB5;
+  --q-master:    #6B4A00;
+  --q-legendary: #963205;
+
   --font-display: 'Arial Black','Helvetica Neue',Impact,sans-serif;
   --font-body: system-ui,-apple-system,'Segoe UI',sans-serif;
   --font-data: ui-monospace,'SF Mono',Menlo,monospace;
@@ -427,6 +451,22 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 .aug-row .ar-t span{display:block;font-size:11.5px;line-height:1.4;color:var(--ink-soft)}
 .aug-row .ar-buy{margin-left:auto}
 .aug-row.is-fitted .ar-t strong::after{content:' ●';color:var(--aug-accent);font-size:11px}
+/* --- gear quality reads as a colour ------------------------- */
+.qual{font-weight:700}
+.q-crude{color:var(--q-crude)}
+.q-sturdy{color:var(--q-sturdy)}
+.q-fine{color:var(--q-fine)}
+.q-master{color:var(--q-master)}
+/* The top tier gets a glow as well as a colour. Deliberately STATIC: a pulse
+   would be motion, and motion in this file has to be gated in JS because a CSS
+   media query cannot reach a rAF loop - a halo needs neither. Two shadows, a
+   tight warm one and a wider soft one, so it reads as a glow at 12px rather
+   than as a blur. */
+.q-legendary{
+  color:var(--q-legendary);
+  text-shadow:0 0 4px rgba(232,66,44,.55), 0 0 10px rgba(255,197,49,.45);
+}
+
 /* What the row is worth to the champion reading it, as opposed to in the
    abstract. Deliberately quieter than the warning beneath it. */
 .ar-you{display:block!important;margin-top:3px;font-style:italic}
@@ -1438,27 +1478,38 @@ const CONST = {
      sand, so the ratio holds flat at every stage by construction, and a deeper
      round still teaches more because it takes longer to win.
 
-     RAISED 2026-08-23 (Rob) from 0.008. The old value was deliberately timid
-     and it read as stingy in play: 0.436 TP/min, 42%% of the floor, and only
-     1.2 TP for a whole fresh run.
+     RAISED 2026-08-23 (Rob) from 0.008 to 0.018, and again 2026-09-06 to 0.04.
 
-     0.018 x (60000/1100) = 0.982 TP/min, about 94%% of the 1.05 TP/min a
-     level-1 Sparring Circle pays a human with no mentor - the floor a player
-     always has. Against a real trained-up academy it is a far smaller
-     supplement, which is the intent.
+     THE CEILING USED TO BE THE FLOOR and it is not any more, because Rob
+     reversed the rule: "it's ok if it starts earning at a higher rate than
+     training - they can both be valid ways to level your weapon skill." The
+     old rule said the arena must stay strictly under what the weakest possible
+     Sparring Circle pays, so it sat at 94%% of it, and it still read as stingy.
 
-     THE CEILING IS THE FLOOR, and it is asserted. Per minute in the sand this
-     must stay strictly below what the weakest possible training facility pays,
-     or doc 1's train-then-fight loop inverts and the arena becomes the way to
-     train. 94%% is close to that line on purpose - the ratio does not drift
-     with run depth (that is what pricing per exchange buys), so only a change
-     to ARENA_TICK_MS or to the facility floor can move it, and the assertion
-     catches either.
+     THE OLD RATIO WAS MEASURING THE WRONG HOUR, which is why. 94%% is per
+     minute IN THE SAND, and the sand is a small part of the loop: a run ends
+     with a bench and a champion who has to be patched up. Per REAL hour the
+     arena was paying 3.5 TP fresh and 6.9 mid against a training floor of 63 -
+     six to eleven per cent, not ninety-four. The same blind spot the harness
+     had twice (`recovery`, then healing time), this time inside an assertion.
 
-     Counting the 25-minute knockout bench, which is the honest way to read it,
-     the arena still only teaches 10-26%% of what the same wall-clock spent
-     training would. */
-  ARENA_TP_PER_EXCHANGE: 0.018,
+     The new rule is a BAND, and it is the honest statement of Rob's decision:
+     a minute in the sand teaches MORE than the weakest Sparring Circle and
+     LESS than a fully built one. 0.04 x (60000/1100) = 2.18 TP/min against a
+     floor of 1.05 and a level-10 facility's 3.15 - so fighting beats an
+     untrained academy outright, and building the academy is still the faster
+     way to train. Both ends are asserted, so raising it further past a real
+     ceiling stays a decision rather than an accident.
+
+     Counting the bench AND the heal, which is the honest way to read it, the
+     arena teaches 7.9 TP/hour fresh and 15.4 mid against the floor's 63 - so
+     13-24%%, up from 6-11%% at 0.018. A champion running Auto-Yield pays no
+     bench and reaches 14.4 and 25.7, which is 23-41%%. It stays a supplement in
+     wall-clock terms and becomes a real one; the sand-minute rate is what makes
+     it an alternative for a player who is going to be fighting anyway.
+
+     26 runs buy a mid-game weapon level on arena TP alone, against 59 before. */
+  ARENA_TP_PER_EXCHANGE: 0.04,
 
   /* The ceiling on ALL in-run healing in one exchange, as a fraction of max
      HP - lifesteal and regen share it. See applySustain() for why this exists:
@@ -1902,6 +1953,12 @@ const WEAPONS = {
 
 /* --- gear quality (doc 3.7) --- */
 const QUALITY = ['Crude', 'Sturdy', 'Fine', 'Master', 'Legendary'];
+/* One CSS token per tier, in tier order, so the colour ladder cannot drift out
+   of step with the name ladder. Derived FROM the tier index rather than written
+   beside each render site: quality is printed in four places and a fifth would
+   otherwise be the one that forgets. There is an assertion that the two lists
+   are the same length, so a sixth tier cannot be added without a colour. */
+const QUALITY_TONES = ['q-crude', 'q-sturdy', 'q-fine', 'q-master', 'q-legendary'];
 
 /* --- the bonus pool (doc 3.4) -------------------------------
    ONE namespace, shared by augments, battle classes and (later) legacy perks.
@@ -7408,6 +7465,18 @@ function awayMarkup() {
 
 const gp = n => Math.round(n).toLocaleString() + 'g';
 
+/* THE one way a gear tier is printed. Four render sites showed the tier name
+   as bare text - the shop's current row, its next-tier preview, its Legendary
+   cap and the Champion screen's gear summary - and colouring them one at a
+   time is how the fifth gets missed. Out of range renders as plain text rather
+   than throwing or picking a colour it has not earned. */
+function qualityText(q) {
+  const i = Math.round(num(q, -1));
+  const label = QUALITY[i];
+  if (label == null) return esc(String(q));
+  return '<span class="qual ' + QUALITY_TONES[i] + '">' + esc(label) + '</span>';
+}
+
 function renderShop() {
   const host = document.getElementById('shop-body');
   if (!host) return;
@@ -7460,11 +7529,14 @@ function gearRows(c) {
     return '<div class="row-buy">' +
       '<div class="rb-main">' + icon(isW ? 'sword' : 'shield') +
         '<div><strong>' + (isW ? 'Weapon' : 'Armour') + '</strong>' +
-        '<span class="rb-now">' + esc(QUALITY[q]) + ' · ' + cur +
+        '<span class="rb-now">' + qualityText(q) + ' · ' + cur +
         ' · ' + slots + ' augment slot' + (slots === 1 ? '' : 's') + '</span></div></div>' +
       (cost === null
-        ? '<span class="rb-max">Legendary</span>'
-        : '<div class="rb-buy"><span class="rb-next">→ ' + esc(QUALITY[q + 1]) + ' · ' + next +
+        /* Read out of the registry, not typed. It was the literal string
+           "Legendary" - a tier name written down beside the table that owns
+           it, which is the shape the dead-tunable scan exists to catch. */
+        ? '<span class="rb-max">' + qualityText(CONST.GEAR_MAX_QUALITY) + '</span>'
+        : '<div class="rb-buy"><span class="rb-next">→ ' + qualityText(q + 1) + ' · ' + next +
           (nextSlots !== slots ? ' · ' + nextSlots + ' slots' : '') + '</span>' +
           '<button class="btn small" type="button" data-buy-gear="' + slot + '"' +
           ' aria-label="Upgrade ' + (isW ? 'weapon' : 'armour') + ' to ' + esc(QUALITY[q + 1]) + ' for ' + gp(cost) + '"' +
@@ -7552,7 +7624,7 @@ function augmentSlotSection(c, slot) {
   if (max === 0) {
     return '<section class="aug-group is-' + slot + '">' + head + note +
       '<div class="aug-body"><p class="aug-empty">No slots on this piece yet — ' +
-      esc(QUALITY[firstSlotQuality()]) + ' quality opens the first one. ' +
+      qualityText(firstSlotQuality()) + ' quality opens the first one. ' +
       'Upgrade it above.</p></div></section>';
   }
 
@@ -9375,7 +9447,7 @@ function championMarkup(c) {
       ['weapon', 'armor'].map(slot => {
         const q = c.gear[slot].augments;
         return '<li><span class="k">' + (slot === 'weapon' ? 'Weapon' : 'Armour') + '</span>' +
-          '<span class="v">' + esc(QUALITY[c.gear[slot].quality]) + '</span>' +
+          '<span class="v">' + qualityText(c.gear[slot].quality) + '</span>' +
           '<span class="fx">' + (q.length
             ? q.map(id => esc(AUGMENTS[id].label)).join(', ')
             : augmentSlots(c, slot, state.account) > 0 ? 'No augments fitted' : 'No augment slots') +
@@ -9434,17 +9506,22 @@ function retireMarkup(c) {
      the dialog closing, and the fix there was a disarm on open AND close; a
      confirm that states the consequence and offers a named Cancel has no armed
      state to leak, and it is the right place to show what is actually lost. */
+  /* Each entry is already-safe HTML, so the join is not re-escaped. It was:
+     the whole list went through esc() AFTER being joined on '&middot;', so the
+     separator rendered as the literal text "&middot;" between every item on
+     the highest-stakes confirm in the game. */
   const losing = [
-    'Might ' + mightOf(c).toLocaleString(),
-    Math.floor(num(c.gold, 0)).toLocaleString() + 'g unspent',
-    QUALITY[c.gear.weapon.quality] + ' weapon, ' + QUALITY[c.gear.armor.quality] + ' armour'
+    esc('Might ' + mightOf(c).toLocaleString()),
+    esc(Math.floor(num(c.gold, 0)).toLocaleString() + 'g unspent'),
+    qualityText(c.gear.weapon.quality) + ' weapon, ' +
+      qualityText(c.gear.armor.quality) + ' armour'
   ];
   return '<div class="panel confirm-panel"><h3 class="sub" tabindex="-1" id="retire-confirm-head">' +
     'Retire ' + esc(c.name) + '?</h3>' +
     '<p class="hp-line">This cannot be undone.</p>' +
     '<ul class="statlist"><li><span class="k">Gains</span><span class="fx">' +
       lp(preview.lp) + ' and a mentor seat in the Hall</span></li>' +
-    '<li><span class="k">Ends</span><span class="fx">' + esc(losing.join(' &middot; ')) +
+    '<li><span class="k">Ends</span><span class="fx">' + losing.join(' &middot; ') +
       '</span></li></ul>' +
     '<div class="row"><button class="btn" data-tone="danger" type="button" id="btn-retire-do">' +
       'Retire for ' + lp(preview.lp) + '</button>' +
@@ -10487,7 +10564,14 @@ function assertAll() {
          size + 'px/' + weight + ', needs ' + need + ' (' + (el.className || el.tagName) + ')');
     });
 
-  ['--vermilion-deep', '--jade-deep'].forEach(name => {
+  /* The gear-quality ladder joins this list rather than getting a check of its
+     own: it is the same class of token - a colour carrying small text over
+     several beds - and Rob's brief was "make sure all shades are readable".
+     A literal yellow for Master measures 3.2:1 and a bright orange for
+     Legendary 3.3:1, so this is the check that decided what the tokens are
+     rather than one written afterwards to bless them. */
+  const QUALITY_VARS = QUALITY_TONES.map(t => '--' + t);
+  ['--vermilion-deep', '--jade-deep'].concat(QUALITY_VARS).forEach(name => {
     const v = cssVar(name);
     ok(/^#[0-9a-f]{6}$/i.test(v), name + ' is not a plain hex, so it cannot be contrast-checked');
     if (!/^#[0-9a-f]{6}$/i.test(v)) return;
@@ -10497,6 +10581,61 @@ function assertAll() {
       ok(r >= 4.5, name + ' on ' + bed + ' is ' + r.toFixed(2) + ':1, under AA');
     });
   });
+
+  /* --- the quality ladder is a ladder ------------------------- */
+  (function () {
+    ok(QUALITY_TONES.length === QUALITY.length,
+       'there are ' + QUALITY.length + ' gear tiers and ' + QUALITY_TONES.length +
+       ' colours for them - a tier would render with no tone or a tone with no tier');
+    /* Two tiers wearing one colour is the duplicate-drawing state the class
+       sprite was fixed out of, and it is just as invisible in review. */
+    const vals = QUALITY_VARS.map(cssVar);
+    ok(new Set(vals).size === vals.length,
+       'two gear tiers share a colour: ' + vals.join(','));
+    /* Every tier must actually reach the markup through the one helper, and a
+       tier that does not exist must not be given a colour it has not earned. */
+    QUALITY.forEach((label, i) => {
+      const html = qualityText(i);
+      ok(html.indexOf(QUALITY_TONES[i]) !== -1,
+         label + ' renders without its own tone class');
+      ok(html.indexOf('>' + label + '<') !== -1, label + ' lost its name to the colouring');
+    });
+    ok(qualityText(QUALITY.length).indexOf('<span') === -1,
+       'a quality tier past the end of the table was given a colour');
+    ok(qualityText(-1).indexOf('<span') === -1, 'a negative quality tier was coloured');
+    ok(qualityText('nonsense').indexOf('<span') === -1, 'a junk quality was coloured');
+    /* THE NAME IS ALWAYS THERE, which is what keeps the colour a reinforcement
+       rather than the only signal. */
+    ok(QUALITY.every((label, i) => qualityText(i).indexOf(label) !== -1),
+       'a gear tier is shown as a colour with no word beside it');
+  })();
+
+  /* --- nothing renders a raw HTML entity ---------------------
+     The retire confirm printed "Might 126 &middot; 0g unspent &middot; Crude
+     weapon" - the literal text, on the highest-stakes screen in the game -
+     because the list was joined on '&middot;' and the whole joined string was
+     then run through esc(), which turned the ampersand into &amp;. Found by
+     touching the line for the quality colours, not by anyone reading it.
+
+     Escaping twice is invisible in code review and unmistakable on screen, so
+     this is the check for the class rather than the fix for the instance: no
+     rendered text may contain an entity, because an entity that reached
+     textContent is an entity that was escaped when it should have been
+     written. Reads the live DOM, so it only covers the screen that is up -
+     which is why the verification sweep walks all seven. */
+  (function () {
+    const ENTITY = /&(?:[a-zA-Z][a-zA-Z0-9]{1,9}|#\d{1,5}|#x[0-9a-fA-F]{1,5});/;
+    const active = document.querySelector('.screen.is-active');
+    if (!active) return;
+    const walk = document.createTreeWalker(active, NodeFilter.SHOW_TEXT);
+    let n, bad = null, seen = 0;
+    while ((n = walk.nextNode()) && seen < 4000) {
+      seen++;
+      const m = ENTITY.exec(n.nodeValue || '');
+      if (m) { bad = m[0] + ' in "' + (n.nodeValue || '').trim().slice(0, 60) + '"'; break; }
+    }
+    ok(bad === null, 'a raw HTML entity reached the screen - something was escaped twice: ' + bad);
+  })();
 
   /* --- roles must not promise behaviour that is not implemented --- */
   ok(document.querySelectorAll('[role="tab"],[role="tablist"],[role="tabpanel"]').length === 0,
@@ -14349,25 +14488,43 @@ function assertAll() {
     const tenEx = 10 * CONST.ARENA_TP_PER_EXCHANGE;
     ok(tenEx > oneEx * 9.9, 'the arena award is not proportional to exchanges');
 
-    /* THE CEILING, and the reason the award has one. Doc 1's loop is
-       train-then-fight: the arena SUPPLEMENTS training, it does not replace it.
-       Per minute in the sand the award must therefore stay strictly under what
-       the weakest facility a player can ever have - a level-1 Sparring Circle,
-       no mentor, no session bonus - pays for the same minute. Cross that line
-       and the fastest way to train a weapon is to stop training.
+    /* THE BAND. This check used to say the arena must stay strictly UNDER the
+       weakest Sparring Circle, on the grounds that doc 1's loop is
+       train-then-fight and the arena only supplements it.
 
-       Pinned as a RATIO rather than as the constant, so raising the award,
-       shortening the exchange or weakening the facility floor are all caught by
-       the same check. It sat at 42% for one build and is 94% now; the assertion
-       is what makes raising it further a decision rather than an accident. */
+       INVERTED, not deleted, 2026-09-06 (Rob): "it's ok if it starts earning at
+       a higher rate than training - they can both be valid ways to level your
+       weapon skill." The check keeps its shape - it still proves the award is
+       priced against the training economy rather than floating free - and only
+       its lower bound moved, because the direction IS the decision. Same
+       treatment as the Phase 9 story gate when that was reversed.
+
+       So: strictly ABOVE the floor a player always has, or the arena is not
+       the alternative it is now meant to be; and strictly BELOW a fully built
+       Sparring Circle, or the ten levels of that facility - one of the largest
+       gold sinks in the game - buy nothing, and the idle half of the game has
+       no purpose.
+
+       Pinned as RATIOS rather than as the constant, so raising the award,
+       shortening the exchange or retuning the facility curve are all caught by
+       the same two lines. */
     const floorRig = defaultState();
     floorRig.character = newCharacter('human', 'Floor', floorRig.account);
     const floorTpMin = baseTpPerMin(floorRig, 'sparring');
+    const builtRig = defaultState();
+    builtRig.character = newCharacter('human', 'Built', builtRig.account);
+    builtRig.account.facilities.sparring = CONST.FACILITY_MAX_LEVEL;
+    const builtTpMin = baseTpPerMin(builtRig, 'sparring');
     const arenaTpMin = CONST.ARENA_TP_PER_EXCHANGE * (60000 / CONST.ARENA_TICK_MS);
-    ok(floorTpMin > 0, 'the training floor pays nothing, so the arena ceiling means nothing');
-    ok(arenaTpMin < floorTpMin,
+    ok(floorTpMin > 0, 'the training floor pays nothing, so the arena band means nothing');
+    ok(builtTpMin > floorTpMin,
+      'a fully built Sparring Circle pays no more than a level-1 one - the band has no top');
+    ok(arenaTpMin > floorTpMin,
       'the arena teaches ' + arenaTpMin.toFixed(3) + ' TP/min against a training floor of ' +
-      floorTpMin.toFixed(3) + ' - fighting now out-trains training and doc 1\'s loop is inverted');
+      floorTpMin.toFixed(3) + ' - it is a supplement again, not the alternative it is meant to be');
+    ok(arenaTpMin < builtTpMin,
+      'the arena teaches ' + arenaTpMin.toFixed(3) + ' TP/min against a fully built Sparring ' +
+      'Circle\'s ' + builtTpMin.toFixed(3) + ' - the ten levels of that facility now buy nothing');
 
     /* A maxed weapon banks nothing - the same as training it would, and the
        weapon picker is how a player redirects it. */
@@ -15596,7 +15753,7 @@ window.EA = {
   get saveBlockedReason() { return saveBlockedReason; },
   get draft() { return draft; },
   CONST, FORMULAS, SCREENS, FACILITIES, ICON_NAMES, STAT_KEYS, UPGRADES,
-  RACES, STATS, WEAPONS, QUALITY, NAMES, PROLOGUES, RENOWN_RANKS,
+  RACES, STATS, WEAPONS, QUALITY, QUALITY_TONES, qualityText, NAMES, PROLOGUES, RENOWN_RANKS,
   rollName, newCharacter, newDraft, championRank, renownTitleFor, titleOf, renownBonus, renownBonusTotals, prologueFor, raceUnlocked, createChampion,
   tpPerMin, facilityLevel, mentorMultFor, sessionElapsed, sessionPreview, previewLevels,
   applyTp, applyRegen, unlockChildren, startTraining, collectSession, resolveOffline, tick,
