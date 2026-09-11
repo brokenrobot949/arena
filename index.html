@@ -1236,7 +1236,7 @@ h3.sub:has(.tale-tag){display:flex;align-items:center;gap:8px;flex-wrap:wrap}
         <p>Pick a facility and leave it. Training banks TP the whole time you are away, up to <strong>eight hours</strong>, and the longer one session runs the better the rate &mdash; so checking in less often is rewarded, not punished. Press Collect to turn banked TP into stat and weapon levels. The Medic heals instead of teaching.</p>
 
         <h3>The arena</h3>
-        <p>Rounds get harder and pay more, forever. You choose when to walk: <strong>yielding</strong> keeps 70% of the pot and your health, a <strong>knockout</strong> keeps the whole pot but costs you 25 minutes on the bench &mdash; during which you cannot train or heal either. The run keeps fighting while the tab is closed.</p>
+        <p>Rounds get harder and pay more, forever. You choose when to walk: <strong>yielding</strong> keeps 70% of the pot and your health, a <strong>knockout</strong> keeps the whole pot but costs you 25 minutes on the bench &mdash; during which you cannot train or heal either. <strong>The moment the bench lifts your health starts coming back on its own</strong>, whether or not you are training and whether or not the tab is open &mdash; roughly two hours from nothing to full. Training at the <strong>Medic</strong> is about four times faster than that, and thirteen times at level 10. The run keeps fighting while the tab is closed.</p>
 
         <h3>The sand, and the boons</h3>
         <p>Two <strong>conditions</strong> are in force at any moment &mdash; shown on the Arena screen before you enter, and they change every twenty minutes. Each has an upside and a cost: a rich purse with hungrier opponents, weaker enemies and a thinner purse. A run keeps whatever sand it started on, so entering is a real choice: fight this one, or wait for sand that suits what you are carrying.</p>
@@ -4563,21 +4563,58 @@ function regenPctFor(s, key) {
   return CONST.MEDIC_REGEN_PCT_MIN * FORMULAS.facilityRate(facilityLevel(s, key)) * vigil * kit;
 }
 
-/* `now` is threaded so the bench can be honoured here rather than at each call
-   site. It is optional ONLY because the harness drives regen on its own clock;
-   omitting it means "no bench", which is true for every harness champion. */
+/* WHERE a champion is healing right now: at the facility they are training at
+   if they are training, and nowhere in particular otherwise. Named, because
+   both callers of applyRegen need it and "hasSession(t) ? t.facility : null"
+   spelled out at each of them is the shape this file has twice paid for. */
+const regenSourceOf = s => {
+  const c = s && s.character;
+  return (c && hasSession(c.training)) ? c.training.facility : null;
+};
+
+/* THE healing a span of clock buys this champion, wherever the span came from:
+   one tick of the idle clock, or a whole absence resolved on return. Both
+   callers were spelling out the same three arguments, and both of them had a
+   `hasSession` gate standing in front of that expression - which is why a
+   champion with no session healed nowhere, awake or asleep.
+
+   One expression at each call site, deliberately, so there is no longer
+   anywhere for a gate to hide: this is the same argument benched() and
+   fillCrowd() rest on, and it is the reason the fix is a named function
+   rather than two edits. */
+const regenOver = (s, ms, now) => applyRegen(s, ms / 60000, regenSourceOf(s), now);
+
+/* `minutes` is a WINDOW ending at `now`, not an instant, and that distinction
+   is the whole of this function's bench handling.
+
+   It used to test `benched(c, now)` and return 0 for the entire window if the
+   champion happened to be benched at its far end - so a three-hour absence that
+   opened with a 25-minute bench either paid for all 180 minutes or for none,
+   depending only on where the bench happened to land. Neither is the rule. The
+   bench eats its own overlap and the rest of the window heals, which is what
+   makes "HP starts coming back the moment the timer is up" true whether the
+   player is watching, in another tab, or gone for the night (Rob, 2026-09-11).
+
+   The overlap is read through benchLeft(), the named home, rather than off
+   knockoutUntil - so the epoch-0 trap (a bench of 0 is NO bench) is handled
+   once, where it already was.
+
+   `now` stays optional, and omitting it still means "no bench": the harness
+   drives regen on its own clock and every harness champion is off the bench. */
 function applyRegen(s, minutes, key, now) {
   const c = s.character;
   if (!c || !(minutes > 0)) return 0;
-  /* A knocked-out champion does not heal. This is the second half of the bench
-     gate: blocking startTraining stops a NEW session, and this stops the one
-     path that could still tick HP up underneath a bench - a session that
-     predates it in a save written by an older build. */
-  if (typeof now === 'number' && benched(c, now)) return 0;
+  let mins = minutes;
+  if (typeof now === 'number') {
+    const windowMs = minutes * 60000;
+    const blockedMs = Math.min(benchLeft(c, now - windowMs), windowMs);
+    mins = (windowMs - blockedMs) / 60000;
+  }
+  if (!(mins > 0)) return 0;
   const max = maxHpOf(c);
   const pct = regenPctFor(s, key);
   const before = c.hp;
-  c.hp = Math.min(max, c.hp + max * pct * minutes);
+  c.hp = Math.min(max, c.hp + max * pct * mins);
   return c.hp - before;
 }
 
@@ -6909,6 +6946,26 @@ function resolveOffline() {
         renown: run.settled ? run.settled.renown : 0
       };
     }
+    /* HEALING, FOR EVERY CHAMPION - and this is the half that was missing.
+       It used to live inside the `hasSession` branch below, so a champion who
+       was not mid-session healed by exactly nothing while the tab was shut. A
+       knockout ENDS the session (entering the arena banks it) and the bench
+       then refuses a new one, so that is the state every knocked-out champion
+       is in: the one case where healing matters most was the one case it never
+       ran. Reported by Rob on 2026-09-11.
+
+       Measured from `appliedMs` - time since lastSeen, capped - rather than
+       from the session origin the TP difference uses. The old expression was
+       `min(now - origin, CAP) - min(lastSeen - origin, CAP)`, which is the
+       right window for ACCRUAL and silently collapses to ZERO for any session
+       already older than the cap: a champion with a nine-hour session who went
+       away for an hour healed nothing either. Time away is the honest window
+       for a thing that cannot be banked.
+
+       BEFORE the bench is cleared, because applyRegen has to still be able to
+       see it to subtract its overlap from the window. */
+    offline.hpRestored = regenOver(state, offline.appliedMs, now);
+
     /* Knockout cooldown resolves on return whether or not they were training. */
     if (c.knockoutUntil != null && !benched(c, now)) { c.knockoutUntil = null; offline.koCleared = true; }
 
@@ -6942,11 +6999,6 @@ function resolveOffline() {
       const full = sessionPreview(state, now);
       offline.mentorSpent = !!(full && full.mentorSpent);
       offline.mentorName = (m && m.champ) ? m.champ.name : null;
-
-      /* HP regen IS applied on return - it is not banked, and capping it with
-         the same 8h window keeps it consistent with the TP rule. */
-      const regenMs = Math.max(0, nowMs - thenMs);
-      offline.hpRestored = applyRegen(state, regenMs / 60000, t.facility, now);
 
       /* Not applied: what the pending bank would buy if collected now. */
       offline.levelsReady = previewLevels(state, t.facility, sessionPreview(state, now).tp);
@@ -7296,10 +7348,28 @@ function updateTrainLive() {
 
 /* Same discipline on the Champion screen: HP moves every second while training,
    and re-rendering the panel for it would drop focus there too. */
+/* What is happening to this champion's health, in one sentence and in ONE
+   place - the render and the tick both read it, so the line cannot go stale
+   the way the arena's bench card once did. It said "Recovers while training"
+   before, which stopped being true on 2026-09-11 and had never been true of a
+   champion sitting at the Medic rather than somewhere else. */
+function hpStatusLine(s, now) {
+  const c = s.character;
+  if (!c) return '';
+  if (benched(c, now)) return 'On the bench · not healing';
+  if (c.hp >= maxHpOf(c) - 1e-9) return 'At full health';
+  return regenSourceOf(s) === 'medic' ? 'Recovering at the Medic' : 'Recovering';
+}
+
 function updateChampionLive() {
   const c = state.character;
   if (!c || activeScreen !== 'champion') return;
   const max = maxHpOf(c);
+  const fx = document.getElementById('champ-hp-fx');
+  if (fx) {
+    const line = hpStatusLine(state, Date.now());
+    if (fx.textContent !== line) fx.textContent = line;
+  }
   const el = document.getElementById('champ-hp');
   if (el) {
     const txt = Math.round(c.hp) + ' / ' + max;
@@ -9439,8 +9509,8 @@ function championMarkup(c) {
         '<span class="v num" id="champ-hp">' + Math.round(c.hp) + ' / ' + maxHpOf(c) + '</span>' +
         '<span class="sbar hp" id="champ-hpbar"><span style="width:' +
           (maxHpOf(c) > 0 ? clamp(c.hp / maxHpOf(c), 0, 1) * 100 : 0).toFixed(1) + '%"></span></span>' +
-        '<span class="fx">' + (benched(c, Date.now())
-          ? 'On the bench' : 'Recovers while training') + '</span></li></ul></div>' +
+        '<span class="fx" id="champ-hp-fx">' + esc(hpStatusLine(state, Date.now())) +
+        '</span></li></ul></div>' +
     /* Doc 7 asks for a gear summary on this screen, not only in the Shop -
        this is where a player checks what their champion is carrying. */
     '<div class="panel"><h3 class="sub">Gear</h3><ul class="statlist">' +
@@ -9754,11 +9824,22 @@ function tick(dtMs) {
 
   if (c.knockoutUntil != null && !benched(c, Date.now())) { c.knockoutUntil = null; dirty = true; }
 
-  const t = c.training;
-  if (hasSession(t)) {
-    const elapsed = Date.now() - t.startedAt;
-    if (elapsed <= CONST.OFFLINE_CAP_MS && applyRegen(state, dtMs / 60000, t.facility, Date.now()) > 0) dirty = true;
-  }
+  /* HEALING IS NOT TRAINING, and it used to be gated on a session exactly as
+     the offline path was - so an idle champion watching their own bench lift
+     stood there at 1 HP indefinitely. It runs for every champion now, at the
+     passive rate unless they are actually at the Medic.
+
+     The `elapsed <= OFFLINE_CAP_MS` guard that stood here is gone with it: the
+     8h cap is doc 6's rule about ACCRUAL, and healing is not accrual - it
+     cannot be banked, it stops at max HP on its own. Same argument the arena
+     catch-up makes for not capping a fight. */
+  const healed = regenOver(state, dtMs, Date.now());
+  /* `dirty` means the STRUCTURE moved and the screen has to be rebuilt - the
+     bench lifting, not a number changing. HP has live updaters (the topbar
+     gauge, the Champion bar, the Train panel), so healing only forces a
+     rebuild while a session is up, exactly as it did before: the Train panel's
+     Medic estimate is drawn by the render rather than by an updater. */
+  if (healed > 0 && hasSession(c.training)) dirty = true;
   /* Doc 7's Legacy Efficiency measures against the champion's OWN peak, so the
      peak is state and has to be advanced by the clock. A render must never do
      it - the readout would then depend on which screen you happened to open. */
@@ -15149,6 +15230,205 @@ function assertAll() {
        champion would stop healing and this says so. */
     ok(applyRegen(hurt(), 10, 'medic') > 0, 'regen with no clock passed refused to heal');
 
+    /* --- THE BENCH EATS ITS OWN SHARE, NOT THE WHOLE WINDOW ----
+       (Rob, 2026-09-11.) `minutes` is a window ending at `now`, and the old
+       rule tested the bench only at its far end - so the same absence paid for
+       everything or for nothing depending on where the bench happened to land.
+       Both halves of that are wrong and this pins the middle. */
+    (function () {
+      const at = (koAt, minutes, now) => {
+        const s = rig(koAt);
+        s.character.hp = 1;
+        s.character.training = { facility: 'medic', startedAt: 0, weaponTarget: null };
+        return applyRegen(s, minutes, 'medic', now);
+      };
+      /* A ten-minute window ending at t=600000 against a bench that lifted at
+         t=300000: exactly half of it heals. */
+      const half = at(300000, 10, 600000);
+      const whole = at(0, 10, 600000);            // no bench at all
+      ok(whole > 0, 'the unbenched control healed nothing, so the comparison means nothing');
+      ok(Math.abs(half - whole / 2) < 1e-6,
+         'a window half covered by the bench healed ' + half.toFixed(3) +
+         ', not half of ' + whole.toFixed(3) + ' - the bench is all-or-nothing again');
+      /* Fully covered: nothing. Ended before the window opened: everything. */
+      ok(at(600000, 10, 600000) === 0, 'a window entirely under the bench healed anyway');
+      /* The window here is [600000, 1200000] and the bench lifted at 300000,
+         so it is over BEFORE the window opens. Written as a later window
+         rather than as an earlier bench because a bench ending at t=1 against
+         a window opening at t=0 really does overlap - by one millisecond - and
+         asking for exact equality there was the rig being wrong, not the code. */
+      ok(Math.abs(at(300000, 10, 1200000) - whole) < 1e-9,
+         'a bench that ended before the window opened still cost the champion healing');
+    })();
+
+    /* --- A KNOCKED-OUT CHAMPION HEALS WHILE THE TAB IS SHUT -----
+       Rob's report, stated as the property he has rather than as the call it
+       was missing: a knockout ENDS the training session and the bench then
+       refuses a new one, so "no session" is the state every knocked-out
+       champion is in - and the offline heal lived inside the session branch,
+       which is why the one case that matters most was the one that never ran.
+
+       Driven through the real resolveOffline() on a swapped-in state, the same
+       way the away-card block does it, because that is the function a returning
+       player actually goes through. */
+    (function () {
+      const keepState = state, keepOffline = offline;
+      try {
+        const mk = (session, awayMs, benchEndsAgoMs) => {
+          const now = Date.now();
+          const x = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+          x.character = newCharacter('human', 'Away', x.account);
+          x.character.hp = 1;
+          x.character.knockoutUntil = now - benchEndsAgoMs;
+          x.character.training = session
+            ? { facility: 'medic', startedAt: now - awayMs, weaponTarget: null }
+            : { facility: null, startedAt: null, weaponTarget: null };
+          x.account.lastSeen = now - awayMs;
+          state = x;
+          return { o: resolveOffline(), c: x.character };
+        };
+        const hour = 60 * 60 * 1000;
+        const idle = mk(false, hour, 30 * 60 * 1000);
+        ok(idle.o.hpRestored > 0,
+           'an hour away after a knockout healed nothing - a champion with no training session ' +
+           'never heals, which is every champion who has just been knocked out');
+        ok(idle.c.hp > 1, 'the away report claimed healing the champion did not get');
+        ok(idle.o.koCleared === true, 'the bench did not lift over an hour away');
+
+        /* THE LIVE CLOCK, not only the returning one. Falsification caught
+           this gap: putting the session gate back on the tick produced ZERO
+           failures, because everything above only ever drove the offline path,
+           and the two are separate call sites of the same rule.
+
+           regenOver() is what both of them call, so this is the step one tick
+           performs - asserted directly rather than by driving tick(), which
+           paints the topbar and would put a rig champion in front of the
+           player. That is the exact defect the suite's own no-toast rule
+           exists for. */
+        const idleNow = Date.now();
+        const live = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+        live.character = newCharacter('human', 'Standing', live.account);
+        live.character.hp = 1;
+        live.character.knockoutUntil = idleNow - 1000;      // bench just lifted
+        live.character.training = { facility: null, startedAt: null, weaponTarget: null };
+        ok(regenOver(live, 60000, idleNow) > 0,
+           'a second of the idle clock healed an idle champion nothing - they stand at 1 HP ' +
+           'forever unless the player starts a training session');
+        live.character.hp = 1;
+        live.character.knockoutUntil = idleNow + 600000;    // back on the bench
+        ok(regenOver(live, 60000, idleNow) === 0, 'the idle clock healed a benched champion');
+
+        /* AND THE CALL SITE, not only the rule. The check above passes with a
+           `hasSession` gate put back in front of regenOver() inside tick() -
+           measured, zero failures - because it drives the shared step rather
+           than the tick. A rule can have a correct implementation and a caller
+           that never reaches it; that IS the defect being fixed here, twice
+           over, so the caller gets its own check.
+
+           tick() paints the topbar, so `state` is swapped, `activeScreen` is
+           parked somewhere neither renderTrain nor renderArena answers to, and
+           the screen is put back on the way out - the same discipline the
+           imported-ledger assertion has needed since it was written. */
+        const keepScreen = activeScreen;
+        try {
+          activeScreen = 'nowhere';
+          live.character.hp = 1;
+          live.character.knockoutUntil = idleNow - 1000;
+          state = live;
+          tick(60000);
+          ok(live.character.hp > 1,
+             'a minute of the live clock left an idle champion on ' + live.character.hp +
+             ' HP - the tick heals only while a session is running');
+        } finally {
+          activeScreen = keepScreen;
+        }
+
+        /* And a session is still worth more, or the Medic has stopped meaning
+           anything - the passive trickle must not quietly match it. */
+        const training = mk(true, hour, 30 * 60 * 1000);
+        ok(training.o.hpRestored > idle.o.hpRestored,
+           'an hour at the Medic healed no more than an hour of doing nothing');
+
+        /* A session OLDER than the offline cap used to heal exactly zero: the
+           window was a difference of two values both clamped to the cap, so it
+           collapsed. Time away is the honest window for a thing that cannot be
+           banked. */
+        const now = Date.now();
+        const x = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+        x.character = newCharacter('human', 'Long', x.account);
+        x.character.hp = 1;
+        x.character.training = { facility: 'medic', startedAt: now - 30 * hour, weaponTarget: null };
+        x.account.lastSeen = now - hour;
+        state = x;
+        ok(resolveOffline().hpRestored > 0,
+           'a champion whose session predates the 8h cap healed nothing for an hour away');
+      } finally {
+        state = keepState;
+        offline = keepOffline;
+        /* tick() and resolveOffline() both paint. Restoring `state` without
+           repainting leaves the header describing a rig champion, which is the
+           failure the imported-ledger block records a few hundred lines up. */
+        renderAll();
+      }
+    })();
+
+    /* --- THE OFFLINE CAP CANNOT BIND ON HEALING -----------------
+       Healing is capped at OFFLINE_CAP_MS for consistency with accrual, and
+       that cap is inert BY MEASUREMENT rather than by argument: at the slowest
+       rate in the game a champion goes from zero to full well inside it. If
+       someone slows regen or the cap moves, this is what says the cap has
+       started deciding outcomes it was never meant to decide. */
+    (function () {
+      const s = rig(null);
+      s.character.hp = 0;
+      const slowest = CONST.PASSIVE_REGEN_PCT_MIN;     // no perk, no augment, not at the Medic
+      ok(slowest > 0, 'the passive regen rate is zero, so nothing heals outside the Medic');
+      const minutesToFull = 1 / slowest;
+      ok(minutesToFull * 60000 < CONST.OFFLINE_CAP_MS,
+         'a full heal at the slowest rate takes ' + Math.round(minutesToFull) +
+         ' minutes, past the ' + Math.round(CONST.OFFLINE_CAP_MS / 60000) +
+         '-minute offline cap - the cap now decides how much a player heals');
+      /* THE GUIDE QUOTES THESE, so they cannot drift quietly. It says "roughly
+         two hours from nothing to full" on your own, and that the Medic is
+         "about four times faster than that, and thirteen times at level 10" -
+         prose naming a number goes stale the moment the number moves, which is
+         the mistake the shop's "→ unchanged" row and the Reaper's uncapped
+         lifesteal chip both shipped. Bands rather than points, because the
+         prose is approximate on purpose. */
+      ok(minutesToFull > 100 && minutesToFull < 150,
+         'the guide says about two hours to full unaided; it is ' +
+         Math.round(minutesToFull) + ' minutes');
+      const medicOver = lvl =>
+        CONST.MEDIC_REGEN_PCT_MIN * FORMULAS.facilityRate(lvl) / CONST.PASSIVE_REGEN_PCT_MIN;
+      ok(medicOver(1) > 3.5 && medicOver(1) < 5,
+         'the guide says the Medic is about four times the passive rate; it is ' +
+         medicOver(1).toFixed(1));
+      ok(medicOver(CONST.FACILITY_MAX_LEVEL) > 11 && medicOver(CONST.FACILITY_MAX_LEVEL) < 15,
+         'the guide says thirteen times at level 10; it is ' +
+         medicOver(CONST.FACILITY_MAX_LEVEL).toFixed(1));
+    })();
+
+    /* --- the health line says which of the four things is true --- */
+    (function () {
+      const s = rig(60000);
+      s.character.hp = 1;
+      s.character.training = { facility: null, startedAt: null, weaponTarget: null };
+      ok(/bench/i.test(hpStatusLine(s, 0)), 'a benched champion is not told they are benched');
+      ok(!/bench/i.test(hpStatusLine(s, 99999)), 'the health line still says benched after the bench lifted');
+      ok(/Medic/.test((function () {
+        s.character.training = { facility: 'medic', startedAt: 0, weaponTarget: null };
+        return hpStatusLine(s, 99999);
+      })()), 'a champion at the Medic is not told that is where the healing is coming from');
+      s.character.training = { facility: null, startedAt: null, weaponTarget: null };
+      ok(hpStatusLine(s, 99999) !== '' && !/training/i.test(hpStatusLine(s, 99999)),
+         'the health line still claims healing only happens while training');
+      s.character.hp = maxHpOf(s.character);
+      ok(/full/i.test(hpStatusLine(s, 99999)), 'a champion at full health is told they are recovering');
+      /* regenSourceOf is the one home for "where is this healing coming from",
+         and it must not invent a facility for a champion with no session. */
+      ok(regenSourceOf(s) === null, 'an idle champion was credited with a training facility');
+    })();
+
     /* TP ACCRUAL. Benched time is not training time, and the rule is applied at
        the one place elapsed is computed rather than at each consumer. */
     s = hurt();
@@ -15764,7 +16044,7 @@ window.EA = {
   playerDamage, playerCritChance, playerEvadeChance, damageTaken, profOf,
   startArenaTick, stopArenaTick, arenaStep, catchUpArena, defaultScreen, startingRenownFor, RENOWN_TOP_RANK,
   AUGMENTS, AUGMENT_KEYS, AUGMENT_SLOTS, AUGMENTS_BY_SLOT, budgetConflict,
-  migrateGear, repairAugmentLists, healMs, sustainForYou,
+  migrateGear, repairAugmentLists, healMs, sustainForYou, regenSourceOf, regenOver, hpStatusLine,
   ARENA_CONDITIONS, CONDITION_KEYS, BOONS, BOON_KEYS, DRAFT_BUCKETS,
   conditionsForBlock, conditionsAt, conditionBlock, conditionsLeftMs, enemyMods,
   conditionEffects, bonusText,
