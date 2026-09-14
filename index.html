@@ -256,6 +256,17 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 .race-card.is-locked .icon{color:var(--ink-soft)}
 .race-head{display:flex;align-items:center;gap:7px;font-size:15px}
 .race-head .icon{width:20px;height:20px}
+/* What a champion was born with. Same shape as the sand card's condition rows,
+   because they are the same thing said about a different subject: a name, a
+   line of flavour, and the numbers underneath it. */
+.traits{list-style:none;margin:11px 0 0;padding:0;display:flex;
+  flex-direction:column;gap:7px}
+.trait{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;
+  background:var(--sand);border:2px solid var(--ink-faint);border-radius:10px}
+.trait .icon{width:22px;height:22px;flex:none;margin-top:1px}
+.trait strong{display:block;font-size:13.5px}
+.trait span{display:block;font-size:11.5px;line-height:1.4;color:var(--ink-soft)}
+.trait-fx{display:flex!important;flex-wrap:wrap;gap:4px;margin-top:5px}
 .race-special{margin:0;font-size:12.5px;line-height:1.45;color:var(--ink-soft)}
 .race-card.is-on .race-special{color:var(--ink)}
 .mods{display:flex;flex-wrap:wrap;gap:5px}
@@ -298,6 +309,17 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 /* ============================================================
    WEAPON TREE + CLASS GRID
    ============================================================ */
+/* The rule above the tree. Wraps freely and the rank chips sit on their own
+   line below the sentence, so the 375px column never has to choose between
+   them and the fourteen nodes underneath. */
+.tlegend{margin:0 0 14px;font-size:12.5px;line-height:1.5;color:var(--ink-soft)}
+.tlegend-rows{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.tlegend-r{
+  display:inline-flex;align-items:baseline;gap:5px;white-space:nowrap;
+  font-family:var(--font-data);font-size:11px;color:var(--ink);
+  background:var(--paper);border:var(--bd-thin);border-radius:var(--r-pill);
+  padding:3px 9px;
+}
 .trees{display:flex;flex-direction:column;gap:18px}
 .trunk{display:flex;flex-direction:column;align-items:center;gap:0}
 .trow{display:flex;justify-content:center;gap:12px;flex-wrap:nowrap}
@@ -504,6 +526,7 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 .status-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;
   font-family:var(--font-data);padding:3px 8px;border-radius:var(--r-pill);
   background:var(--vermilion-deep);color:var(--paper)}
+.rival{border-color:var(--vermilion-deep)}
 .crowd-spend{border-color:var(--gold)}
 .crowd-opts{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
 @media (min-width:460px){.crowd-opts{grid-template-columns:1fr 1fr}}
@@ -1391,6 +1414,28 @@ const CONST = {
      fight; a two-minute set piece against a 5-12 minute run is the intended
      contrast. Chapter 1 sitting near 80%% is deliberate - it is the only
      chapter fought by a champion who has barely cleared its gate. */
+  /* LEFT ALONE 2026-09-13, deliberately, and that is a finding rather than a
+     dodge. The open item said chapters 2-5 are a 100% win; re-measuring it
+     found the figure is an artifact of how the rig is EQUIPPED, not a property
+     of the ladder:
+
+       rig                                     ch1  ch2  ch3  ch4  ch5
+       stat curve from the gate (Phase 9)      100  100  100  100  100
+       stage-config stats, no class/augments   100    0    0    0    0
+       stage-config stats + class, augs, rank  100    0   81  100  100
+
+     Same constants, three defensible rigs, three different answers - and the
+     third is not even monotone. Boss difficulty is dominated by how equipped
+     the arriving champion happens to be, which the harness cannot know and the
+     game does not constrain. Every value swept from here either left chapter 1
+     winnable and the rest a formality, or killed all five outright: at
+     hp x8->x20 the win rate went 100% -> 33% at chapter 1 while 2-5 stayed at
+     100%, and one step of damage past that took every chapter to zero.
+
+     Tuning against any one of those rigs would be fitting to the rig. The
+     lever that would actually work is a boss that scales on the champion who
+     shows up rather than on the round that gates the chapter - a real design
+     change, and Rob's call rather than mine. */
   BOSS_HP_MULT: 8,
   BOSS_DMG_MULT: 1.5,
   BOSS_REWARD_MULT: 5,
@@ -1463,6 +1508,32 @@ const CONST = {
 
   PLAYER_DMG_BASE: 10,
   PROF_DMG_PER: 0.03,
+  /* What a weapon's DEPTH IN THE TREE is worth, per proficiency level, indexed
+     by tier - 1 (Rob, 2026-09-13).
+
+     Before this, depth bought nothing at all in a fight. Every weapon used the
+     same PROF_DMG_PER and PROF_CRIT_PER, so a Great Axe at proficiency 10 hit
+     exactly as hard as the Daggers every champion is born holding - while
+     costing 16% more TP to get there, because the parent has to reach level 4
+     first. The tree's three ranks were a gate on battle classes and nothing
+     else; the weapons at the bottom of it were strictly worse buys.
+
+     It multiplies the PER-LEVEL coefficient rather than adding a flat bonus,
+     which is what makes it "a better weapon levels better" instead of "a better
+     weapon starts ahead": at proficiency 1 the gap is a third of one per cent
+     and at 10 it is the whole 15 points. Both the damage and the crit term
+     inherit it, because it scales the proficiency the two formulas read rather
+     than either formula itself.
+
+     Swept, not guessed. At tier 3 a proficiency level is worth 5.4% damage and
+     1.8 points of crit instead of 3% and 1, so proficiency 10 pays +54% damage
+     and +18% crit against a root weapon's +30% and +10% - measured at +12% /
+     +22% / +10% gold per hour across the three stages, for +16% more TP. That
+     is about what one strong augment is worth, which is the weight class the
+     deepest weapon investment in the game should be in. x2.2 was measured too
+     and reached +32% at mid, which makes a root weapon a trap for a champion
+     who is born holding one. */
+  WEAPON_TIER_PROF_MULT: [1, 1.4, 1.8],
   WEAPON_QUALITY_PER: 0.15,
   ARMOR_QUALITY_PER: 0.06,
   CRIT_BASE: 0.05,
@@ -1590,6 +1661,7 @@ const CONST = {
   START_STAT: 5,
   WEAPON_START: ['daggers', 'clubs'],
   STARTING_CLASS: 'grunt',
+  TRAITS_PER_CHAMPION: 2,
   WEAPON_START_LEVEL: 1,
   WEAPON_UNLOCK_LEVEL: 4,
   WEAPON_MAX_LEVEL: 10,
@@ -1663,6 +1735,28 @@ const CONST = {
   ELITE_HP_MULT: 1.5,
   ELITE_DMG_MULT: 1.2,
   ELITE_GOLD_MULT: 2.5,
+
+  /* --- the rival (Rob, 2026-09-13) ---------------------------
+     Every opponent in this game was generated and forgotten. Elites are named
+     and forgotten forty seconds later. Nothing in the arena remembered you,
+     which for a gladiator game is the cheapest emotional hook going and the
+     one it did not have.
+
+     A rival is one named gladiator who persists on the ACCOUNT, keeps a record
+     against you, and turns up mid-run to settle it. Beat them and they retire
+     and somebody else rises; lose and they are still there next time, with one
+     more win on the board.
+
+     THEY CAN NEVER BE A WALL, and that is the whole of the tuning. Their round
+     is pinned to a fraction of a depth you have ALREADY reached, and it never
+     moves deeper for an existing rival - so a rival you lost to is standing in
+     exactly the same place next run, and everything you do between runs makes
+     them easier. A rival who outran you would be a stop sign, not a story. */
+  RIVAL_ROUND_FRACTION: 0.6,
+  RIVAL_MIN_ROUND: 3,
+  RIVAL_HP_MULT: 1.9,
+  RIVAL_DMG_MULT: 1.3,
+  RIVAL_GOLD_MULT: 3,
 
   /* --- the crowd, spent rather than banked --------------------
      The meter has existed since Phase 4 and did one thing: fill to 8 and add
@@ -1950,6 +2044,153 @@ const WEAPONS = {
   spear:         { label: 'Spear',         tier: 3, parent: 'battlestaff', icon: 'wpn-spear' },
   scythe:        { label: 'Scythe',        tier: 3, parent: 'battlestaff', icon: 'wpn-scythe' }
 };
+
+const WEAPON_KEYS = Object.keys(WEAPONS);
+/* How deep the tree goes, read off the tree rather than written down. Every
+   weapon's tier is its parent's plus one (asserted), so this is the number of
+   ranks - and it is what says WEAPON_TIER_PROF_MULT has an entry for each of
+   them instead of silently paying a fourth rank nothing. */
+const deepestWeaponTier = () =>
+  WEAPON_KEYS.reduce((n, w) => Math.max(n, num(WEAPONS[w].tier, 1)), 1);
+
+/* --- champion traits (Rob, 2026-09-13) ----------------------
+   THE PROBLEM THESE EXIST FOR, stated plainly: six sessions of work made a RUN
+   differ from another run - the sand, the draft, archetypes, elites, the crowd
+   - and a mid-game run went from one decision to about nine. Nothing did the
+   same for the layer above. Champion #7's life was shaped exactly like #2's:
+   train stats, level a weapon, unlock a class, buy gear, go deeper. Retirement
+   reset the numbers but not the shape, and "characters are finite, you always
+   need the next one" is the premise the whole game rests on.
+
+   A trait is rolled at creation and never changes. You build AROUND what you
+   were dealt instead of re-running the same optimum, and the Hall becomes a
+   gallery of characters rather than a list of training multipliers.
+
+   EVERY ROW IS SHAPED: a real gift answered by a real cost, the same rule the
+   drawback classes are held to. A trait that is only a penalty reads as a bad
+   roll and makes the reroll button the only interesting thing on the creation
+   screen. There is an assertion that no trait is a net trap, swept rather than
+   argued, and one that every trait changes something measurable.
+
+   They resolve through the doc 3.4 pool, so `bonus(c, key)` takes a fifth
+   source and no combat code learns traits exist - the same trick that let fame
+   become the third and the run's own modifiers the fourth. */
+const TRAITS = {
+  lefthanded:  { label: 'Left-Handed',    icon: 'aug-keen',
+                 text: 'Comes at everything from the wrong side.',
+                 effect: { crit: 0.06, damage: -0.05 } },
+  glassjaw:    { label: 'Glass Jaw',      icon: 'cls-berserker',
+                 text: 'Hits like a door. Takes one like a window.',
+                 effect: { damage: 0.14, vigor: -0.10 } },
+  thickskin:   { label: 'Thick-Skinned',  icon: 'aug-warded',
+                 text: 'Slow to move, slower to fall.',
+                 effect: { mitigation: 0.09, evasion: -0.05 } },
+  showman:     { label: 'Showman',        icon: 'trophy',
+                 text: 'Plays to the seats. Forgets the guard.',
+                 effect: { avarice: 0.14, mitigation: -0.06 } },
+  quickmend:   { label: 'Quick to Mend',  icon: 'cross-medic',
+                 text: 'Back on the sand while the bruises are fresh.',
+                 effect: { recovery: 0.14, damage: -0.05 } },
+  /* payline 'idle': its gift is training speed, which gold per hour is
+     structurally blind to - the same situation the Honed augment and the Blade
+     Master class are in. Excluded from the no-trap sweep rather than silently
+     scored as a loss, and held to a much tighter cost instead. */
+  slowstarter: { label: 'Slow Starter',   icon: 'book', payline: 'idle',
+                 text: 'Learns everything, just not quickly.',
+                 effect: { tutelage: 0.20, crit: -0.03 } },
+  cruelstreak: { label: 'Cruel Streak',   icon: 'flame',
+                 text: 'Leaves more behind than a win needs.',
+                 effect: { affliction: 0.14, mitigation: -0.05 } },
+  heavybones:  { label: 'Heavy Bones',    icon: 'aug-bulwark',
+                 text: 'Built to be hit. Not built to dodge.',
+                 effect: { vigor: 0.10, evasion: -0.05 } },
+  duelistseye: { label: "Duellist's Eye", icon: 'aug-savage',
+                 text: 'Finds the seam, and leans too far in.',
+                 effect: { critPower: 0.30, vigor: -0.06 } },
+  lightfooted: { label: 'Light-Footed',   icon: 'hurdle',
+                 text: 'Never quite where the blow lands.',
+                 effect: { evasion: 0.06, vigor: -0.07 } }
+};
+const TRAIT_KEYS = Object.keys(TRAITS);
+
+/* --- the academy today (Rob, 2026-09-13) --------------------
+   The arena tells you what the sand is like before you walk onto it. The
+   academy told you nothing at all: you picked a facility and came back. Half
+   the game had no reason to be looked at.
+
+   ROTATES ONCE A REAL DAY, derived from the date exactly as the daily
+   commission is - no stored "which one did we roll", so it is the same all
+   day, survives a reload, and cannot drift from what is on screen.
+
+   Daily rather than on a short block, and that is a correctness decision
+   rather than a flavour one: offline TP is computed as the DIFFERENCE of two
+   pure previews across the whole absence, so a rate that changed inside that
+   window would be applied to hours it was never active for. A day is longer
+   than the 8h accrual cap, so any single session sees one rate throughout, and
+   the one boundary it can cross is the boundary the session tiers already
+   have.
+
+   `all` multiplies every facility; `mult` names the exceptions. Both are
+   optional, so a row can be a blanket, a spike, or a spike against a dip. */
+const TRAINING_DAYS = {
+  /* The baseline, and a ROW rather than a null case - the same reason Rank and
+     File is a row in the archetype table. Nothing downstream needs a branch for
+     "no academy day today", the card always has something to say, and doc 4's
+     pinned training rates have a real date they can be measured on. */
+  ordinary:   { label: 'An Ordinary Day', icon: 'dumbbell',
+                text: 'Drills, repetition, and nobody watching.' },
+  opendoors:  { label: 'Open Doors',      icon: 'dumbbell',
+                text: 'The whole academy is running. Nobody is turned away.',
+                all: 1.15 },
+  visiting:   { label: 'Visiting Master', icon: 'cls-blademaster',
+                text: 'Someone worth watching is taking the Sparring Circle.',
+                mult: { sparring: 1.60 } },
+  hardfrost:  { label: 'Hard Frost',      icon: 'aug-warded',
+                text: 'The yard is ice. The forge has never been busier.',
+                all: 0.95, mult: { obstacle: 0.70, forge: 1.35 } },
+  quiethalls: { label: 'Quiet Halls',     icon: 'book',
+                text: 'Nobody is talking. The Library has never been better.',
+                all: 0.95, mult: { library: 1.65 } },
+  fullhouse:  { label: 'Full Cantina',    icon: 'mug',
+                text: 'Every table taken, every story worth hearing twice.',
+                mult: { cantina: 1.60 } },
+  longnight:  { label: 'Long Night',      icon: 'hourglass',
+                text: 'Everyone is tired. The healers are not.',
+                all: 0.90, mult: { medic: 1.80 } }
+};
+const TRAINING_DAY_KEYS = Object.keys(TRAINING_DAYS);
+
+/* Which one today is, derived from the date and nothing else. */
+function trainingDayAt(now) {
+  return TRAINING_DAY_KEYS[hashStr('academy:' + dayKey(now)) % TRAINING_DAY_KEYS.length];
+}
+
+/* A date on which the academy is doing nothing unusual. Doc 4's training rates
+   are pinned to exact numbers and the academy is a modifier on top of them, so
+   the rigs that check those numbers need a day that multiplies by one - found
+   rather than hardcoded, because a hardcoded date goes stale the moment the
+   table changes length. Bounded: a search that cannot find one must report
+   rather than spin, which is the rule two of this suite's own loops once
+   broke. */
+function neutralAcademyClock(from) {
+  let t = typeof from === 'number' ? from : Date.UTC(2026, 0, 1, 12);
+  for (let i = 0; i < 400; i++) {
+    if (trainingDayAt(t) === 'ordinary') return t;
+    t += 24 * 60 * 60 * 1000;
+  }
+  return null;
+}
+
+/* THE multiplier a facility is training at today. One home, read by
+   baseTpPerMin - so the live rate, the offline difference, the Train panel's
+   estimate and the shop's TP/min all inherit it without any of them being
+   edited, which is the same reason regenPctFor exists. */
+function trainingDayMult(now, key) {
+  const d = TRAINING_DAYS[trainingDayAt(now)];
+  if (!d) return 1;
+  const m = (d.mult && typeof d.mult[key] === 'number') ? d.mult[key] : num(d.all, 1);
+  return m > 0 ? m : 1;
+}
 
 /* --- gear quality (doc 3.7) --- */
 const QUALITY = ['Crude', 'Sturdy', 'Fine', 'Master', 'Legendary'];
@@ -2645,22 +2886,28 @@ const CONDITION_KEYS = Object.keys(ARENA_CONDITIONS);
    in exchange() and applied ONLY to the enemy: bleed, burn, stun, weaken and
    slow were things you did to them and never things that happened to you.
    Half a registry, live for eleven phases, running one way. */
+/* `weight` is how often a row comes up, and it exists because the first table
+   did not have it (Rob, 2026-08-31 -> fixed 2026-09-13). Uniform across seven
+   rows meant six rounds in seven carried a trait, so "this one is unusual"
+   stopped meaning anything - the baseline was the rarest thing in the arena.
+   Rank and File is half the table now and the rest share the other half, so a
+   trait reads as an event again. Weights are relative, not percentages. */
 const ENEMY_ARCHETYPES = {
-  ranker:   { label: 'Rank and File', icon: 'skull',
+  ranker:   { label: 'Rank and File', icon: 'skull', weight: 6,
               text: 'Nothing unusual about this one.', hp: 1, dmg: 1 },
-  brawler:  { label: 'Brawler', icon: 'anvil',
+  brawler:  { label: 'Brawler', icon: 'anvil', weight: 1,
               text: 'Hits far harder than it can take.', hp: 0.72, dmg: 1.38 },
-  turtle:   { label: 'Turtle', icon: 'shield',
+  turtle:   { label: 'Turtle', icon: 'shield', weight: 1,
               text: 'Slow, heavy, and a long way from falling over.', hp: 1.60, dmg: 0.78 },
-  duelist:  { label: 'Duelist', icon: 'aug-keen',
+  duelist:  { label: 'Duelist', icon: 'aug-keen', weight: 1,
               text: 'Finds the gap far too often.', hp: 0.90, dmg: 0.92, crit: 0.18 },
-  swarmer:  { label: 'Swarmer', icon: 'hurdle',
+  swarmer:  { label: 'Swarmer', icon: 'hurdle', weight: 1,
               text: 'Strikes twice for half as much — armour helps, evasion less so.',
               hp: 0.85, dmg: 0.52, strikes: 2 },
-  venomous: { label: 'Venomous', icon: 'drop',
+  venomous: { label: 'Venomous', icon: 'drop', weight: 1,
               text: 'Leaves wounds that keep working after the exchange.',
               hp: 0.95, dmg: 0.82, inflicts: 'bleed', chance: 0.35 },
-  crusher:  { label: 'Crusher', icon: 'aug-savage',
+  crusher:  { label: 'Crusher', icon: 'aug-savage', weight: 1,
               text: 'Lands the kind of blow you need a moment to answer.',
               hp: 1.12, dmg: 1.02, inflicts: 'stun', chance: 0.10 }
 };
@@ -2719,10 +2966,28 @@ const BOONS = {
                   text: '−10% damage taken',      effect: { mitigation: 0.10 } },
   secondbreath: { label: 'Second Breath', icon: 'hourglass',  bucket: 'defence',
                   text: '−12% knockout bench',    effect: { recovery: 0.12 } },
+  braced:       { label: 'Braced',        icon: 'aug-plated', bucket: 'defence',
+                  text: '−6% damage taken, +3% evasion',
+                  effect: { mitigation: 0.06, evasion: 0.03 } },
   crowdspurse:  { label: "Crowd's Purse", icon: 'coin',       bucket: 'spoils',
-                  text: '+25% gold',              effect: { avarice: 0.25 } }
+                  text: '+25% gold',              effect: { avarice: 0.25 } },
+  /* `crowdGain` is a non-pool effect key like Mending's `hpRegen` - no class
+     grants it and it belongs to the meter rather than to the champion. It is
+     read in fillCrowd(), the one place the meter goes up, so it reaches a
+     round clear, a crit and a dodge without any of the three learning it
+     exists. Spoils-shaped because a faster meter is more full-meter rounds and
+     more spends, which is something you take OUT of the fight. */
+  showmanship:  { label: 'Showmanship',   icon: 'trophy',     bucket: 'spoils',
+                  text: '+60% crowd meter gain', effect: { crowdGain: 0.60 } },
+  spoilsofwar:  { label: 'Spoils of War', icon: 'laurel',     bucket: 'spoils',
+                  text: '+12% gold, −8% knockout bench',
+                  effect: { avarice: 0.12, recovery: 0.08 } }
 };
 const BOON_KEYS = Object.keys(BOONS);
+/* Effect keys a boon may use that are NOT doc 3.4 pool keys. The pool belongs
+   to a champion; these belong to something else the run owns. Closed list, so
+   a mistyped pool key is still caught by the registry check. */
+const BOON_NONPOOL_KEYS = ['crowdGain'];
 
 /* --- feats (doc 8) ------------------------------------------
    Built FROM the registries rather than transcribed beside them. Fourteen
@@ -3285,6 +3550,11 @@ function defaultAccount() {
     /* What a full crowd meter does when nobody is watching. `bank` is the
        behaviour the game had before the meter could be spent at all. */
     crowdSpend: CONST.CROWD_DEFAULT_SPEND,
+    /* The rival, and how many have been put down. Null until the first run
+       asks for one - derived on read rather than seeded, so an account that
+       predates the mechanic picks one up without a migration step. */
+    rival: null,
+    rivalsBeaten: 0,
     /* Daily commission. `day` is the local calendar day this record describes,
        `doneOn` the last day actually completed - the streak is measured from
        doneOn, so opening the game without finishing does not keep it alive.
@@ -3304,6 +3574,7 @@ function defaultArena() {
        Neither survives a reload, which is a deliberate simplification - a
        status belongs to one fight and to one moment in it. */
     statuses: [], playerStatuses: [],
+    rivalRound: 0, rivalMet: false,
     pot: { gold: 0, renown: 0 }, log: [],
     crowd: 0, enemy: null, over: null, totalExchanges: 0,
     /* This run's own seed. Draft offers are derived from it rather than drawn
@@ -3508,6 +3779,24 @@ function migrateAccount(raw) {
      rather than being kept, because the auto-policy has to name a real one. */
   a.crowdSpend = CROWD_SPENDS.some(x => x.id === raw.crowdSpend)
     ? raw.crowdSpend : CONST.CROWD_DEFAULT_SPEND;
+  /* THE RIVAL, repaired field by field like everything else on the ledger. A
+     record that is not a coherent rival becomes no rival at all rather than a
+     half-built one - the phantom-mentor lesson: an object that reads as truthy
+     while naming nothing is worse than null. The round is clamped so a
+     hand-edited save cannot park a rival past the depth the rules allow. */
+  a.rival = null;
+  if (isObj(raw.rival) && typeof raw.rival.name === 'string' && raw.rival.name.trim()) {
+    a.rival = {
+      name: raw.rival.name.trim().slice(0, CONST.NAME_MAX_CHARS),
+      archetype: ELITE_ARCHETYPES.indexOf(raw.rival.archetype) !== -1
+        ? raw.rival.archetype : ELITE_ARCHETYPES[0],
+      round: clamp(Math.round(num(raw.rival.round, CONST.RIVAL_MIN_ROUND)),
+                   CONST.RIVAL_MIN_ROUND, CONST.GOLD_SOFTCAP_ROUND),
+      beat: Math.max(0, Math.round(num(raw.rival.beat, 0))),
+      since: Math.max(0, num(raw.rival.since, 0))
+    };
+  }
+  a.rivalsBeaten = Math.max(0, Math.round(num(raw.rivalsBeaten, 0)));
   /* Commission, repaired field by field like everything else in the account.
      An unknown or missing task id, or a day key that is not a day key, simply
      rolls a fresh commission on the next refresh - the streak survives that,
@@ -3711,6 +4000,13 @@ function migrateCharacter(raw) {
   if (isObj(raw.classRounds)) Object.keys(raw.classRounds).forEach(k => {
     if (CLASSES[k]) c.classRounds[k] = Math.max(0, Math.round(num(raw.classRounds[k], 0)));
   });
+  /* TRAITS. Real ids only, no duplicates, never longer than the roll - the
+     same three invariants the augment lists have, and for the same reason: a
+     hand-edited save is a live surface. A save written before traits existed
+     has none, and it stays that way rather than being handed a fresh roll: a
+     champion halfway through a life should not suddenly become a different
+     champion because the build moved under them. */
+  c.traits = cleanTraits(raw.traits);
   c.unlocks = {
     earlyAugment: bool(isObj(raw.unlocks) ? raw.unlocks.earlyAugment : false, false)
   };
@@ -3760,6 +4056,11 @@ function migrateArena(raw, account) {
      meter. Clamped and finite-checked exactly as before; only the quantising
      is gone. */
   a.crowd      = clamp(num(raw.crowd, 0), 0, CONST.CROWD_MAX);
+  /* The rival's standing place for this run, and whether they have been met.
+     Clamped the same way the live one is, so a forged round cannot put a rival
+     somewhere the rules would never place them. */
+  a.rivalRound = clamp(Math.round(num(raw.rivalRound, 0)), 0, CONST.GOLD_SOFTCAP_ROUND);
+  a.rivalMet   = bool(raw.rivalMet, false);
   /* The arena's clock. A record without one - anything written before the run
      learned to fight on its own - resumes from the moment it is loaded rather
      than being owed the whole absence, which is what the game did before this
@@ -4117,7 +4418,36 @@ function makeId() { return 'c' + Date.now().toString(36) + (idSeq++).toString(36
 const startingRenownFor = account =>
   Math.floor(FORMULAS.newCharacterFloor(num(account ? account.prestige : 0, 0)));
 
-function newCharacter(raceKey, name, account) {
+/* THE three invariants a trait list has - real ids, no duplicates, never
+   longer than the roll - in one place. They were written out twice, once in
+   newCharacter and once in migrateCharacter, and the creation copy silently
+   dropped the dedupe: a list of ['glassjaw','glassjaw','nope','thickskin']
+   came back as two Glass Jaws, which is one trait at double magnitude wearing
+   a roll's clothes. Exactly the shape migrateGear was collapsed out of. */
+function cleanTraits(list) {
+  const out = [];
+  arr(list, []).forEach(id => {
+    if (TRAITS[id] && out.indexOf(id) === -1 && out.length < CONST.TRAITS_PER_CHAMPION) out.push(id);
+  });
+  return out;
+}
+
+/* CONST.TRAITS_PER_CHAMPION distinct traits, drawn through the shared rng.
+   Bounded rather than a while-loop on a random draw: "keep rolling until you
+   get a new one" is the shape that hangs the tab when the table is smaller
+   than the count, and this file has already shipped two unbounded loops into
+   its own assertion suite. */
+function rollTraits() {
+  const pool = TRAIT_KEYS.slice();
+  const out = [];
+  const want = Math.min(CONST.TRAITS_PER_CHAMPION, pool.length);
+  while (out.length < want && pool.length) {
+    out.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
+  }
+  return out;
+}
+
+function newCharacter(raceKey, name, account, traits) {
   const race = RACES[raceKey];
   /* Bloodline (legacy perk) raises the FLOOR every champion starts from, so it
      stacks with the racial modifiers rather than replacing them. */
@@ -4142,6 +4472,16 @@ function newCharacter(raceKey, name, account) {
        never empty, and the first thing a new player reads there is what they
        ARE rather than a list of things they are not yet. */
     battleClass: CONST.STARTING_CLASS,
+    /* PASSED IN, never rolled here, and the seam matters. newCharacter builds
+       a champion OBJECT; being dealt a hand is part of being created by a
+       player, which is what newDraft and createChampion do. Rolling here gave
+       every assertion rig and every harness champion two random traits, and 25
+       checks failed at once - correctly, because the whole build's baselines
+       are measured on a champion with nothing on them.
+
+       So a rig gets a clean champion, the game rolls at the draft where the
+       player can see and reroll it, and a sweep sets them explicitly. */
+    traits: cleanTraits(traits),
     gear: { weapon: { quality: 0, augments: [] }, armor: { quality: 0, augments: [] } },
     /* Set below from maxHpOf, once the object exists: born at FULL health, and
        full now folds in the Grunt's vigor and whatever the renown floor buys.
@@ -4274,7 +4614,16 @@ function baseTpPerMin(s, key) {
     1,
     raceTrainingMult(s),
     tutelageBonus(s, key)
-  );
+  ) * trainingDayMult(trainingClockOf(s), key);
+}
+
+/* The clock the academy's day is read from. A pure function of the state so
+   the core stays harness-drivable: a sweep pins it, and the game reads the
+   wall clock. Without this, baseTpPerMin would call Date.now() and the one
+   architectural rule - the simulation core never reads wall-clock time - would
+   be broken by a training bonus. */
+function trainingClockOf(s) {
+  return (s && typeof s.trainingClock === 'number') ? s.trainingClock : Date.now();
 }
 
 /* The rate RIGHT NOW, at the mentor's current decayed multiplier. This is a
@@ -4560,7 +4909,12 @@ function regenPctFor(s, key) {
      non-pool effect key like `regen` - no class grants it. */
   const kit = 1 + Math.max(-0.9, augBonus(s.character, 'hpRegen'));
   if (key !== 'medic') return CONST.PASSIVE_REGEN_PCT_MIN * vigil * kit;
-  return CONST.MEDIC_REGEN_PCT_MIN * FORMULAS.facilityRate(facilityLevel(s, key)) * vigil * kit;
+  /* The academy's day reaches the Medic here rather than through baseTpPerMin,
+     because the Medic pays in HP and that function returns 0 for it - a
+     "healers are busy tonight" day that moved a TP rate the Medic does not
+     have would be a row with no effect. */
+  return CONST.MEDIC_REGEN_PCT_MIN * FORMULAS.facilityRate(facilityLevel(s, key)) * vigil * kit *
+         trainingDayMult(trainingClockOf(s), key);
 }
 
 /* WHERE a champion is healing right now: at the facility they are training at
@@ -4752,9 +5106,23 @@ const rollEnemyName = round => pick(ENEMY_GIVEN) + ' the ' + pick(bandFor(round)
 /* THE single entry point for "what bonus does this champion have". Augments and
    battle classes both resolve here, so a consumer never asks where a bonus came
    from - which is what keeps doc 10's no-special-cases rule enforceable. */
+/* A FIFTH source in the pool. Traits are rolled at creation and never move, so
+   unlike the run's modifiers there is nothing to bind or unbind - the list is
+   on the champion and reading it is the whole implementation. */
+function traitBonus(c, key) {
+  if (!c) return 0;
+  let n = 0;
+  arr(c.traits, []).forEach(id => {
+    const t = TRAITS[id];
+    if (t && typeof t.effect[key] === 'number') n += t.effect[key];
+  });
+  return n;
+}
+
 function bonus(c, key) {
   if (!c) return 0;
-  return augBonus(c, key) + classBonus(c, key) + renownBonus(c, key) + runBonus(c, key);
+  return augBonus(c, key) + classBonus(c, key) + renownBonus(c, key) +
+         runBonus(c, key) + traitBonus(c, key);
 }
 
 /* --- the run's own modifiers: conditions and drafted boons ----
@@ -4947,13 +5315,55 @@ const draftPreferenceOf = s =>
    `recovery` against RECOVERY_RELIEF_CAP. An auto-pick that walks a player
    into a saturated key is the Dark Knight mistake made on their behalf, which
    is worse than making it yourself. */
+/* WOULD TAKING THIS CHANGE ANYTHING? Measured, not reasoned about: the boon is
+   pushed onto the run, the champion's whole derived combat profile is read
+   back, and it is removed again. A boon whose key is already at a cap moves
+   none of those numbers.
+
+   Generic rather than a per-key switch, because the caps are spread across
+   four different clamps (evasion, mitigation, the relief cap, the sustain
+   ceiling) and a switch here would be the fifth place to remember them - the
+   shape this file has paid for repeatedly. A new capped key is covered by
+   being in the profile rather than by anyone editing this. */
+function boonWouldDoNothing(s, id) {
+  const a = s.arena, c = s.character;
+  if (!BOONS[id] || !a || !c) return false;
+  const profile = () => [
+    playerDamage(c, false), playerDamage(c, true), playerCritChance(c),
+    playerEvadeChance(c), damageTaken(c, 100),
+    /* The bench actually served, not the raw `recovery` bonus - that is the
+       whole point, since the relief is what RECOVERY_RELIEF_CAP clamps. */
+    Math.min(CONST.RECOVERY_RELIEF_CAP, Math.max(0, bonus(c, 'recovery'))),
+    Math.max(-0.9, runBonus(c, 'crowdGain')),
+    FORMULAS.goldPerRound(5, c.stats.cha, bonus(c, 'avarice'))
+  ].join('|');
+  const before = profile();
+  a.boons.push(id);
+  let after;
+  try { after = profile(); } finally { a.boons.pop(); }
+  return before === after;
+}
+
+/* The auto-pick, and the rule it was missing. It already spread across the
+   boons it held; what it could not see was a boon that is legal, unheld and
+   completely inert - a defence-preferring run took Second Breath twice in a
+   row because `recovery` was already at RECOVERY_RELIEF_CAP and it was the
+   only Survival row in both offers.
+
+   Order: something in your bucket that does something, then anything in your
+   bucket, then anything at all that does something, then anything. Least-held
+   breaks every tie, which is the spread rule that was already here. */
 function autoPickBoon(s) {
   const a = s.arena;
   const opts = a.draft.options;
   const pref = draftPreferenceOf(s);
   const held = id => arr(a.boons, []).filter(b => b === id).length;
+  const useful = list => list.filter(id => !boonWouldDoNothing(s, id));
   const inBucket = opts.filter(id => BOONS[id] && BOONS[id].bucket === pref);
-  const from = inBucket.length ? inBucket : opts;
+  const from = useful(inBucket).length ? useful(inBucket)
+             : inBucket.length ? inBucket
+             : useful(opts).length ? useful(opts)
+             : opts;
   return from.reduce((best, id) => held(id) < held(best) ? id : best, from[0]);
 }
 
@@ -5028,6 +5438,35 @@ function classLevelProgress(c, id) {
   return { level: lvl, next: lvl + 1, have: have, need: t[lvl], left: Math.max(0, t[lvl] - have) };
 }
 
+/* Pool keys the ARENA cannot see. `tutelage` speeds training; no amount of it
+   wins a round, and gold per hour - the metric every class is measured on -
+   is structurally blind to it. Same situation the Honed augment is in, which
+   is excluded from the pricing sweep for the same reason. */
+const CLASS_IDLE_KEYS = ['tutelage'];
+
+/* A TIER'S MAGNITUDE IS A BUDGET, and a bonus the arena cannot see should not
+   spend arena budget (Rob's backlog, 2026-09-13).
+
+   Blade Master was the weakest tier-3 class in the game at +84% gold/hour -
+   below three tier-2 classes - and the reason was arithmetic rather than
+   design: its three bonuses are crit, critPower and `tutelage`, so one third
+   of its tier-3 magnitude went somewhere gold per hour cannot follow. It was
+   a two-bonus class wearing a three-bonus price tag, and every player chasing
+   gold was right to never pick it.
+
+   The combat bonuses now split the whole budget between them - three slots
+   with one idle means the other two are worth 3/2 each - so the class is a
+   full-strength tier-3 row in the arena AND keeps the training speed as a
+   genuine extra. It stops being a trap without stopping being different.
+
+   A class with no idle bonus gets exactly 1 and nothing it measured moves. */
+function arenaShareOf(cl, key) {
+  if (CLASS_IDLE_KEYS.indexOf(key) !== -1) return 1;     // the idle key keeps its own magnitude
+  const idle = cl.bonuses.filter(k => CLASS_IDLE_KEYS.indexOf(k) !== -1).length;
+  const combat = cl.bonuses.length - idle;
+  return (idle > 0 && combat > 0) ? cl.bonuses.length / combat : 1;
+}
+
 function classBonus(c, key) {
   const cl = c && CLASSES[c.battleClass];
   if (!cl) return 0;
@@ -5040,7 +5479,7 @@ function classBonus(c, key) {
   const lvlMult = CONST.CLASS_LEVEL_MULT[classLevelOf(c) - 1];
   const mult = tier.magnitude * lvlMult * (cl.drawback ? 1 + CLASS_DRAWBACK_BONUS : 1);
   let n = 0;
-  if (cl.bonuses.indexOf(key) !== -1) n += BONUS_KEYS[key].base * mult;
+  if (cl.bonuses.indexOf(key) !== -1) n += BONUS_KEYS[key].base * mult * arenaShareOf(cl, key);
   if (cl.drawback === key) n -= BONUS_KEYS[key].base * lvlMult;
   return n;
 }
@@ -5315,6 +5754,29 @@ function buyFacility(s, key) {
 
 const profOf = c => (c.weapons[c.activeWeapon] ? c.weapons[c.activeWeapon].level : 1);
 
+/* What one proficiency level of THIS weapon is worth, relative to a root one.
+   Keyed on `tier`, which is the tree depth by construction - there is an
+   assertion that every weapon's tier is its parent's plus one, so this cannot
+   drift from the shape of the tree it is reading.
+
+   Unknown or missing weapon reads as 1: a champion with a corrupt activeWeapon
+   gets no bonus rather than NaN damage, which is the falsiness-on-a-number
+   lesson applied to a table lookup. */
+function weaponTierMult(id) {
+  const w = WEAPONS[id];
+  if (!w) return 1;
+  const m = CONST.WEAPON_TIER_PROF_MULT[Math.round(num(w.tier, 1)) - 1];
+  return typeof m === 'number' && isFinite(m) && m > 0 ? m : 1;
+}
+
+/* THE proficiency the two combat formulas read - the level, scaled by what a
+   level of that weapon is worth. Deliberately NOT profOf(): that one means
+   "what level is this weapon", and it is what the Hall's mentor conversion,
+   the Legacy Points term, the Weapon Mastery feats and every screen that
+   prints "Lv 7" are asking. Conflating the two would inflate a mentor and pay
+   legacy points for depth the champion has not trained. */
+const combatProfOf = c => profOf(c) * weaponTierMult(c.activeWeapon);
+
 /* Max HP with `vigor` folded in. Nothing may compute max HP from raw CON any
    more - that is the "derived stats have one home" rule, and vigor is the first
    bonus that would silently be skipped by a consumer that did. */
@@ -5322,12 +5784,12 @@ const maxHpOf = c => FORMULAS.maxHp(c.stats.con, bonus(c, 'vigor'));
 
 function playerDamage(c, crit) {
   const race = RACES[c.race] || {};
-  const base = FORMULAS.playerDmg(c.stats.str, profOf(c), c.gear.weapon.quality,
+  const base = FORMULAS.playerDmg(c.stats.str, combatProfOf(c), c.gear.weapon.quality,
     bonus(c, 'damage')) * (race.damageMult || 1);
   return crit ? base * FORMULAS.critMult(bonus(c, 'critPower')) : base;
 }
 
-const playerCritChance = c => FORMULAS.playerCrit(c.stats.int, profOf(c), bonus(c, 'crit'));
+const playerCritChance = c => FORMULAS.playerCrit(c.stats.int, combatProfOf(c), bonus(c, 'crit'));
 const playerEvadeChance = c =>
   FORMULAS.playerEvade(c.stats.dex, bonus(c, 'evasion'),
     (RACES[c.race] || {}).evasionCap || CONST.EVASION_CAP);
@@ -5340,9 +5802,78 @@ const isEliteRound = round => round > 0 && round % CONST.ELITE_EVERY_ROUNDS === 
    for the same two reasons: a reload has to show the same opponent, and
    drawing from the shared `rng` would shift the combat sequence behind it and
    break the paired comparisons the shop's pricing rig depends on. */
+/* WEIGHTED, and still derived from the seed and the round rather than drawn
+   from the shared rng - a reload has to fight the same opponent, and drawing
+   here would shift the combat sequence behind every paired comparison the
+   shop's pricing rig depends on.
+
+   The hash is taken modulo the total weight rather than the row count, so the
+   table's own `weight` column decides the spread. An elite pool re-totals over
+   its own rows: Rank and File is excluded there, so its weight must not be
+   allowed to skew what is left. */
+/* --- the rival ------------------------------------------------
+   Account state, because the grudge outlives the champion: an heir inherits
+   the rival their predecessor could not put down, which is the same rule the
+   half-told story follows and the reason it is on the ledger rather than on a
+   mortal gladiator. */
+function newRival(s, now) {
+  const best = accountBestRound(s);
+  const round = clamp(Math.round(best * CONST.RIVAL_ROUND_FRACTION),
+                      CONST.RIVAL_MIN_ROUND, CONST.GOLD_SOFTCAP_ROUND);
+  return {
+    name: pick(ENEMY_GIVEN) + ' ' + pick(ELITE_TITLES),
+    /* Never Rank and File - a rival is somebody. */
+    archetype: ELITE_ARCHETYPES[Math.floor(rng() * ELITE_ARCHETYPES.length)],
+    round: round,
+    beat: 0,             // times they have put YOU down
+    since: num(now, 0)
+  };
+}
+
+/* The rival, ensured. Derived-on-read rather than created by a migration step,
+   so an account that predates the mechanic gets one the first time it is
+   asked for and nothing has to remember to seed it. */
+function rivalOf(s, now) {
+  const a = s.account;
+  if (!a.rival) a.rival = newRival(s, now);
+  return a.rival;
+}
+
+/* WHERE they are standing, and the one rule that keeps them from being a wall:
+   their round never moves deeper once they exist. A rival who climbed with you
+   would be a stop sign. */
+function rivalRoundFor(s, now) {
+  const r = rivalOf(s, now);
+  return clamp(Math.round(num(r.round, CONST.RIVAL_MIN_ROUND)),
+               CONST.RIVAL_MIN_ROUND, CONST.GOLD_SOFTCAP_ROUND);
+}
+
+/* You put them down. They retire, the record is kept, and somebody else rises
+   at whatever depth you have reached by now - which is how the grudge escalates
+   without ever getting ahead of you. */
+function retireRival(s, now) {
+  const a = s.account;
+  const old = a.rival;
+  a.rivalsBeaten = Math.max(0, num(a.rivalsBeaten, 0)) + 1;
+  a.rival = newRival(s, now);
+  return old;
+}
+
+function pickWeighted(keys, seedStr) {
+  let total = 0;
+  keys.forEach(k => { total += Math.max(0, num(ENEMY_ARCHETYPES[k].weight, 1)); });
+  if (!(total > 0)) return keys[hashStr(seedStr) % keys.length];
+  let n = hashStr(seedStr) % total;
+  for (let i = 0; i < keys.length; i++) {
+    n -= Math.max(0, num(ENEMY_ARCHETYPES[keys[i]].weight, 1));
+    if (n < 0) return keys[i];
+  }
+  return keys[keys.length - 1];
+}
+
 function archetypeFor(seed, round) {
   const pool = isEliteRound(round) ? ELITE_ARCHETYPES : ARCHETYPE_KEYS;
-  return pool[hashStr(seed + ':arch:' + round) % pool.length];
+  return pickWeighted(pool, seed + ':arch:' + round);
 }
 
 /* `mods` is the enemy half of the arena conditions - the one part of a
@@ -5352,16 +5883,26 @@ function archetypeFor(seed, round) {
 
    Both extra arguments are optional so every existing caller and every
    assertion still describes a plain rank-and-file enemy at the round curve. */
-function enemyFor(round, mods, archetype) {
+function enemyFor(round, mods, archetype, rival) {
   const m = mods || { hp: 1, dmg: 1 };
   const key = ENEMY_ARCHETYPES[archetype] ? archetype : 'ranker';
   const arch = ENEMY_ARCHETYPES[key];
-  const elite = isEliteRound(round) && key !== 'ranker' && archetype != null;
-  const hpMult = (m.hp || 1) * arch.hp * (elite ? CONST.ELITE_HP_MULT : 1);
-  const dmgMult = (m.dmg || 1) * arch.dmg * (elite ? CONST.ELITE_DMG_MULT : 1);
+  /* A rival is not an elite and does not become one - and the `!rival` here is
+     load-bearing rather than decorative. Without it a rival standing on an
+     elite round came back with BOTH flags: their own health and damage
+     multipliers, and the elite purse stacked on top of the rival purse, plus
+     the elite badge on somebody who is not one. Caught by the assertion, after
+     a comment two lines down had already claimed it was handled. */
+  const elite = !rival && isEliteRound(round) && key !== 'ranker' && archetype != null;
+  const hpMult = (m.hp || 1) * arch.hp *
+    (rival ? CONST.RIVAL_HP_MULT : elite ? CONST.ELITE_HP_MULT : 1);
+  const dmgMult = (m.dmg || 1) * arch.dmg *
+    (rival ? CONST.RIVAL_DMG_MULT : elite ? CONST.ELITE_DMG_MULT : 1);
   const hp = FORMULAS.enemyHp(round) * hpMult;
   return {
-    name: elite ? pick(ENEMY_GIVEN) + ' ' + pick(ELITE_TITLES) : rollEnemyName(round),
+    rival: rival ? true : false,
+    name: rival ? rival.name
+        : elite ? pick(ENEMY_GIVEN) + ' ' + pick(ELITE_TITLES) : rollEnemyName(round),
     round: round,
     archetype: key,
     elite: elite,
@@ -5475,9 +6016,13 @@ function roundReward(s, round) {
   const e = s.arena.enemy;
   const eliteMult = (e && e.elite && e.round === round && !s.arena.boss)
     ? CONST.ELITE_GOLD_MULT : 1;
+  /* A rival's purse, read off the enemy under the same guard and for the same
+     reason. They are not an elite, so the two multipliers cannot stack. */
+  const rivalMult = (e && e.rival && e.round === round && !s.arena.boss)
+    ? CONST.RIVAL_GOLD_MULT : 1;
   return {
     gold: FORMULAS.goldPerRound(round, c.stats.cha, bonus(c, 'avarice')) *
-      (race.goldMult || 1) * crowdMult * eliteMult,
+      (race.goldMult || 1) * crowdMult * eliteMult * rivalMult,
     renown: FORMULAS.renownPerRound(round, c.stats.cha) * (race.renownMult || 1) * eliteMult
   };
 }
@@ -5527,7 +6072,11 @@ function startRun(s, now, conditions) {
        button. Copied, not referenced, so the run keeps its sand. */
     conditions: Array.isArray(conditions)
       ? conditions.filter(id => !!ARENA_CONDITIONS[id]).slice(0, CONST.CONDITIONS_PER_RUN)
-      : conditionsAt(now)
+      : conditionsAt(now),
+    /* Locked at the door like the sand: which round the rival is standing at
+       for THIS run, and whether they have been met yet. */
+    rivalRound: rivalRoundFor(s, now),
+    rivalMet: false
   });
   beginRound(s, round);
   return s.arena;
@@ -5549,7 +6098,14 @@ function beginRound(s, round) {
      comes through this function - startRun to open one and clearRound to
      advance it. startBoss builds its arena directly and binds explicitly. */
   bindRun(s);
-  const e = enemyFor(round, enemyMods(a), archetypeFor(num(a.seed, 0), round));
+  /* The rival stands at one round, locked when the run opened - the same rule
+     the sand follows, and for the same reason: a reload has to walk back into
+     the fight it left. `rivalMet` is what stops them appearing twice in a run
+     that catches up past their round in one go. */
+  const meeting = !a.boss && !a.rivalMet && num(a.rivalRound, 0) === round
+    ? (s.account.rival || null) : null;
+  if (meeting) a.rivalMet = true;
+  const e = enemyFor(round, enemyMods(a), archetypeFor(num(a.seed, 0), round), meeting);
   a.enemy = e;
   a.enemyName = e.name;
   a.enemyMaxHp = e.maxHp;
@@ -5646,7 +6202,7 @@ function exchange(s, now) {
       /* The crowd came for this. A fraction of a pip, so a round clear stays
          the thing that fills the meter and this is the thing that keeps it
          moving between clears. */
-      fillCrowd(a, CONST.CROWD_PER_CRIT);
+      fillCrowd(s, CONST.CROWD_PER_CRIT);
     }
 
     /* One affliction roll per landed hit, fed by class, race and augment alike. */
@@ -5712,7 +6268,7 @@ function exchange(s, now) {
       /* Rolled PER STRIKE, so a Swarmer's second swing is a second chance to
          be cheered for - which is the same asymmetry that makes evasion weak
          against it defensively, seen from the other side. */
-      fillCrowd(a, CONST.CROWD_PER_EVADE);
+      fillCrowd(s, CONST.CROWD_PER_EVADE);
       events.push({ who: 'player', kind: 'evade' });
       logLine(a, 'evade', 'You slip aside.');
       continue;
@@ -5788,7 +6344,16 @@ function clearRound(s, events) {
   const r = roundReward(s, a.round);
   a.pot.gold += r.gold;
   a.pot.renown += r.renown;
-  fillCrowd(a, CONST.CROWD_PER_CLEAR);
+  /* THE SCORE, SETTLED. Read off the ENEMY rather than recomputed from the
+     round, exactly as the elite purse is - the round number is not proof of
+     who was standing on it, and a restored save fights the opponent it was
+     fighting. */
+  if (a.enemy && a.enemy.rival && s.account.rival) {
+    const beaten = retireRival(s, num(a.lastExchangeAt, 0));
+    logLine(a, 'clear', beaten.name + ' is finished. That score is settled.');
+    events.push({ who: 'player', kind: 'rivalDown', name: beaten.name });
+  }
+  fillCrowd(s, CONST.CROWD_PER_CLEAR);
   /* Time in the sand teaches the weapon in your hand. Routed through applyTp
      so it takes the same level-up path, the same NaN and Infinity guards, and
      the same child-weapon unlocks the Sparring Circle uses - a second
@@ -5838,9 +6403,17 @@ function crowdReady(a) {
 
    Returns what was actually added, so the render layer can tell a tick from a
    jump without re-deriving it. */
-function fillCrowd(a, amount) {
+/* Takes the STATE rather than the arena since 2026-09-13: the Showmanship boon
+   multiplies what every source is worth, and a rule about how fast the meter
+   fills belongs at the one place it fills rather than at each of the three
+   things that fill it. `crowdGain` is a non-pool effect key - it belongs to
+   the meter, not to the champion - so it is read through runBonus directly. */
+function fillCrowd(s, amount) {
+  const a = s && s.arena ? s.arena : s;           // tolerates a bare arena
   if (!a) return 0;
-  const want = num(amount, 0);
+  const c = s && s.character ? s.character : null;
+  const mult = c ? 1 + Math.max(-0.9, runBonus(c, 'crowdGain')) : 1;
+  const want = num(amount, 0) * mult;
   if (!(want > 0)) return 0;
   const before = clamp(num(a.crowd, 0), 0, CONST.CROWD_MAX);
   a.crowd = clamp(before + want, 0, CONST.CROWD_MAX);
@@ -5897,6 +6470,15 @@ function autoSpendCrowd(s, events) {
 function settleRun(s, how, now) {
   const a = s.arena, c = s.character;
   if (!a.active) return null;
+  /* THEY PUT YOU DOWN, and only a knockout counts: walking away from a rival
+     is not losing to one, which is the same distinction the yield commission
+     draws. Their round does NOT move - they are standing in exactly the same
+     place next run, and everything the champion does between now and then
+     makes them easier. That is the rule that stops a rival becoming a wall. */
+  if (how === 'knockout' && a.enemy && a.enemy.rival && s.account.rival) {
+    s.account.rival.beat = Math.max(0, num(s.account.rival.beat, 0)) + 1;
+    logLine(a, 'crit', s.account.rival.name + ' stands over you. They will be back.');
+  }
   const keep = how === 'yield' ? CONST.YIELD_POT_KEPT : 1;
   const gold = Math.floor(a.pot.gold * keep);
   const renown = Math.floor(a.pot.renown * keep);
@@ -7278,6 +7860,7 @@ function renderTrain() {
 
   const restore = keepFocus(host);
   host.innerHTML = awayMarkup() + (p ? activePanel(p, c) : idlePanel()) +
+    academyDayMarkup() +
     '<div class="panel"><h3 class="sub">Facilities</h3><div class="fac-grid">' + cards + '</div>' +
     '<p class="hp-line">Levels and mentors are bought in the Shop and the Hall. One session at a time — ' +
     'switching banks whatever the current one is worth.</p></div>';
@@ -8541,7 +9124,7 @@ function idleArenaMarkup(a, c) {
       '<p class="hp-line">Entering ends the current training session — it banks first.</p>' +
       '<button class="btn wide" type="button" id="btn-enter">Enter the arena</button></div>';
 
-  return result + sandMarkup(a, now) + gate +
+  return result + rivalMarkup(state, now) + sandMarkup(a, now) + gate +
          autoYieldMarkup(c) + draftPrefMarkup() + commissionMarkup();
 }
 
@@ -8904,8 +9487,8 @@ function sandMarkup(a, now) {
   if (!ids.length) return '';
   return '<div class="panel sand"><h3 class="sub">' + icon('hurdle') +
     (live ? ' The sand today' : ' The sand today') +
-    (live ? '<span class="sand-when">this run</span>'
-          : '<span class="sand-when">changes in ' + dur(conditionsLeftMs(now)) + '</span>') +
+    (live ? '<span class="sand-when" id="sand-when">this run</span>'
+          : '<span class="sand-when" id="sand-when">changes in ' + dur(conditionsLeftMs(now)) + '</span>') +
     '</h3>' +
     '<ul class="cond-list">' + conditionChips(ids) + '</ul>' +
     (live ? '' : '<p class="hp-line">A run keeps the sand it started on.</p>') +
@@ -8947,16 +9530,28 @@ function crowdMarkup(a, c) {
   if (!crowdReady(a)) return '';
   const max = maxHpOf(c);
   const heal = Math.min(max - a.playerHp, max * CONST.CROWD_HEAL_PCT);
+  /* WHAT IT IS WORTH OVER A RUN, not just this once. Rob's backlog had the
+     heal down as "looks thin for something that takes eight rounds to earn" -
+     and measured it is not thin at all: at mid-game the three policies come
+     out at 2,707 / 2,996 / 2,875 gold an hour, which is as even a three-way
+     choice as this game has. It was the PRESENTATION that was thin. "Recover
+     62 health" against a 777 pool reads as nothing; the same number said as a
+     share of the pool, with how often the meter comes back, reads as what it
+     is. Same fix as the Resilient shop row got. */
+  const perRun = Math.max(1, Math.round(CONST.CROWD_MAX / CONST.CROWD_PER_CLEAR));
   return '<div class="panel crowd-spend"><h3 class="sub">' + icon('trophy') +
     ' The crowd is yours</h3>' +
     '<p class="hp-line">Holding it pays <strong>+' +
       Math.round((CONST.CROWD_GOLD_MULT - 1) * 100) + '% gold</strong> every round. ' +
-      'Spending it empties the meter.</p>' +
+      'Spending it empties the meter, which refills over about ' + perRun +
+      ' more rounds — sooner if you land crits and slip blows.</p>' +
     '<div class="crowd-opts">' +
       '<button class="draft-opt" type="button" data-crowd="heal"' +
         (heal <= 0 ? ' disabled' : '') + '>' + icon('heart') +
         '<strong>Play to them</strong><span>' +
-        (heal > 0 ? 'Recover ' + Math.round(heal) + ' health' : 'Already at full health') +
+        (heal > 0 ? 'Recover ' + Math.round(heal) + ' health — ' +
+           Math.round(CONST.CROWD_HEAL_PCT * 100) + '% of your pool'
+         : 'Already at full health') +
         '</span></button>' +
       '<button class="draft-opt" type="button" data-crowd="finish">' + icon('aug-savage') +
         '<strong>Call the finish</strong><span>Take ' +
@@ -9245,7 +9840,10 @@ let retireArmed = false;
 let retirementCard = null;
 
 function newDraft(raceKey) {
-  draft = { race: raceKey, name: rollName(raceKey) };
+  /* The traits are part of what the reroll button rerolls: they are decided
+     here, shown in the preview, and carried into newCharacter - so a player
+     sees who they are about to create rather than finding out afterwards. */
+  draft = { race: raceKey, name: rollName(raceKey), traits: rollTraits() };
   return draft;
 }
 
@@ -9285,7 +9883,7 @@ function creationMarkup() {
      starting class's vigor from the HP - both of which the created champion
      gets the instant the button is pressed. Same rule as the shop's augment
      slot: one derivation, and the preview reads it. */
-  const probe = newCharacter(draft.race, draft.name, a);
+  const probe = newCharacter(draft.race, draft.name, a, draft.traits);
   const preview = STAT_KEYS.map(k => {
     const mod = race.mods[k] || 0;
     return '<li><span class="k">' + STATS[k].label + '</span>' +
@@ -9314,6 +9912,12 @@ function creationMarkup() {
       '<ul class="statlist">' + preview + '</ul>' +
       '<p class="hp-line">Starting HP <span class="num">' + hp + '</span></p>' +
     '</div>' +
+    /* The hand they were dealt, BEFORE the button is pressed - and it rerolls
+       with the name, because the whole point of a trait is that it is the
+       thing you are choosing to accept. */
+    '<div class="panel"><h3 class="sub">Born with</h3>' + traitMarkup(probe) +
+      '<p class="hp-line">Rerolling the name rerolls these too. They never change ' +
+      'once this champion takes the sand.</p></div>' +
     '<button class="btn wide" type="button" id="btn-create">Send them out</button>';
 }
 
@@ -9321,9 +9925,118 @@ function creationMarkup() {
    Two vertical trunks, circular icon nodes, a level pip ring, and locked nodes
    greyed with their requirement showing. Derived from WEAPONS at render time -
    the shape is never authored, so adding a weapon cannot desync the picture. */
+/* What ONE proficiency level of this weapon is worth, in the two numbers it
+   moves. Derived from the same constants the combat formulas read - a weapon
+   that levels better is only a real thing if the screen and the fight agree on
+   by how much, and prose naming a number goes stale the moment it moves. */
+/* WHAT THIS CHAMPION WAS BORN WITH. One helper, used by the Champion card and
+   by the creation preview, so the two can never describe the same roll
+   differently - the same rule loadoutChips follows.
+
+   Each effect is phrased by bonusText(), already the one home for "what does
+   this pool key mean", so a trait and a class card cannot say different things
+   about the same key. Its inversion rule does the hard part for free: a
+   `mitigation: -0.06` reads as "+6% damage taken" rather than as a negative
+   bonus nobody can parse. Good is coloured on the SIGN of the pool value,
+   because every key in the pool is framed so that more is better. */
+function traitMarkup(c) {
+  const held = arr(c && c.traits, []).filter(id => !!TRAITS[id]);
+  if (!held.length) return '';
+  return '<ul class="traits">' + held.map(id => {
+    const t = TRAITS[id];
+    const fx = Object.keys(t.effect).map(k =>
+      '<span class="mod ' + (t.effect[k] > 0 ? 'up' : 'down') + '">' +
+      esc(bonusText(k, t.effect[k])) + '</span>').join('');
+    return '<li class="trait">' + icon(t.icon) +
+      '<div><strong>' + esc(t.label) + '</strong>' +
+      '<span>' + esc(t.text) + '</span>' +
+      '<span class="trait-fx">' + fx + '</span></div></li>';
+  }).join('') + '</ul>';
+}
+
+/* The academy's day, as the sand card's opposite number - same shape, because
+   it is the same thing said about the other half of the game. The effects are
+   DERIVED from the multipliers the rate actually reads rather than written
+   beside them, so the card and the training cannot drift apart; that is the
+   rule the sand card was fixed to follow. */
+/* WHO IS WAITING, and where. Shown on the idle Arena screen because that is
+   the moment the information is worth something: it is a reason to walk
+   through the gate, and it tells you exactly how deep you have to get.
+
+   The record is theirs, not yours - "has beaten you twice" is a sentence about
+   somebody, which is the entire point of the mechanic. */
+function rivalMarkup(s, now) {
+  if (!s.character) return '';
+  const r = rivalOf(s, now);
+  if (!r) return '';
+  const arch = ENEMY_ARCHETYPES[r.archetype];
+  const beat = Math.max(0, num(r.beat, 0));
+  const record = beat === 0 ? 'You have never met.'
+    : beat === 1 ? 'They have put you down once.'
+    : 'They have put you down ' + beat + ' times.';
+  const beaten = Math.max(0, num(s.account.rivalsBeaten, 0));
+  return '<div class="panel rival"><h3 class="sub">' + icon('skull') +
+    ' Your rival<span class="sand-when">round ' + rivalRoundFor(s, now) + '</span></h3>' +
+    '<ul class="cond-list"><li class="cond">' + icon(arch ? arch.icon : 'skull') +
+    '<div><strong>' + esc(r.name) + '</strong>' +
+    '<span>' + esc((arch ? arch.label + '. ' : '') + record) + '</span>' +
+    '<span class="cond-fx">' +
+      '<span class="mod down">×' + CONST.RIVAL_HP_MULT + ' health</span>' +
+      '<span class="mod down">×' + CONST.RIVAL_DMG_MULT + ' damage</span>' +
+      '<span class="mod up">×' + CONST.RIVAL_GOLD_MULT + ' purse</span>' +
+    '</span></div></li></ul>' +
+    '<p class="hp-line">They are standing at round ' + rivalRoundFor(s, now) +
+    ' and they do not move. ' +
+    (beaten > 0 ? 'You have settled ' + beaten + ' score' + (beaten === 1 ? '' : 's') + ' so far.'
+                : 'Get that deep and the score gets settled one way or the other.') +
+    '</p></div>';
+}
+
+function academyDayMarkup() {
+  const now = trainingClockOf(state);
+  const d = TRAINING_DAYS[trainingDayAt(now)];
+  if (!d) return '';
+  const chips = Object.keys(FACILITIES).map(k => {
+    const m = trainingDayMult(now, k);
+    if (Math.abs(m - 1) < 1e-9) return '';
+    return '<span class="mod ' + (m > 1 ? 'up' : 'down') + '">' +
+      esc(FACILITIES[k].label) + ' ×' + (+m.toFixed(2)) + '</span>';
+  }).filter(Boolean).join('');
+  return '<div class="panel sand"><h3 class="sub">' + icon(d.icon) +
+    ' At the academy today<span class="sand-when">until midnight</span></h3>' +
+    '<ul class="cond-list"><li class="cond">' + icon(d.icon) +
+    '<div><strong>' + esc(d.label) + '</strong>' +
+    '<span>' + esc(d.text) + '</span>' +
+    '<span class="cond-fx">' + chips + '</span></div></li></ul></div>';
+}
+
+function weaponProfText(key) {
+  const m = weaponTierMult(key);
+  return '+' + +(CONST.PROF_DMG_PER * m * 100).toFixed(1) + '% damage and +' +
+    +(CONST.PROF_CRIT_PER * m * 100).toFixed(1) + '% crit per level';
+}
+
+/* The rule stated once, above the tree, rather than a badge on each of the
+   fourteen nodes - the rank IS the row here, so the mapping is already on
+   screen and repeating it per node would crowd eight tier-3 nodes at 375px.
+   Built from the table, so a fourth rank appears here without an edit. */
+function treeLegend() {
+  const ranks = [];
+  for (let t = 1; t <= deepestWeaponTier(); t++) {
+    const m = CONST.WEAPON_TIER_PROF_MULT[t - 1];
+    if (typeof m !== 'number') continue;
+    ranks.push('<span class="tlegend-r"><b>Rank ' + t + '</b> +' +
+      +(CONST.PROF_DMG_PER * m * 100).toFixed(1) + '% dmg · +' +
+      +(CONST.PROF_CRIT_PER * m * 100).toFixed(1) + '% crit</span>');
+  }
+  return '<p class="tlegend">Deeper weapons train harder — a proficiency level ' +
+    'is worth more the further down the tree it is. ' +
+    '<span class="tlegend-rows">' + ranks.join('') + '</span></p>';
+}
+
 function treeMarkup(c) {
   const roots = Object.keys(WEAPONS).filter(w => WEAPONS[w].parent === null);
-  return '<div class="trees">' + roots.map(root => {
+  return treeLegend() + '<div class="trees">' + roots.map(root => {
     const kids = Object.keys(WEAPONS).filter(w => WEAPONS[w].parent === root);
     return '<div class="trunk">' +
       '<div class="trow">' + treeNode(c, root) + '</div>' +
@@ -9366,7 +10079,12 @@ function treeNode(c, key) {
   }
   return '<button class="tnode' + (active ? ' is-on' : '') + '" type="button" ' +
     'id="node-' + key + '" data-equip-weapon="' + key + '" ' +
-    'aria-label="' + esc(w.label) + ', level ' + lvl + (active ? ', equipped' : ', equip') + '">' +
+    /* The per-level figure reaches the keyboard and the screen reader here,
+       since the legend above is positional and a node read on its own carries
+       none of it. */
+    'title="' + esc(w.label + ' — ' + weaponProfText(key)) + '" ' +
+    'aria-label="' + esc(w.label) + ', level ' + lvl + ', ' + esc(weaponProfText(key)) +
+    (active ? ', equipped' : ', equip') + '">' +
     inner + '<span class="tname">' + esc(w.label) + '</span>' +
     '<span class="treq">' + (active ? 'Equipped' : 'Lv ' + lvl) + '</span></button>';
 }
@@ -9501,6 +10219,7 @@ function championMarkup(c) {
       /* Same two chips the arena shows, from the same helper. */
       '<div class="loadout">' + loadoutChips(c) + '</div>' +
       '<p class="race-special">' + esc(race.special) + '</p>' +
+      traitMarkup(c) +
     '</div>' +
     '<div class="panel"><h3 class="sub">Stats</h3><ul class="statlist">' + stats + '</ul>' +
       /* HP reads as a bar as well as a number, the same way every stat above it
@@ -9678,7 +10397,7 @@ function wireChampion() {
 
 function createChampion() {
   if (!draft || !raceUnlocked(draft.race, state.account)) return;
-  state.character = newCharacter(draft.race, draft.name, state.account);
+  state.character = newCharacter(draft.race, draft.name, state.account, draft.traits);
   retireArmed = false;
   const p = prologueFor(state.account, state.character);
   draft = null;
@@ -9880,7 +10599,13 @@ function updateArenaIdleLive() {
      on describing the previous twenty minutes is the frozen-bench-card bug in
      a new hat: the countdown has to move, and when it reaches zero the sand
      itself has to be replaced rather than waiting for a navigation. */
-  const when = document.querySelector('.sand-when');
+  /* BY ID, not by class. The class is shared with the rival card and the
+     academy card - both of which sit on a screen this updater runs on - and a
+     querySelector on it wrote the sand countdown into whichever came first in
+     the DOM. The rival panel read "changes in 17m 40s" where it should have
+     read the round they are standing at. Caught in a screenshot, not by any
+     measurement. */
+  const when = document.getElementById("sand-when");
   if (!when) { lastSandBlock = -1; return; }
   if (lastSandBlock === -1) lastSandBlock = conditionBlock(now);
   else if (conditionBlock(now) !== lastSandBlock) {
@@ -9965,6 +10690,27 @@ function harnessState(config) {
   if (cfg.renownRank != null) {
     c.renown = cfg.renownRank === 0 ? 0 : FORMULAS.rankThreshold(cfg.renownRank);
     c.renownRank = renownRankFor(c.renown);
+  }
+  /* WHICH weapon, not only what level. A weapon's tier is worth something in a
+     fight as of 2026-09-13, and a sweep that can only ever measure the root
+     weapon a champion is born holding cannot see it - the same gap that hid
+     the lifesteal classes until harnessState learned `battleClass`.
+
+     Granted directly, past the parent-at-level-4 gate, for the same reason
+     augments are fitted past the slot limit: the question is what the weapon is
+     WORTH, not whether this rig could have unlocked it. */
+  /* TRAITS, set rather than rolled. newCharacter draws them from the shared
+     rng, which is right for the game and useless for a sweep: measuring what a
+     trait is worth means holding every other thing equal, and `traits: []` is
+     how a rig says "no trait at all" as the baseline to measure against. */
+  if (Array.isArray(cfg.traits)) c.traits = cleanTraits(cfg.traits);
+  /* The academy rotates on the real date, so a sweep has to be able to pin it
+     or every run is measured on whatever today happens to be. Never saved:
+     defaultState does not declare it and migrate does not copy it. */
+  if (cfg.trainingClock != null) s.trainingClock = cfg.trainingClock;
+  if (cfg.weapon && WEAPONS[cfg.weapon]) {
+    if (!c.weapons[cfg.weapon]) c.weapons[cfg.weapon] = { level: CONST.WEAPON_START_LEVEL, tp: 0 };
+    c.activeWeapon = cfg.weapon;
   }
   if (cfg.weaponLevel != null) c.weapons[c.activeWeapon].level = cfg.weaponLevel;
   if (cfg.weaponQuality != null) c.gear.weapon.quality = cfg.weaponQuality;
@@ -10854,6 +11600,252 @@ function assertAll() {
   });
   ok(wKeys.filter(w => WEAPONS[w].tier === 3).length === 8, 'expected 8 tier-3 weapons');
 
+  /* --- CHAMPION TRAITS (Rob, 2026-09-13) --------------------
+     The layer above the run: every champion's life was shaped identically, so
+     retirement reset the numbers and not the shape. A trait is the thing you
+     build around. */
+  (function () {
+    ok(TRAIT_KEYS.length >= CONST.TRAITS_PER_CHAMPION * 3,
+       'only ' + TRAIT_KEYS.length + ' traits for ' + CONST.TRAITS_PER_CHAMPION +
+       ' per champion - the roll barely varies between lives');
+    TRAIT_KEYS.forEach(id => {
+      const t = TRAITS[id];
+      ok(ICON_NAMES.indexOf(t.icon) !== -1, id + ' names an icon outside the sprite sheet');
+      const keys = Object.keys(t.effect);
+      ok(keys.length > 0, id + ' is a trait with no mechanical effect');
+      keys.forEach(k => ok(!!BONUS_KEYS[k], id + ' grants "' + k + '", which is not a doc 3.4 pool key'));
+      /* SHAPED, and this is the rule the whole registry lives or dies on. A
+         trait that is only a gift makes the reroll button the only interesting
+         thing on the creation screen; one that is only a penalty reads as a bad
+         roll. Same rule the drawback classes are held to. */
+      ok(keys.some(k => t.effect[k] > 0), id + ' is all cost and no gift - it reads as a bad roll');
+      ok(keys.some(k => t.effect[k] < 0), id + ' is all gift and no cost - there is nothing to build around');
+    });
+    /* No two traits may be the same set of effects: a duplicate under two
+       names is invisible in review and halves the real variety. */
+    const sigs = TRAIT_KEYS.map(id => Object.keys(TRAITS[id].effect).sort()
+      .map(k => k + ':' + TRAITS[id].effect[k]).join(','));
+    ok(new Set(sigs).size === sigs.length, 'two traits carry identical effects');
+
+    /* The roll: the right count, distinct, and all real. */
+    /* MORE THAN ONE, and that is not the same statement as "the right number".
+       Falsification caught this: driving TRAITS_PER_CHAMPION to 1 produced
+       ZERO failures, because the check below compares the roll to the constant
+       and passes at any value - a test that survives the deletion of the thing
+       it names. The variety argument is about COMBINATIONS: ten traits two at
+       a time is forty-five hands, ten one at a time is ten. */
+    ok(CONST.TRAITS_PER_CHAMPION >= 2,
+       'a champion is dealt ' + CONST.TRAITS_PER_CHAMPION + ' trait - there are no combinations, ' +
+       'only ' + TRAIT_KEYS.length + ' possible champions');
+    const rolled = rollTraits();
+    ok(rolled.length === Math.min(CONST.TRAITS_PER_CHAMPION, TRAIT_KEYS.length),
+       'a roll produced ' + rolled.length + ' traits, not ' + CONST.TRAITS_PER_CHAMPION);
+    ok(new Set(rolled).size === rolled.length, 'a champion was rolled the same trait twice');
+    ok(rolled.every(id => !!TRAITS[id]), 'a roll produced a trait that does not exist');
+
+    /* THE SEAM. newCharacter builds a champion object and does NOT deal a hand
+       - rolling there gave every assertion rig and every harness champion two
+       random traits, and twenty-five checks failed at once because the whole
+       build's baselines are measured on a champion with nothing on them. */
+    const acct = defaultAccount();
+    ok(newCharacter('human', 'Clean', acct).traits.length === 0,
+       'newCharacter deals traits on its own - every rig and every sweep is now measuring a random champion');
+    ok(newDraft('human').traits.length === CONST.TRAITS_PER_CHAMPION,
+       'the creation draft does not roll traits, so a player never gets one');
+    const given = newCharacter('human', 'Given', acct, ['glassjaw', 'glassjaw', 'nope', 'thickskin']);
+    ok(given.traits.length === CONST.TRAITS_PER_CHAMPION &&
+       given.traits.indexOf('nope') === -1 && new Set(given.traits).size === given.traits.length,
+       'newCharacter accepted a duplicated or invented trait');
+
+    /* It reaches the pool, and therefore the fight, with nothing downstream
+       edited - the fifth source, after augments, classes, fame and the run. */
+    const t = newCharacter('human', 'Trait', acct, ['glassjaw']);
+    const plain = newCharacter('human', 'Plain', acct, []);
+    ok(bonus(t, 'damage') > bonus(plain, 'damage'), 'a trait bonus never reaches bonus()');
+    ok(maxHpOf(t) < maxHpOf(plain), 'a trait cost never reaches the derived layer');
+    ok(traitBonus(plain, 'damage') === 0, 'a champion with no traits is not the baseline');
+  })();
+
+  /* --- THE RIVAL (Rob, 2026-09-13) --------------------------
+     One named gladiator who persists on the account and keeps a record against
+     you. The whole of the tuning is the rule below: they can never be a wall. */
+  (function () {
+    const rig = best => {
+      const x = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+      x.character = newCharacter('human', 'Grudge', x.account, []);
+      x.character.stats = { str: 200, dex: 5, int: 5, con: 400, cha: 5 };
+      x.character.bestRound = best;
+      x.character.hp = maxHpOf(x.character);
+      return x;
+    };
+    /* Derived on demand, so an account predating the mechanic picks one up
+       without a migration step having to remember to seed it. */
+    const s = rig(20);
+    ok(s.account.rival === null, 'a fresh account is seeded with a rival instead of deriving one');
+    const rv = rivalOf(s, 0);
+    ok(!!rv && typeof rv.name === 'string' && rv.name.length > 0, 'the derived rival has no name');
+    ok(ELITE_ARCHETYPES.indexOf(rv.archetype) !== -1,
+       'the rival is Rank and File - a rival has to be somebody');
+
+    /* NEVER A WALL: they stand at a fraction of a depth already reached. */
+    ok(rivalRoundFor(s, 0) >= CONST.RIVAL_MIN_ROUND, 'the rival stands shallower than the floor');
+    ok(rivalRoundFor(s, 0) <= accountBestRound(s),
+       'the rival stands at round ' + rivalRoundFor(s, 0) + ' against a best of ' +
+       accountBestRound(s) + ' - deeper than the champion has ever been');
+    ok(rivalRoundFor(rig(200), 0) <= CONST.GOLD_SOFTCAP_ROUND, 'the rival can be parked past the soft cap');
+
+    /* Losing leaves them exactly where they stood. */
+    const lost = rig(20);
+    lost.account.rival = JSON.parse(JSON.stringify(rivalOf(lost, 0)));
+    const stoodAt = lost.account.rival.round;
+    startRun(lost, 0, []);
+    lost.arena.enemy = enemyFor(lost.arena.round, null, 'brawler', lost.account.rival);
+    settleRun(lost, 'knockout', 0);
+    ok(lost.account.rival.beat === 1, 'a knockout at the rival did not go on their record');
+    ok(lost.account.rival.round === stoodAt, 'losing moved the rival deeper - they are now a wall');
+
+    /* Walking away is not losing to them - the distinction the yield
+       commission already draws. */
+    const walked = rig(20);
+    rivalOf(walked, 0);
+    startRun(walked, 0, []);
+    walked.arena.enemy = enemyFor(walked.arena.round, null, 'brawler', walked.account.rival);
+    settleRun(walked, 'yield', 0);
+    ok(num(walked.account.rival.beat, 0) === 0, 'yielding was recorded as losing to the rival');
+
+    /* A run locks where they are standing and opens not having met them. */
+    const once = rig(20);
+    startRun(once, 0, []);
+    ok(once.arena.rivalRound >= CONST.RIVAL_MIN_ROUND, 'the run did not lock a rival round');
+    ok(once.arena.rivalMet === false, 'a run opens having already met the rival');
+
+    /* Beating them settles it: retired, counted, replaced. */
+    const won = rig(20);
+    const name = rivalOf(won, 0).name;
+    startRun(won, 0, []);
+    won.arena.enemy = enemyFor(won.arena.round, null, 'brawler', won.account.rival);
+    clearRound(won, []);
+    ok(won.account.rivalsBeaten === 1, 'putting the rival down was not recorded');
+    ok(won.account.rival && won.account.rival.name !== name, 'nobody rose to replace the beaten rival');
+
+    /* THE PURSE IS READ OFF THE ENEMY, not recomputed from the round - the
+       guard the elite purse needed, and for the same reason: a boss, whose
+       a.round is the round that GATES its chapter, must never be paid as one. */
+    const pay = rig(20);
+    rivalOf(pay, 0);
+    startRun(pay, 0, []);
+    const plainGold = roundReward(pay, pay.arena.round).gold;
+    pay.arena.enemy = enemyFor(pay.arena.round, null, 'brawler', pay.account.rival);
+    ok(roundReward(pay, pay.arena.round).gold > plainGold, 'a rival pays an ordinary purse');
+    pay.arena.boss = { story: 'x', chapter: 0 };
+    ok(Math.abs(roundReward(pay, pay.arena.round).gold - plainGold) < 1e-9,
+       'a story boss was paid a rival purse');
+
+    /* A rival is NOT an elite: the two must not stack on the round in ten
+       where they would otherwise collide. */
+    const e = enemyFor(CONST.ELITE_EVERY_ROUNDS, null, 'brawler', { name: 'X', archetype: 'brawler' });
+    ok(e.rival === true && e.elite === false,
+       'a rival standing on an elite round became an elite as well');
+
+    /* THE SAND COUNTDOWN MUST NOT WRITE INTO SOMEBODY ELSE'S CARD. `.sand-when`
+       is shared by three panels on the Arena and Train screens, and the
+       updater took it by class - so the rival's header read "changes in 17m
+       40s" where it should have read the round they stand at. Found in a
+       screenshot, which is the only thing that finds this class of defect. */
+    const marked = (sandMarkup({ active: false, conditions: [] }, 0).match(/id="sand-when"/g) || []).length;
+    ok(marked === 1, 'the sand countdown has no unique id, so it writes into whatever shares its class');
+    ok(rivalMarkup(rig(20), 0).indexOf('id="sand-when"') === -1,
+       'the rival card claims the sand countdown id');
+    ok(academyDayMarkup().indexOf('id="sand-when"') === -1,
+       'the academy card claims the sand countdown id');
+
+    /* Migration: a record that is not a coherent rival becomes NO rival rather
+       than a half-built one - the phantom-mentor lesson. */
+    const wire = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+    wire.account.rival = { name: '   ', archetype: 'nope', round: 9999, beat: -5 };
+    wire.account.rivalsBeaten = -3;
+    const back = migrate(JSON.parse(JSON.stringify(wire)));
+    ok(back.account.rival === null, 'a nameless rival survived migration');
+    ok(back.account.rivalsBeaten === 0, 'a negative rival count survived migration');
+    const forged = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
+    forged.account.rival = { name: 'Cheat', archetype: 'nope', round: 9999, beat: 2 };
+    const fb = migrate(JSON.parse(JSON.stringify(forged)));
+    ok(fb.account.rival.round <= CONST.GOLD_SOFTCAP_ROUND, 'a forged rival round survived migration');
+    ok(ELITE_ARCHETYPES.indexOf(fb.account.rival.archetype) !== -1,
+       'a forged rival archetype survived migration');
+    ok(fb.account.rival.beat === 2, 'a legitimate rival record was thrown away');
+  })();
+
+  /* --- DEPTH IN THE TREE IS WORTH SOMETHING (Rob, 2026-09-13) ---
+     It was worth nothing at all: every weapon shared PROF_DMG_PER, so a Great
+     Axe at proficiency 10 hit exactly as hard as the Daggers a champion is born
+     holding, while costing 16% more TP to reach because the parent has to get
+     to level 4 first. The bottom of the tree was a strictly worse buy that
+     happened to unlock classes. */
+  (function () {
+    const deepest = deepestWeaponTier();
+    ok(CONST.WEAPON_TIER_PROF_MULT.length === deepest,
+       'the tree is ' + deepest + ' ranks deep and the multiplier table has ' +
+       CONST.WEAPON_TIER_PROF_MULT.length + ' entries - a rank pays nothing or one is never read');
+    /* MONOTONE, and strictly: two ranks paying the same makes the deeper one
+       pure overhead, which is the state this whole change is fixing. */
+    for (let t = 2; t <= deepest; t++) {
+      ok(CONST.WEAPON_TIER_PROF_MULT[t - 1] > CONST.WEAPON_TIER_PROF_MULT[t - 2],
+         'rank ' + t + ' is worth no more per level than rank ' + (t - 1) +
+         ' - the deeper weapon costs more TP and buys nothing');
+    }
+    ok(CONST.WEAPON_TIER_PROF_MULT[0] === 1,
+       'the root rank is not the baseline, so every number measured before this change moved');
+
+    /* And it reaches the fight, for BOTH terms, through a real champion rather
+       than by reading the table back at itself. */
+    const rig = weapon => {
+      const s = harnessState({ weapon: weapon, weaponLevel: CONST.WEAPON_MAX_LEVEL,
+        weaponQuality: 2, armorQuality: 2, battleClass: null,
+        stats: { str: 40, dex: 30, int: 20, con: 40, cha: 15 } });
+      return s.character;
+    };
+    const root = rig('daggers'), deep = rig('greatsword');
+    ok(WEAPONS.greatsword.tier > WEAPONS.daggers.tier, 'the depth rig is not comparing two depths');
+    ok(playerDamage(deep, false) > playerDamage(root, false),
+       'a tier-' + WEAPONS.greatsword.tier + ' weapon at proficiency ' + CONST.WEAPON_MAX_LEVEL +
+       ' hits no harder than a root weapon at the same level');
+    ok(playerCritChance(deep) > playerCritChance(root),
+       'depth reaches the damage term but not the crit term - one of the two formulas is still on profOf');
+
+    /* THE GAP WIDENS WITH LEVEL. That is the difference between "a better
+       weapon levels better", which is what was asked for, and "a better weapon
+       starts ahead", which a flat bonus would have given instead. */
+    const at = (weapon, lvl) => {
+      const s = harnessState({ weapon: weapon, weaponLevel: lvl, weaponQuality: 2, armorQuality: 2,
+        battleClass: null, stats: { str: 40, dex: 30, int: 20, con: 40, cha: 15 } });
+      return playerDamage(s.character, false);
+    };
+    const gapAt = lvl => at('greatsword', lvl) - at('daggers', lvl);
+    ok(gapAt(CONST.WEAPON_MAX_LEVEL) > gapAt(1) * 2,
+       'the depth bonus barely grows with proficiency (' + gapAt(1).toFixed(2) + ' -> ' +
+       gapAt(CONST.WEAPON_MAX_LEVEL).toFixed(2) + ') - it is a flat head start, not a better ladder');
+
+    /* IT IS THE COMBAT PROFICIENCY THAT MOVED, NOT THE LEVEL. profOf() answers
+       "what level is this weapon" and is what the Hall's mentor conversion, the
+       Legacy Points term and every "Lv 7" on screen read; conflating the two
+       would inflate a mentor and pay legacy points for depth nobody trained. */
+    ok(profOf(deep) === CONST.WEAPON_MAX_LEVEL,
+       'the weapon level itself was scaled - a tier-3 weapon now reports a level it does not have');
+    ok(combatProfOf(deep) > profOf(deep), 'the combat proficiency ignores the weapon tier');
+    ok(combatProfOf(root) === profOf(root), 'a root weapon is not the baseline in the fight');
+    ok(weaponTierMult('nonsense') === 1, 'an unknown weapon was given a depth bonus');
+
+    /* The screen and the fight must agree about the size of it. */
+    ok(weaponProfText('daggers') !== weaponProfText('greatsword'),
+       'the tree describes a root and a tier-3 weapon identically');
+    ok(weaponProfText('greatsword').indexOf(
+        String(+(CONST.PROF_DMG_PER * CONST.WEAPON_TIER_PROF_MULT[2] * 100).toFixed(1))) !== -1,
+       'the tree quotes a per-level damage figure the combat formula does not use');
+    ok(treeLegend().indexOf('Rank ' + deepest) !== -1,
+       'the tree legend does not reach the deepest rank it is describing');
+  })();
+
   /* --- name tables (doc 8) ---
      These counts are what keeps the placeholder tables from shipping quietly. */
   Object.keys(RACES).forEach(k => {
@@ -10934,12 +11926,20 @@ function assertAll() {
   /* --- training core (doc 3.8, 4, 6) ---
      Driven against a fabricated state, never the live one: nothing here reads
      or writes localStorage or the real champion. */
+  /* PINNED TO A NEUTRAL ACADEMY DAY. Everything below checks doc 4's training
+     rates against exact numbers, and the academy's day is a multiplier sitting
+     on top of them - left on the real date, every one of these would pass or
+     fail depending on what day it happened to be run. Seven checks failed the
+     first time the academy shipped, which is the suite doing its job. */
   const rig = (over) => {
     const s = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
     s.character = newCharacter('human', 'Rig', s.account);
+    s.trainingClock = neutralAcademyClock();
     if (over) over(s);
     return s;
   };
+  ok(neutralAcademyClock() !== null,
+     'no date in a year is an ordinary day at the academy - doc 4 rates cannot be measured');
   const HOUR = 3600000;
 
   /* Rate: doc 4's facilityRate x mentor x race x tutelage. Human is x1.05. */
@@ -11254,8 +12254,13 @@ function assertAll() {
       const b = BOONS[id];
       ok(ICON_NAMES.indexOf(b.icon) !== -1, id + ' names an icon outside the sprite sheet');
       ok(DRAFT_BUCKETS.some(x => x.id === b.bucket), id + ' is in bucket "' + b.bucket + '", which does not exist');
-      Object.keys(b.effect).forEach(k => ok(!!BONUS_KEYS[k],
-        id + ' grants "' + k + '", which is not a doc 3.4 pool key'));
+      /* NON-POOL boon keys are allowed, and the list of them is closed. The
+         pool belongs to a champion; `crowdGain` belongs to the meter, exactly
+         as Mending's `hpRegen` belongs to the clock rather than to the fight.
+         Enumerated here rather than waved through, so a typo in an effect key
+         is still caught - which is the whole job of this check. */
+      Object.keys(b.effect).forEach(k => ok(!!BONUS_KEYS[k] || BOON_NONPOOL_KEYS.indexOf(k) !== -1,
+        id + ' grants "' + k + '", which is neither a doc 3.4 pool key nor a known non-pool one'));
     });
     /* NOT ALLOWED in either table, and both bans are load-bearing. `vigor`
        moves max HP mid-run, which shifts the Auto-Yield threshold and the HP
@@ -11277,7 +12282,18 @@ function assertAll() {
       return { dmg: playerDamage(c, false), critDmg: playerDamage(c, true),
                crit: playerCritChance(c), ev: playerEvadeChance(c),
                taken: damageTaken(c, 100), gold: roundReward(s, 5).gold,
-               affl: afflictionChance(c), hp: maxHpOf(c) };
+               affl: afflictionChance(c), hp: maxHpOf(c),
+               /* What one unit of crowd is actually worth on this run, read by
+                  filling a throwaway meter rather than by reading the bonus
+                  back at itself - the same reason `recovery` gets a real
+                  knockout instead of a lookup. */
+               crowd: (function () {
+                 const keep = s.arena.crowd;
+                 s.arena.crowd = 0;
+                 const got = fillCrowd(s, 1);
+                 s.arena.crowd = keep;
+                 return got;
+               })() };
     };
     const moved = (before, after, key) =>
       key === 'damage'     ? after.dmg !== before.dmg :
@@ -11288,6 +12304,7 @@ function assertAll() {
       key === 'avarice'    ? after.gold !== before.gold :
       key === 'affliction' ? after.affl !== before.affl :
       key === 'recovery'   ? true :        // proved with a real knockout below
+      key === 'crowdGain'  ? after.crowd !== before.crowd :
       false;
 
     CONDITION_KEYS.forEach(id => {
@@ -11569,6 +12586,12 @@ function assertAll() {
         const arch = ENEMY_ARCHETYPES[id];
         ok(ICON_NAMES.indexOf(arch.icon) !== -1, id + ' names an icon outside the sprite sheet');
         ok(typeof arch.hp === 'number' && arch.hp > 0, id + ' has no positive HP multiplier');
+        /* A weight of zero is a row that can never come up, which is the dead
+           registry shape - and pickWeighted falls back to uniform when the
+           total is zero, so it fails SILENTLY. Falsification found this: I
+           flattened every weight to 0 and the suite reported nothing. */
+        ok(typeof arch.weight === 'number' && arch.weight > 0,
+           id + ' has no positive weight, so it never comes up - or it silently makes the table uniform');
         ok(typeof arch.dmg === 'number' && arch.dmg > 0, id + ' has no positive damage multiplier');
         if (arch.inflicts) ok(!!STATUSES[arch.inflicts],
           id + ' inflicts "' + arch.inflicts + '", which is not a doc 3.6 status');
@@ -11579,6 +12602,33 @@ function assertAll() {
       });
       ok(ENEMY_ARCHETYPES.ranker.hp === 1 && ENEMY_ARCHETYPES.ranker.dmg === 1,
          'the baseline archetype is not actually the baseline');
+
+      /* THE WEIGHTS ACTUALLY DECIDE THE SPREAD (Rob's backlog, 2026-09-13).
+         Uniform across seven rows meant six rounds in seven carried a trait,
+         so "this one is unusual" stopped meaning anything - the baseline was
+         the rarest thing in the arena. Sampled over the real picker rather
+         than asserted about the table, because pickWeighted falling back to
+         uniform is exactly the failure this has to catch. */
+      (function () {
+        const seen = {};
+        ARCHETYPE_KEYS.forEach(k => { seen[k] = 0; });
+        for (let r = 1; r <= 700; r++) {
+          if (isEliteRound(r)) continue;              // elites draw from their own pool
+          seen[archetypeFor(12345, r)]++;
+        }
+        const total = ARCHETYPE_KEYS.reduce((n, k) => n + seen[k], 0);
+        ok(total > 100, 'the archetype sample is too small to say anything');
+        const rankerShare = seen.ranker / total;
+        const declared = ENEMY_ARCHETYPES.ranker.weight /
+          ARCHETYPE_KEYS.reduce((n, k) => n + ENEMY_ARCHETYPES[k].weight, 0);
+        ok(Math.abs(rankerShare - declared) < 0.10,
+           'Rank and File comes up ' + (rankerShare * 100).toFixed(0) + '% of the time against a ' +
+           'declared ' + (declared * 100).toFixed(0) + '% - the weights are not reaching the picker');
+        ok(rankerShare > 0.35,
+           'only ' + (rankerShare * 100).toFixed(0) + '% of rounds are ordinary, so a trait is the ' +
+           'norm rather than an event');
+        ARCHETYPE_KEYS.forEach(k => ok(seen[k] > 0, k + ' never comes up at all'));
+      })();
       /* EVERY DECLARED TRAIT MUST REACH THE ENEMY THAT IS BUILT FROM IT.
          The exchange-loop checks further down drive a Swarmer and a Venomous
          opponent by setting `strikes` and `inflicts` on the enemy object
@@ -12319,7 +13369,14 @@ function assertAll() {
 
   const bestEcon = simulate(Object.assign({}, lateBase, {
     battleClass: 'juggernaut', classLevel: CONST.CLASS_LEVEL_ROUNDS.length, renownRank: RENOWN_TOP_RANK,
-    augments: { weapon: ['vampiric'], armor: ['resilient'] }, yieldAtHp: 0.25
+    augments: { weapon: ['vampiric'], armor: ['resilient'] }, yieldAtHp: 0.25,
+    /* And the weapon at the BOTTOM of the tree, since 2026-09-13 made depth
+       worth something in a fight. An optimised champion carries a tier-3
+       weapon; leaving the rig on the root one every champion is born holding
+       would put this guard back to measuring a strawman, which is the exact
+       miss it was written to catch. Read out of WEAPONS rather than named, so
+       a re-shaped tree cannot leave a stale id here. */
+    weapon: WEAPON_KEYS.filter(w => WEAPONS[w].tier === deepestWeaponTier())[0]
   }), 30);
   const bestHours = allSinks / bestEcon.goldPerHour;
   ok(bestHours >= 20,
@@ -12994,8 +14051,51 @@ function assertAll() {
   const fi = { battleClass: 'fighter', gear: { weapon: { augments: [] }, armor: { augments: [] } } };
   ok(Math.abs(classBonus(fi, 'damage') - BONUS_KEYS.damage.base * 1.0) < 1e-9,
      'a drawback-free tier 1 class is not at 1.0x');
-  const t3 = { battleClass: 'blademaster', gear: { weapon: { augments: [] }, armor: { augments: [] } } };
-  ok(Math.abs(classBonus(t3, 'damage') - BONUS_KEYS.damage.base * 2.0) < 1e-9, 'tier 3 is not 2.0x');
+  /* Sampled from a tier-3 class with NO idle bonus, and found rather than
+     named: a class carrying `tutelage` redistributes its arena budget over the
+     bonuses the arena can see, so it is the wrong row to read a tier magnitude
+     off. This check used Blade Master, which is exactly such a class. */
+  const plainT3 = CLASS_KEYS.filter(k => CLASSES[k].tier === 3 &&
+    CLASSES[k].bonuses.indexOf('damage') !== -1 && !CLASSES[k].drawback &&
+    CLASSES[k].bonuses.every(b => CLASS_IDLE_KEYS.indexOf(b) === -1))[0];
+  ok(!!plainT3, 'no tier-3 class carries plain damage, so the tier magnitude cannot be read');
+  if (plainT3) {
+    const t3 = { battleClass: plainT3, gear: { weapon: { augments: [] }, armor: { augments: [] } } };
+    ok(Math.abs(classBonus(t3, 'damage') - BONUS_KEYS.damage.base * 2.0) < 1e-9, 'tier 3 is not 2.0x');
+  }
+
+  /* --- AN IDLE BONUS DOES NOT SPEND ARENA BUDGET -------------
+     Blade Master was the weakest tier-3 class in the game at +84% gold/hour,
+     below three tier-2 classes, because one of its three bonuses is `tutelage`
+     and gold per hour is structurally blind to it - a two-bonus class wearing a
+     three-bonus price tag. Its combat bonuses carry the whole budget now. */
+  (function () {
+    const idleClass = CLASS_KEYS.filter(k =>
+      CLASSES[k].bonuses.some(b => CLASS_IDLE_KEYS.indexOf(b) !== -1))[0];
+    ok(!!idleClass, 'no class carries an idle bonus, so the redistribution is untested');
+    if (!idleClass) return;
+    const cl = CLASSES[idleClass];
+    const rig = { battleClass: idleClass, gear: { weapon: { augments: [] }, armor: { augments: [] } } };
+    const combat = cl.bonuses.filter(b => CLASS_IDLE_KEYS.indexOf(b) === -1);
+    const idleKey = cl.bonuses.filter(b => CLASS_IDLE_KEYS.indexOf(b) !== -1)[0];
+    const tierMult = CLASS_TIERS[cl.tier].magnitude * (cl.drawback ? 1 + CLASS_DRAWBACK_BONUS : 1);
+    combat.forEach(k => ok(
+      Math.abs(classBonus(rig, k) - BONUS_KEYS[k].base * tierMult * (cl.bonuses.length / combat.length)) < 1e-9,
+      idleClass + "'s " + k + ' does not carry the share of the budget its idle bonus cannot use'));
+    /* And the idle bonus itself is untouched - it keeps its own magnitude, or
+       the class has been paid twice for the same slot. */
+    ok(Math.abs(classBonus(rig, idleKey) - BONUS_KEYS[idleKey].base * tierMult) < 1e-9,
+       idleClass + "'s " + idleKey + ' was rescaled too, so the redistribution pays twice');
+    /* A class with no idle bonus is untouched, which is what says nothing
+       measured before this change moved. */
+    const plain = CLASS_KEYS.filter(k =>
+      CLASSES[k].bonuses.every(b => CLASS_IDLE_KEYS.indexOf(b) === -1))[0];
+    const pc = CLASSES[plain];
+    const prig = { battleClass: plain, gear: { weapon: { augments: [] }, armor: { augments: [] } } };
+    const pMult = CLASS_TIERS[pc.tier].magnitude * (pc.drawback ? 1 + CLASS_DRAWBACK_BONUS : 1);
+    ok(Math.abs(classBonus(prig, pc.bonuses[0]) - BONUS_KEYS[pc.bonuses[0]].base * pMult) < 1e-9,
+       'a class with no idle bonus had its magnitude changed');
+  })();
 
   /* Unlocks: tier N needs its N weapons at the tier's proficiency. */
   const cu = { version: CONST.VERSION, account: defaultAccount(), character: null, arena: defaultArena() };
@@ -16034,6 +17134,10 @@ window.EA = {
   get draft() { return draft; },
   CONST, FORMULAS, SCREENS, FACILITIES, ICON_NAMES, STAT_KEYS, UPGRADES,
   RACES, STATS, WEAPONS, QUALITY, QUALITY_TONES, qualityText, NAMES, PROLOGUES, RENOWN_RANKS,
+  TRAITS, TRAIT_KEYS, traitBonus, rollTraits, traitMarkup, deepestWeaponTier, WEAPON_KEYS,
+  CLASS_IDLE_KEYS, arenaShareOf, BOON_NONPOOL_KEYS, pickWeighted, cleanTraits,
+  TRAINING_DAYS, TRAINING_DAY_KEYS, trainingDayAt, trainingDayMult, trainingClockOf, academyDayMarkup,
+  neutralAcademyClock, newRival, rivalOf, rivalRoundFor, retireRival, rivalMarkup,
   rollName, newCharacter, newDraft, championRank, renownTitleFor, titleOf, renownBonus, renownBonusTotals, prologueFor, raceUnlocked, createChampion,
   tpPerMin, facilityLevel, mentorMultFor, sessionElapsed, sessionPreview, previewLevels,
   applyTp, applyRegen, unlockChildren, startTraining, collectSession, resolveOffline, tick,
@@ -16041,7 +17145,7 @@ window.EA = {
   benched, benchLeft, sessionOrigin, updateArenaIdleLive,
   ENEMY_GIVEN, ENEMY_BANDS, bandFor, rollEnemyName,
   startRun, beginRound, exchange, settleRun, yieldPreview, roundReward, enemyFor, applySustain,
-  playerDamage, playerCritChance, playerEvadeChance, damageTaken, profOf,
+  playerDamage, playerCritChance, playerEvadeChance, damageTaken, profOf, combatProfOf, weaponTierMult,
   startArenaTick, stopArenaTick, arenaStep, catchUpArena, defaultScreen, startingRenownFor, RENOWN_TOP_RANK,
   AUGMENTS, AUGMENT_KEYS, AUGMENT_SLOTS, AUGMENTS_BY_SLOT, budgetConflict,
   migrateGear, repairAugmentLists, healMs, sustainForYou, regenSourceOf, regenOver, hpStatusLine,
