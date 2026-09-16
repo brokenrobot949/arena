@@ -512,6 +512,27 @@ h3.sub:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 .cond strong{display:block;font-size:13.5px}
 .cond span{display:block;font-size:11.5px;line-height:1.4;color:var(--ink-soft)}
 .cond-fx{display:flex!important;flex-wrap:wrap;gap:4px;margin-top:5px}
+/* --- the tournament ----------------------------------------- */
+/* The locked reason sits where the button would be, so a card you cannot enter
+   still reads as a row with a requirement rather than a gap. */
+.tny-locked{display:block!important;margin-top:6px;font-size:11.5px;
+  font-family:var(--font-data);color:var(--ink-soft)}
+.cond .btn.small{margin-top:6px}
+.tny-board{list-style:none;margin:8px 0 0;padding:0;display:flex;
+  flex-direction:column;gap:4px}
+.tny-step{display:flex;align-items:baseline;gap:8px;padding:6px 8px;
+  border:2px solid var(--ink);border-radius:8px;background:var(--paper);
+  box-shadow:2px 2px 0 var(--ink)}
+.tny-step.is-done{background:var(--stone);opacity:.7}
+.tny-step.is-here{background:var(--gold)}
+.tny-when{font-family:var(--font-data);font-size:10.5px;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink-soft);flex:none;min-width:98px}
+.tny-step.is-here .tny-when{color:var(--ink)}
+.tny-who{font-size:12.5px;font-weight:700;line-height:1.3}
+@media (max-width:359px){
+  .tny-step{flex-direction:column;gap:2px}
+  .tny-when{min-width:0}
+}
 /* --- who you are fighting ----------------------------------- */
 .arch{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:2px 0 6px;
   font-size:11.5px;color:var(--ink-soft)}
@@ -1045,6 +1066,36 @@ h3.sub:has(.tale-tag){display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     transition-duration:.001ms !important;
   }
 }
+/* --- below 375px --------------------------------------------
+   The narrow band nobody had measured. Every sweep in this project has used
+   375px as the narrowest real device, and the layout assertions are guarded at
+   >= 320 - so between 320 and 374 two checks had been failing since long before
+   this build, and were only found by sweeping the guarded range itself rather
+   than the device sizes: the longest name the elf syllable tables can build
+   ellipsised in the topbar (114px into 99), and the "Champion" nav label
+   truncated (50px into 44).
+
+   Confirmed pre-existing by running the same checks against the build from
+   before this session at the same width: identical figures, both files.
+
+   Type gives way rather than information: the labels stay, at the smallest
+   size this band can carry, and the icons above them carry the meaning
+   regardless. */
+@media (max-width:374px){
+  #topbar h1{font-size:clamp(8.5px,3.3vw,17px);letter-spacing:.01em}
+  #topbar{gap:4px;padding:10px 6px}
+  /* The purse gives ground before the champion's own name does. */
+  .purse{gap:3px}
+  .purse .chip{font-size:9px;padding:2px 4px 2px 3px;gap:2px}
+  .purse .chip .icon{width:10px;height:10px}
+  #nav button{font-size:clamp(7px,2.2vw,11px);letter-spacing:0;padding:8px 0}
+  /* Four tier-3 nodes on ONE row is the property the tree exists to show, and
+     the node width was sized for 375px: at 320 four of them plus their gaps
+     needed 257px of a 254px box. Pre-existing, and invisible until the sweep
+     covered the guarded range rather than the device sizes. */
+  .tnode{width:clamp(56px,18.5vw,84px)}
+  .trow.wide{gap:3px}
+}
 </style>
 </head>
 <body>
@@ -1265,6 +1316,9 @@ h3.sub:has(.tale-tag){display:flex;align-items:center;gap:8px;flex-wrap:wrap}
         <p>Two <strong>conditions</strong> are in force at any moment &mdash; shown on the Arena screen before you enter, and they change every twenty minutes. Each has an upside and a cost: a rich purse with hungrier opponents, weaker enemies and a thinner purse. A run keeps whatever sand it started on, so entering is a real choice: fight this one, or wait for sand that suits what you are carrying.</p>
         <p>Every opponent has an <strong>archetype</strong> &mdash; a Brawler hits far harder than it can take, a Turtle is a long way from falling over, a Swarmer strikes twice for half as much, and a Venomous one leaves wounds that keep working after the exchange. It is named above their health bar, and it is the reason one round plays differently from the next. Some of them can put a <strong>status on you</strong>, which is new: bleed and stun used to be things only you did to them.</p>
         <p>Every tenth round is an <strong>elite</strong> &mdash; a named challenger with a forced archetype, more health, and a purse worth two and a half rounds.</p>
+        <p>Past Renown Rank 8, and once a champion has cleared round 10 themselves, the <strong>tournament</strong> opens: sixteen names, four bouts, <strong>one health bar</strong>. You are patched up a fifth of your pool between bouts, there is no walking out, and the entry fee is not returned. Three cards, cheapest to dearest, each priced in what a full run at your depth pays &mdash; so the stake grows with you and never goes stale.</p>
+        <p>It asks a different question from the endless run. The opponents are scaled to <em>your</em> expected damage and <em>your</em> effective health pool, so raw stats and gear quality are divided out and the card cannot be outgrown. What still tells is the <strong>balance</strong> of a build: lifesteal and regen, a status that weakens what they hit back with, and how well you hold up across four fights rather than one. A champion who hits hard and cannot take a hit goes out in the semi-final.</p>
+        <p>Reaching the final pays most of the fee back, so a bad draw costs rather than ruins. Winning outright is worth two to four times the stake depending on the card. Measured over many runs the three cards pay within a quarter of each other per hour &mdash; they differ in how often, not how much, so the top card is a gamble and not a better deal. A tournament credits <strong>no arena depth</strong>: it moves no best round, levels no class, and feeds no story gate. And if you have a rival, they are seeded into the far half of the draw &mdash; beat them in the final or not at all.</p>
         <p>The <strong>crowd meter</strong> fills a full notch for every round you clear, and a fraction of one every time you land a critical hit or slip a blow — so a flashy fighter wins it over sooner. Held full it pays +15% gold every round; spent, it either recovers some health or takes a large bite out of whoever you are facing. Holding it is the default, and you can set what happens while you are away under the arena card.</p>
 
         <p>Every five rounds you are offered three <strong>boons</strong> and take one. They last for that run only, they <em>stack</em>, and the fight does not stop while you choose &mdash; the boon starts working the moment you take it. If you are not watching, the game takes one for you after twelve exchanges, using the preference you set under the arena card.</p>
@@ -1758,6 +1812,86 @@ const CONST = {
   RIVAL_DMG_MULT: 1.3,
   RIVAL_GOLD_MULT: 3,
 
+
+  /* --- the tournament (Rob, 2026-09-15) -----------------------
+     The problem it exists for, stated as a number: every sink in this game is
+     PERMANENT, and a permanent sink is finite by construction. The seven
+     facilities are 898,898g and they are bought once; gear and augments are
+     ~40,500g and they recur only once per champion, which at the measured late
+     figure of 21,659 gold an hour is under two hours. After that the arena
+     pays a currency with nothing left to buy.
+
+     A fee is the answer because it RECURS, and it is denominated in rounds of
+     pay at the champion's own depth - the same trick the daily commission uses
+     - so it scales with income forever and can never be outgrown. A flat price
+     is the disease, not the cure. */
+  TOURNEY_BOUTS: 4,
+  TOURNEY_ENTRANTS: 16,
+  /* HOW EACH BOUT ESCALATES, and this took two wrong answers before the sweep
+     produced a right one. Both wrong versions scaled the opponent to the
+     ROUND, and neither is stage-neutral, because enemy strength is exponential
+     in round while a champion's power is not:
+
+       - a fraction of depth per bout (0.70/0.85/1.00/1.15) measured 100% win
+         at fresh and mid and 0% on the top card at late;
+       - flat health and damage multipliers AT the depth measured 93% on the
+         bottom card at mid and 7% on the same card at late.
+
+     One table, three stages, no value that works at all of them. That is the
+     boss finding of 2026-09-13 reproduced exactly, and the note it ended on
+     said what the real lever was: a fight that scales on THE CHAMPION WHO
+     SHOWS UP rather than on the round that gates it.
+
+     So a bout is specified in the only two units that mean the same thing at
+     every stage:
+
+       EXCHANGES - how many of this champion's own hits the opponent absorbs;
+       THREAT    - what share of this champion's own health pool it takes off
+                   per exchange, AFTER their mitigation.
+
+     Both are inverted back through FORMULAS.enemyHp/enemyDmg into the {hp,dmg}
+     pair enemyFor() already takes, so nothing downstream learns that the
+     tournament scales differently - the archetype, the sand and the statuses
+     all still fold in on top, which is what keeps the bouts varied around the
+     band rather than identical to it.
+
+     What this does NOT normalise is the thing that should decide the card: a
+     build's BALANCE. Crit, evasion, mitigation, lifesteal and recovery all
+     still tell, because only raw damage and raw health are divided out. A
+     champion who hits hard and cannot take a hit still loses in the semi. */
+  TOURNEY_BOUT_EXCHANGES: [14, 20, 28, 40],
+  /* Tuned against the card's own arithmetic rather than by groping: the whole
+     card costs the sum over bouts of (exchanges x threat) health pools, and a
+     champion brings 1 pool plus three patch-ups of TOURNEY_PATCH_PCT. The
+     first table summed to 5.0 pools against 1.6 available, which is why every
+     stage lost. These sum to 1.36, so a clean win is a real win and an average
+     build dies in the semi or the final. */
+  TOURNEY_BOUT_THREAT: [0.008, 0.010, 0.013, 0.017],
+  /* How far an entrant's own strength moves their bout off its band. The board
+     has to mean something - a finalist who fought through should be the hard
+     one - without the difficulty curve escaping the sweep's control. */
+  TOURNEY_STRENGTH_SPREAD: 0.16,
+  /* Patched up between bouts. Zero healing makes the tournament a pure max-HP
+     check decided by bout one's luck; a full heal makes it four unrelated
+     fights. A fifth of the pool is what keeps it one contest. */
+  TOURNEY_PATCH_PCT: 0.20,
+  /* Deepest round the fee and the opponents may be scaled from. Past the gold
+     soft cap the purse per round is flat, so an unbounded depth would price
+     the fee off a curve that stopped paying. */
+  TOURNEY_DEPTH_CAP: 60,
+  /* The champion's own floor. The account unlock is a record that outlives
+     them; the right to stand in the bracket is earned by the champion, the
+     same split the story gate settled on 2026-08-30. */
+  TOURNEY_MIN_ROUND: 10,
+  TOURNEY_RANK: 8,
+  /* Paid out by bouts won, as a multiple of the fee. Reaching the semi-final
+     returns most of the stake: a player who cannot afford to enter again is in
+     a spiral, and the fee is meant to be a cost, not a trap. */
+  TOURNEY_PLACEMENT: [0, 0.30, 0.60, 0.95],
+  /* Fame per bout survived, in rounds of renown at depth. Renown is NOT
+     staked - a card you lost is still a card you entered - so this is a grant
+     rather than a share of the fee. */
+  TOURNEY_RENOWN_PER_BOUT: 3,
   /* --- the crowd, spent rather than banked --------------------
      The meter has existed since Phase 4 and did one thing: fill to 8 and add
      15% gold. Now it is a resource with a choice attached, and BANKING is the
@@ -2820,7 +2954,14 @@ const RANK_UNLOCKS = [
   { rank: CONST.RANK_SEEDED_ENTRY, scope: 'account', key: 'seededEntry',
     label: 'Seeded Entry', icon: 'laurel',
     text: 'Begin every run at ' + Math.round(CONST.SEEDED_ENTRY_FRACTION * 100) +
-          '% of your best round' }
+          '% of your best round' },
+  /* The tournament is an ACCOUNT unlock - the school's standing, which
+     outlives a champion - but standing in the bracket also needs a best round
+     of TOURNEY_MIN_ROUND from whoever is standing in it. The record survives a
+     death; the right to be there is earned. Same split as the story gate. */
+  { rank: CONST.TOURNEY_RANK, scope: 'account', key: 'tourney',
+    label: 'The Tournament', icon: 'trophy',
+    text: 'Enter a sixteen-name bracket: four bouts, one health bar, for a purse' }
 ];
 
 /* --- arena conditions: the sand you are fighting on today ----
@@ -2871,6 +3012,80 @@ const ARENA_CONDITIONS = {
                   pool: { critPower: 0.25, crit: -0.06 }, enemy: {} }
 };
 const CONDITION_KEYS = Object.keys(ARENA_CONDITIONS);
+
+/* --- the three kinds of fight -------------------------------
+   The arena has run two kinds of fight since Phase 9 - the endless run and a
+   story bout - and they were told apart by `a.boss` being non-null, tested ad
+   hoc at FOURTEEN sites across the core and the render. Those sites do not all
+   ask the same question: some want "does this count as arena depth", some want
+   "may the player walk out", some want "what happens when the enemy falls".
+
+   A third kind of fight arriving as `!a.boss && !a.tourney` at each of those
+   fourteen is how this file has broken before. The knockout bench was
+   hand-rolled as `c.knockoutUntil && now < c.knockoutUntil` in six places and
+   was simply ABSENT from the seventh and eighth; the status side was defaulted
+   and the default was wrong at the newest call site. A rule that has to be
+   remembered at each call site will be forgotten at one, and the one it is
+   forgotten at is the new one.
+
+   So a mode is a ROW, and a new kind of fight fills the row in rather than
+   editing the sites - the same reason `ranker` and `An Ordinary Day` are rows
+   rather than null cases. The predicates below are named for the QUESTION,
+   not for the mode, which is what stops a caller quietly meaning a different
+   one. */
+const ARENA_MODES = {
+  /* depth   - does clearing here count as arena depth? (bestRound, class
+                levels, the depth commissions and every depth feat hang off
+                this one flag; see settleRun)
+     yield   - may the player walk out for a share of the pot?
+     draft   - are boons offered between rounds?
+     crowd   - may the crowd meter be spent?
+     rival   - does the account's rival turn up mid-fight here?
+     advance - what happens when the enemy falls: the next round, the next
+               bout, or the end of the fight. */
+  endless: { label: 'the arena',    depth: true,  yield: true,  draft: true,  crowd: true,  rival: true,  advance: 'round' },
+  boss:    { label: 'a story bout', depth: false, yield: false, draft: false, crowd: false, rival: false, advance: 'end'   },
+  /* The crowd meter IS spendable in a tournament, and deliberately: four hard
+     fights on one health bar is exactly where a banked heal earns its keep.
+     The rival does not turn up mid-fight because they are seeded into the
+     bracket instead - they are the finalist, not an interruption. */
+  tourney: { label: 'a tournament',  depth: false, yield: false, draft: false, crowd: true,  rival: false, advance: 'bout'  }
+};
+const ARENA_MODE_KEYS = Object.keys(ARENA_MODES);
+
+/* Which kind of fight this is. Reads the arena's own markers rather than being
+   stored, because a stored copy of a derived value is a value that drifts -
+   the same rule battleClass, renownRank and mentorSlots are held to. */
+function arenaMode(a) {
+  if (a && a.boss) return 'boss';
+  if (a && a.tourney) return 'tourney';
+  return 'endless';
+}
+const modeOf         = a => ARENA_MODES[arenaMode(a)] || ARENA_MODES.endless;
+const paysDepth      = a => modeOf(a).depth;
+const canYield       = a => modeOf(a).yield;
+const canDraft       = a => modeOf(a).draft;
+const canSpendCrowd  = a => modeOf(a).crowd;
+const rivalAppears   = a => modeOf(a).rival;
+const advanceOnClear = a => modeOf(a).advance;
+
+/* --- the tournament's three cards ---------------------------
+   One row per card. `feeRounds` and `purse` are both denominated in rounds of
+   pay at the champion's own depth, so the whole ladder scales with income and
+   none of it goes stale the way a fixed price does.
+
+   `scale` multiplies the bout band, so the Crimson Crown's final stands at
+   1.15 x 1.12 = 1.29 of a best round the champion has already reached - past
+   anything they have done. Stake more, face worse, win more. */
+const TOURNEY_TIERS = {
+  local:   { label: 'The Local Card',   icon: 'sword',  feeRuns: 0.55, scale: 0.86, dmgScale: 0.95, purse: 2.0,
+             text: 'A neighbourhood bill. Four bouts, modest stakes.' },
+  grand:   { label: 'The Grand Tourney', icon: 'laurel', feeRuns: 1.60, scale: 1.00, dmgScale: 1.00, purse: 2.2,
+             text: 'The proper card. Sixteen names worth knowing.' },
+  crimson: { label: 'The Crimson Crown', icon: 'trophy', feeRuns: 3.60, scale: 1.18, dmgScale: 1.06, purse: 4.1,
+             text: 'The one they write down. The final asks more than you have given.' }
+};
+const TOURNEY_TIER_KEYS = Object.keys(TOURNEY_TIERS);
 
 /* --- enemy archetypes ---------------------------------------
    What makes round 17 different from round 16. `hp` and `dmg` are multipliers
@@ -3537,7 +3752,7 @@ function defaultAccount() {
        repeatedly either. earlyAugment stays on the champion: it is about one
        champion's gear progression. Doc 9 Phase 9 already anticipates "the
        account/character unlock split". */
-    unlocks: { autoYield: false, seededEntry: false },
+    unlocks: { autoYield: false, seededEntry: false, tourney: false },
     /* Auto-Yield's chosen threshold, as a fraction of max HP. 0 is off, which
        is also what an unlocked-but-unset player has - the unlock grants the
        control, not the behaviour. */
@@ -3555,6 +3770,11 @@ function defaultAccount() {
        predates the mechanic picks one up without a migration step. */
     rival: null,
     rivalsBeaten: 0,
+    /* The tournament's record. The bracket itself lives on the ARENA, because
+       a tournament IS a run - four bouts on one health bar - and the arena is
+       what a run is. Only the tally outlives it. */
+    tourneysEntered: 0,
+    tourneysWon: 0,
     /* Daily commission. `day` is the local calendar day this record describes,
        `doneOn` the last day actually completed - the streak is measured from
        doneOn, so opening the game without finishing does not keep it alive.
@@ -3597,6 +3817,12 @@ function defaultArena() {
        exchange() branches on this alone, so it has to be part of the shape and
        has to survive migration - see migrateArena. */
     boss: null,
+    /* null for an ordinary run; the bracket while a tournament is being
+       fought. Same rule as `boss`: exchange() and settleRun() branch on the
+       MODE this implies, so it has to be part of the shape and has to survive
+       migration - a tournament that reloaded as an endless run would pay an
+       ordinary purse for a fight that cost a fee. */
+    tourney: null,
     /* When the last exchange was fought. The arena's clock, in the same sense
        training.startedAt is the session's: what makes the run keep fighting
        through a throttled tab and a closed one. See catchUpArena. */
@@ -3763,7 +3989,8 @@ function migrateAccount(raw) {
   }
   a.unlocks = {
     autoYield: bool(isObj(raw.unlocks) ? raw.unlocks.autoYield : false, false),
-    seededEntry: bool(isObj(raw.unlocks) ? raw.unlocks.seededEntry : false, false)
+    seededEntry: bool(isObj(raw.unlocks) ? raw.unlocks.seededEntry : false, false),
+    tourney: bool(isObj(raw.unlocks) ? raw.unlocks.tourney : false, false)
   };
   /* Snapped to an offered step rather than merely clamped: a hand-edited 0.99
      would walk the player out of every run on the first exchange, which reads
@@ -3797,6 +4024,10 @@ function migrateAccount(raw) {
     };
   }
   a.rivalsBeaten = Math.max(0, Math.round(num(raw.rivalsBeaten, 0)));
+  a.tourneysEntered = Math.max(0, Math.round(num(raw.tourneysEntered, 0)));
+  /* Never more cards won than entered: the pair is a record, and a record that
+     contradicts itself is one the Hall would print. */
+  a.tourneysWon = clamp(Math.round(num(raw.tourneysWon, 0)), 0, a.tourneysEntered);
   /* Commission, repaired field by field like everything else in the account.
      An unknown or missing task id, or a day key that is not a day key, simply
      rolls a fresh commission on the next refresh - the streak survives that,
@@ -4119,11 +4350,42 @@ function migrateArena(raw, account) {
       a.boss = { story: raw.boss.story, chapter: ch };
     }
   }
+  /* A TOURNAMENT HAS TO SURVIVE A RELOAD AS A TOURNAMENT, and losing the
+     marker would be worse than losing the fight - this is the boss defect of
+     2026-08-22 verbatim, in a mode that has a FEE attached. Without the
+     marker, exchange() reads the mode as endless: the bout enemy stays but the
+     purse becomes an ordinary round payout, the card can never be won however
+     well the player fought, and the run rolls on from a deep start, which is
+     Seeded Entry without earning it - after the player has already paid.
+
+     Everything here is repaired rather than trusted. `depth` is what the fee
+     and every bout are scaled from, so a forged one is a forged purse; it is
+     capped here on shape and re-clamped against the champion's own best round
+     in reconcileUnlocks, where the whole state exists. The entrant list is
+     rebuilt from the seed rather than restored, which is the strongest form of
+     "a stored copy of a derived value is a value that drifts": there is
+     nothing in it to forge. */
+  if (isObj(raw.tourney) && TOURNEY_TIERS[raw.tourney.tier]) {
+    a.tourney = {
+      tier: raw.tourney.tier,
+      seed: Math.max(0, Math.round(num(raw.tourney.seed, 0))),
+      depth: clamp(Math.round(num(raw.tourney.depth, 1)), 1, CONST.TOURNEY_DEPTH_CAP),
+      won: clamp(Math.round(num(raw.tourney.won, 0)), 0, CONST.TOURNEY_BOUTS - 1),
+      bout: clamp(Math.round(num(raw.tourney.bout, 1)), 1, CONST.TOURNEY_BOUTS),
+      fee: Math.max(0, Math.round(num(raw.tourney.fee, 0))),
+      entrants: []
+    };
+    /* The bout being fought is the one after the bouts won, always. Restoring
+       the two independently is how a save arrives claiming three wins while
+       standing in bout one - four payouts for one fight. */
+    a.tourney.bout = a.tourney.won + 1;
+  }
   /* A boss fight that could not be restored coherently settles to idle rather
      than resuming as an endless run at the boss's gating round. */
   a.active = bool(raw.active, false) && !!a.enemy &&
              a.playerHp > 0 && a.enemyHp > 0 && a.round >= 1 &&
-             (!isObj(raw.boss) || !!a.boss);
+             (!isObj(raw.boss) || !!a.boss) &&
+             (!isObj(raw.tourney) || !!a.tourney);
   a.over = null;
   a.totalExchanges = Math.max(0, Math.round(num(raw.totalExchanges, 0)));
   /* The run's draft seed. Restored so a reload is offered the same three
@@ -4145,7 +4407,7 @@ function migrateArena(raw, account) {
      an honest run at that depth would hold. Duplicates are legal here - boons
      stack on purpose - which is exactly why a length cap is the check that
      matters. */
-  const boonCap = a.boss ? 0 : draftsEarnedBy(a.round);
+  const boonCap = canDraft(a) ? draftsEarnedBy(a.round) : 0;
   arr(raw.boons, []).forEach(id => {
     if (BOONS[id] && a.boons.length < boonCap) a.boons.push(id);
   });
@@ -4210,6 +4472,23 @@ function reconcileUnlocks(s) {
      holds, and a trim cannot be undone by a later pass however well commented.
      Placed AFTER the unlock loop for exactly that reason. */
   if (s.character) migrateGear(s.character, s.account);
+  /* The card's bracket, REBUILT from its seed rather than restored from the
+     record - so the sixteen names, their strengths and the rival's place in
+     the draw are all derived and there is nothing in them to forge. It has to
+     happen here rather than in migrateArena for the same reason the augment
+     trim does: the entrant list needs the champion (for slot 0's name) and the
+     account (for the rival), and migrateArena has only one of them.
+
+     `depth` is re-clamped against the champion's own best round in the same
+     breath. A tournament credits no arena depth, so the depth it was entered
+     at can never legitimately exceed bestRound - and depth is what the fee and
+     every bout are scaled from, which makes an inflated one a forged purse. */
+  if (s.character && s.arena && s.arena.tourney) {
+    const t = s.arena.tourney;
+    t.depth = clamp(t.depth, 1, Math.max(1, Math.min(CONST.TOURNEY_DEPTH_CAP,
+                                                     Math.round(num(s.character.bestRound, 1)))));
+    t.entrants = tourneyEntrants(s, t.seed, t.tier);
+  }
   /* Rebind the champion to the run they are in and re-derive the draft from
      the round they are at. Both halves are derived rather than restored, so a
      save cannot arrive holding a run bonus it did not earn - and a save
@@ -5272,7 +5551,7 @@ function settleDraftOwed(s) {
      its chapter rather than one anybody fought - so drafting off it would hand
      a chapter-5 boss four free boons for a fight that clears nothing. Same
      rule, same reason, as the arena-depth guard in settleRun. */
-  if (a.boss) { a.draft = null; return null; }
+  if (!canDraft(a)) { a.draft = null; return null; }
   const owed = draftsEarnedBy(a.round) - arr(a.boons, []).length;
   if (owed <= 0) { a.draft = null; return null; }
   if (draftPending(a)) { a.draft.owed = owed; return a.draft; }
@@ -5859,6 +6138,356 @@ function retireRival(s, now) {
   return old;
 }
 
+
+/* --- THE TOURNAMENT (Rob, 2026-09-15) -------------------------
+   Four bouts on ONE health bar, no yield, for a purse - against an entry fee
+   paid up front and not refunded. The fee is the point: every other sink in
+   this game is permanent and therefore finite, and a player who has bought the
+   academy out has nothing left to earn gold FOR.
+
+   Everything below is scaled from the champion's own best round rather than
+   from the tier, and that is the load-bearing decision. A fixed-difficulty
+   fight is either a wall or a formality - the boss table of 2026-09-13 proved
+   exactly that, where the same constants produced three different answers on
+   three defensible rigs and the third was not even monotone. Scaled to the
+   champion who shows up, the card self-tunes across the whole game and can
+   never become a wall.
+   ------------------------------------------------------------- */
+
+/* WHAT A WHOLE RUN AT THIS DEPTH PAYS, which is the unit the fee and the purse
+   are denominated in. Not one round's pay, and the difference is not cosmetic:
+   goldPerRound goes FLAT past GOLD_SOFTCAP_ROUND, so a round-denominated fee
+   stops growing at round 28 while a late champion's income keeps climbing with
+   the number of rounds they clear. Measured, that made a card pay four times
+   the arena at mid-game and one times at late from the same constants - a fee
+   that goes stale is the exact disease this mechanic exists to cure, and the
+   first version had it. A run's pay keeps tracking depth on both sides of the
+   soft cap because depth still pays linearly there. */
+function runPurse(s, depth) {
+  const d = clamp(Math.round(num(depth, 1)), 1, CONST.TOURNEY_DEPTH_CAP);
+  let total = 0;
+  for (let r = 1; r <= d; r++) total += baseRoundGold(s, r);
+  return Math.max(1, total);
+}
+
+/* The depth everything about a card is priced and scaled from: the CHAMPION's
+   own best round, not the account's. The account unlock is a record that
+   outlives them; the right to stand in the bracket is earned by whoever is
+   standing in it - the same split the story gate settled on 2026-08-30. */
+function tourneyDepth(s) {
+  const c = s.character;
+  return clamp(Math.round(num(c ? c.bestRound : 0, 0)), 1, CONST.TOURNEY_DEPTH_CAP);
+}
+
+/* The stake, in rounds of pay at that depth. Denominated this way rather than
+   as a number of coins so it tracks income forever: a flat price is the
+   disease this whole mechanic exists to cure. */
+function tourneyFee(s, tierKey, depth) {
+  const t = TOURNEY_TIERS[tierKey];
+  if (!t) return 0;
+  const d = clamp(Math.round(num(depth, tourneyDepth(s))), 1, CONST.TOURNEY_DEPTH_CAP);
+  return Math.max(1, Math.floor(runPurse(s, d) * t.feeRuns));
+}
+
+/* What the card pays for reaching as far as you did. DERIVED from (tier,
+   depth, bouts won) and never from a stored figure: `fee` is kept on the
+   marker for the screen to quote, and if the payout read it back a hand-edited
+   save could mint gold by inflating a number it had already "paid". */
+function tourneyPayout(s, tierKey, depth, boutsWon) {
+  const t = TOURNEY_TIERS[tierKey];
+  if (!t) return 0;
+  const fee = tourneyFee(s, tierKey, depth);
+  const won = clamp(Math.round(num(boutsWon, 0)), 0, CONST.TOURNEY_BOUTS);
+  const mult = won >= CONST.TOURNEY_BOUTS ? t.purse : num(CONST.TOURNEY_PLACEMENT[won], 0);
+  return Math.floor(fee * mult);
+}
+
+/* Fame, paid per bout survived. Renown is not staked - you cannot lose
+   standing by losing a fight you were brave enough to enter - so it is a
+   straight grant rather than a multiple of the fee. */
+function tourneyRenown(s, tierKey, depth, boutsWon) {
+  const t = TOURNEY_TIERS[tierKey];
+  if (!t) return 0;
+  const d = clamp(Math.round(num(depth, 1)), 1, CONST.TOURNEY_DEPTH_CAP);
+  const won = clamp(Math.round(num(boutsWon, 0)), 0, CONST.TOURNEY_BOUTS);
+  return Math.floor(baseRoundRenown(s, d) * won * t.scale * CONST.TOURNEY_RENOWN_PER_BOUT);
+}
+
+/* The sixteen. Derived from the card's own seed rather than drawn from the
+   shared rng - the same rule the draft offers and the archetypes follow, and
+   for the same two reasons: a reload has to walk back into the same bracket,
+   and drawing from rng would shift the combat sequence behind it and break
+   every paired comparison the sweeps depend on.
+
+   Slot 0 is the champion. The rival, if the account has one, takes the top of
+   the far half at strength 1, so they fight their way to the final and the
+   grudge is settled in the last bout or not at all. */
+function tourneyEntrants(s, seed, tierKey) {
+  const n = CONST.TOURNEY_ENTRANTS;
+  const list = [{ you: true, rival: false, name: s.character ? s.character.name : 'You',
+                  strength: 0.5, archetype: null }];
+  const used = {};
+  for (let i = 1; i < n; i++) {
+    let name = '', tries = 0;
+    do {
+      const h = hashStr(seed + ':ent:' + i + ':' + tries);
+      name = ENEMY_GIVEN[h % ENEMY_GIVEN.length] + ' ' +
+             ELITE_TITLES[Math.floor(h / ENEMY_GIVEN.length) % ELITE_TITLES.length];
+      tries++;
+    } while (used[name] && tries < 16);
+    used[name] = true;
+    list.push({
+      you: false, rival: false, name: name,
+      strength: (hashStr(seed + ':str:' + i) % 1000) / 1000,
+      archetype: pickWeighted(ELITE_ARCHETYPES, seed + ':tarch:' + i)
+    });
+  }
+  const r = s.account.rival;
+  if (r && n >= 2) {
+    /* Strength deliberately OUTSIDE the [0,1] band the others are drawn in, so
+       the rival reaches the final BY CONSTRUCTION rather than by luck. At
+       strength 1 the jitter in tourneyWinner could and did knock them out of
+       their own half of the draw - measured: a rival on the account did not
+       appear in the bracket at all. A grudge that only sometimes turns up is
+       not a grudge. The nudge clamps its input, so this does not leak into
+       the bout's difficulty. */
+    list[n / 2] = { you: false, rival: true, name: r.name, strength: 2,
+                    archetype: ELITE_ARCHETYPES.indexOf(r.archetype) !== -1
+                      ? r.archetype : ELITE_ARCHETYPES[0] };
+  }
+  return list;
+}
+
+/* The half of the draw the champion meets at each bout: slot 1, then the
+   winner of 2 to 3, then of 4 to 7, then of the whole far half. */
+function tourneyBracketRange(bout) {
+  const b = clamp(Math.round(num(bout, 1)), 1, CONST.TOURNEY_BOUTS);
+  return [Math.pow(2, b - 1), Math.pow(2, b) - 1];
+}
+
+/* The fourteen fights the champion is not in, settled by a seeded comparison
+   of strength - NOT by running exchange() seven more times. That would be a
+   second combat path, and a second path is how two implementations of one
+   thing quietly stop agreeing. They exist to fill the board and to name the
+   next opponent; nothing they produce is ever paid out, and the champion's own
+   bouts are fought rather than guessed. */
+function tourneyWinner(list, lo, hi, seed) {
+  if (lo >= hi) return lo;
+  const mid = lo + Math.floor((hi - lo) / 2);
+  const a = tourneyWinner(list, lo, mid, seed);
+  const b = tourneyWinner(list, mid + 1, hi, seed);
+  const jitter = ((hashStr(seed + ':tb:' + a + ':' + b) % 200) - 100) / 1000;
+  return (num(list[a] ? list[a].strength : 0, 0) + jitter) >=
+         num(list[b] ? list[b].strength : 0, 0) ? a : b;
+}
+
+/* Who is standing opposite at a given bout. */
+function tourneyEntrantFor(s, t, bout) {
+  const list = arr(t.entrants, []);
+  if (!list.length) return null;
+  const r = tourneyBracketRange(bout);
+  return list[tourneyWinner(list, r[0], Math.min(r[1], list.length - 1), t.seed)] || null;
+}
+
+/* A bout is fought at the champion's own depth - the round they died on. The
+   round no longer sets the DIFFICULTY (see TOURNEY_BOUT_EXCHANGES); it is what
+   the fee is priced from and what the sand and the archetype are drawn at, so
+   the fight still belongs to the stage of the game it is in. */
+function tourneyBoutRound(s, t) {
+  return clamp(Math.round(num(t.depth, 1)), 1, CONST.TOURNEY_DEPTH_CAP);
+}
+
+/* The bout, expressed in the champion's own units and then INVERTED back into
+   the {hp, dmg} pair enemyFor() already takes - the same seam the sand's enemy
+   half uses, so nothing downstream learns the tournament scales differently.
+
+   The archetype's own multipliers still land on top of this, deliberately: a
+   Turtle in the semi-final is tankier than the band and a Brawler hits harder
+   than it, which is what keeps four bouts from being one fight repeated.
+
+   The nudge is what makes the board mean something - a finalist who fought
+   their way through really is the harder one. It moves health only, so a
+   strong entrant is a longer fight rather than a spikier one. */
+function tourneyBoutMods(s, t, bout) {
+  const c = s.character;
+  const tier = TOURNEY_TIERS[t.tier] || TOURNEY_TIERS.grand;
+  const b = clamp(Math.round(num(bout, 1)), 1, CONST.TOURNEY_BOUTS);
+  const base = enemyMods(s.arena);
+  if (!c) return base;
+  const opp = tourneyEntrantFor(s, t, b);
+  /* Clamped: the rival is seeded at a strength outside the drawn band so the
+     bracket cannot lose them, and that placement must not also make the final
+     harder through the back door. */
+  const nudge = 1 + (clamp(num(opp ? opp.strength : 0.5, 0.5), 0, 1) - 0.5) * CONST.TOURNEY_STRENGTH_SPREAD;
+  const round = tourneyBoutRound(s, t);
+
+  /* EXPECTED damage per exchange, not the plain hit - crit folded in through
+     the game's own two functions rather than by re-deriving the multiplier.
+
+     Using the plain hit left crit OUT of the normalisation, and the sweep
+     showed exactly what that costs: at one threat table a fresh champion won
+     0% of every card while a late one won 100% of all three, and NO value of
+     the table made all three stages playable. Crit and evasion were carrying
+     the whole gradient - they scale hard with DEX and weapon level, which
+     every champion accumulates, so the card got easier the longer you played
+     until it printed money. Six times the arena's gold per hour, measured.
+
+     What is deliberately NOT divided out is sustain, affliction and the
+     statuses that weaken what the opponent does back. Those are build BALANCE
+     rather than build magnitude, and they are what four bouts on one health
+     bar is meant to ask about - a different question from the one the endless
+     run asks, which is the whole reason this mode exists. */
+  const hit = Math.max(1e-6,
+    playerDamage(c, false) * (1 - playerCritChance(c)) +
+    playerDamage(c, true) * playerCritChance(c));
+  const wantHp = hit * num(CONST.TOURNEY_BOUT_EXCHANGES[b - 1], 10) * num(tier.scale, 1) * nudge;
+
+  /* And how hard it has to swing for that to land as the target share of this
+     champion's pool. Measured THROUGH damageTaken() rather than by reading the
+     armour and mitigation terms back out: a probe through the game's own
+     function cannot fall out of step with it, which is the mistake this file
+     has now made six times by copying a derivation instead of calling it.
+
+     The pool is the EFFECTIVE one - a champion who dodges two swings in five
+     has half again the health the bar shows, and leaving that out is the other
+     half of the gradient above. */
+  const through = Math.max(1e-6, damageTaken(c, 100) / 100);
+  const pool = maxHpOf(c) / Math.max(0.05, 1 - clamp(playerEvadeChance(c), 0, 0.95));
+  const wantDmg = (pool * num(CONST.TOURNEY_BOUT_THREAT[b - 1], 0.04) *
+                   num(tier.dmgScale, 1)) / through;
+
+  return {
+    hp: num(base.hp, 1) * wantHp / Math.max(1e-6, FORMULAS.enemyHp(round)),
+    dmg: num(base.dmg, 1) * wantDmg / Math.max(1e-6, FORMULAS.enemyDmg(round))
+  };
+}
+
+/* One bout begins. Built through enemyFor() so it inherits the archetype
+   traits, the status plumbing and the sand of the day that every other fight
+   in the game gets - only the bout's own multipliers are the tournament's. */
+function beginBout(s, bout) {
+  const a = s.arena, t = a.tourney;
+  const opp = tourneyEntrantFor(s, t, bout);
+  const round = tourneyBoutRound(s, t);
+  t.bout = bout;
+  a.round = round;
+  /* Bound here for the same reason startBoss binds explicitly: without it the
+     champion would still be pointing at the previous run, and that reads as
+     zero only by the accident of settleRun having flipped its active flag. */
+  bindRun(s);
+  /* A rival in the final is fought AS the rival - their own health and damage
+     multipliers - which is what makes the last bout the one worth staying for.
+     Their purse cannot stack, because roundReward gates every run multiplier
+     on paysDepth() and a tournament pays none of them. */
+  const asRival = opp && opp.rival && s.account.rival ? s.account.rival : null;
+  const e = enemyFor(round, tourneyBoutMods(s, t, bout), opp ? opp.archetype : null, asRival);
+  if (opp && !asRival) e.name = opp.name;
+  a.enemy = e;
+  a.enemyName = e.name;
+  a.enemyMaxHp = e.maxHp;
+  a.enemyHp = e.hp;
+  a.exchange = 0;
+  return e;
+}
+
+/* A bout falls. Four of them takes the card; there is no yield, so anything
+   short of four ends the moment the champion goes down. */
+function advanceBout(s, events, now) {
+  const a = s.arena, t = a.tourney, c = s.character;
+  t.won = clamp(Math.round(num(t.won, 0)), 0, CONST.TOURNEY_BOUTS) + 1;
+  fillCrowd(s, CONST.CROWD_PER_CLEAR);
+  /* A bout is time in the sand and it teaches the weapon in your hand at
+     exactly the arena's rate. Through applyTp for the same reason clearRound
+     uses it: a second level-up path is a second place for the Phase 3 NaN and
+     Infinity defects to come back. */
+  const tp = Math.max(0, num(a.exchange, 0)) * CONST.ARENA_TP_PER_EXCHANGE;
+  const taught = tp > 0 ? applyTp(s, 'sparring', tp) : null;
+  if (a.enemy && a.enemy.rival && s.account.rival) {
+    const beaten = retireRival(s, num(a.lastExchangeAt, 0));
+    logLine(a, 'clear', beaten.name + ' is finished. That score is settled.');
+    events.push({ who: 'player', kind: 'rivalDown', name: beaten.name });
+  }
+  logLine(a, 'clear', a.enemyName + ' goes down.');
+  if (taught && taught.levels.length) {
+    taught.levels.forEach(l => logLine(a, 'clear',
+      (WEAPONS[l.key] ? WEAPONS[l.key].label : l.key) + ' reaches level ' + l.level + '.'));
+  }
+  events.push({ who: 'player', kind: 'boutClear', bout: t.won,
+                tp: tp, levels: taught ? taught.levels : [] });
+  if (t.won >= CONST.TOURNEY_BOUTS) {
+    s.account.tourneysWon = Math.max(0, num(s.account.tourneysWon, 0)) + 1;
+    logLine(a, 'clear', 'The card is yours.');
+    settleRun(s, 'tourney', now);
+    return events;
+  }
+  /* Patched up between bouts. Zero healing makes the card a pure max-HP check
+     decided by bout one's luck; a full heal makes it four unrelated fights. A
+     fifth of the pool is what keeps four bouts ONE contest. */
+  a.playerHp = Math.min(maxHpOf(c), a.playerHp + maxHpOf(c) * CONST.TOURNEY_PATCH_PCT);
+  const e = beginBout(s, t.won + 1);
+  logLine(a, 'clear', 'Patched up. ' + e.name + ' takes the sand.');
+  events.push({ who: 'enemy', kind: 'enter', round: a.round, name: e.name });
+  return events;
+}
+
+/* Why you may not enter, or null. Returns the REASON rather than a boolean so
+   the screen can print the requirement - doc 3.8's rule that a locked row
+   still carries its information, the same shape chapterBlocked() follows. */
+function tourneyBlocked(s, tierKey, now) {
+  const c = s.character;
+  if (!c) return 'No champion.';
+  if (!TOURNEY_TIERS[tierKey]) return 'No such card.';
+  if (s.arena && s.arena.active) return 'Finish your run first.';
+  if (benched(c, now)) return 'Still on the bench \u00b7 back in ' + dur(benchLeft(c, now));
+  if (!s.account.unlocks.tourney) return 'Renown Rank ' + CONST.TOURNEY_RANK + ' required';
+  if (num(c.bestRound, 0) < CONST.TOURNEY_MIN_ROUND)
+    return 'Clear round ' + CONST.TOURNEY_MIN_ROUND + ' in the arena (best: ' +
+           Math.max(0, num(c.bestRound, 0)) + ')';
+  if (c.gold < tourneyFee(s, tierKey, tourneyDepth(s))) return 'The fee is beyond your purse.';
+  return null;
+}
+
+/* Returns {ok, msg} like every other core action - the edge does the flashing.
+   A core action that talks to the DOM is a core action that cannot be tested,
+   and the bench toast reached every player exactly that way. */
+function startTourney(s, tierKey, now) {
+  const blocked = tourneyBlocked(s, tierKey, now);
+  if (blocked) return { ok: false, msg: blocked };
+  const c = s.character;
+  /* Same rule as the arena door and the story call: a fight ends training, and
+     banking first means entering never costs the player a session. */
+  if (hasSession(c.training)) {
+    const p = sessionPreview(s, now);
+    if (p && p.tp > 0) {
+      const applied = applyTp(s, p.facility, p.tp);
+      if (applied.consumed >= p.tp) drainMentor(s, p.facility, p.mentorConsumed);
+    }
+    c.training.facility = null;
+    c.training.startedAt = null;
+  }
+  const depth = tourneyDepth(s);
+  const fee = tourneyFee(s, tierKey, depth);
+  c.gold -= fee;
+  s.account.tourneysEntered = Math.max(0, num(s.account.tourneysEntered, 0)) + 1;
+  const seed = Math.floor(rng() * 1e9);
+  s.arena = Object.assign(defaultArena(), {
+    active: true, playerHp: c.hp, lastExchangeAt: now, seed: seed,
+    /* A card is fought on the sand of the day like anything else. */
+    conditions: conditionsAt(now),
+    tourney: {
+      tier: tierKey, seed: seed, depth: depth, bout: 1, won: 0,
+      /* Kept for the screen to quote. NEVER read back by tourneyPayout - see
+         the comment there. */
+      fee: fee,
+      entrants: tourneyEntrants(s, seed, tierKey)
+    }
+  });
+  const e = beginBout(s, 1);
+  logLine(s.arena, 'clear',
+    (TOURNEY_TIERS[tierKey] ? TOURNEY_TIERS[tierKey].label : 'The card') +
+    ' \u00b7 ' + e.name + ' takes the sand.');
+  return { ok: true, arena: s.arena, enemy: e, fee: fee };
+}
 function pickWeighted(keys, seedStr) {
   let total = 0;
   keys.forEach(k => { total += Math.max(0, num(ENEMY_ARCHETYPES[k].weight, 1)); });
@@ -6005,8 +6634,28 @@ function damageTaken(c, raw) {
 
 /* Doc 4: gold and renown per round, with CHA and the race multipliers. The
    crowd multiplier is the doc 7 crowd meter at full. */
+/* One round's pay at a given depth, carrying every term the arena applies
+   EXCEPT the ones that belong to a run in progress - the crowd, the elite and
+   the rival. roundReward() is defined in terms of these rather than the other
+   way round, because the tournament's fee and purse have to be priced off the
+   curve the arena actually pays on. A second copy of this arithmetic is how a
+   re-derivation stops agreeing with the thing it copied, which this file has
+   now paid for six times. */
+function baseRoundGold(s, round) {
+  const c = s.character;
+  if (!c) return CONST.GOLD_BASE;
+  const race = RACES[c.race] || {};
+  return FORMULAS.goldPerRound(round, c.stats.cha, bonus(c, 'avarice')) * (race.goldMult || 1);
+}
+function baseRoundRenown(s, round) {
+  const c = s.character;
+  if (!c) return CONST.RENOWN_BASE;
+  const race = RACES[c.race] || {};
+  return FORMULAS.renownPerRound(round, c.stats.cha) * (race.renownMult || 1);
+}
+
 function roundReward(s, round) {
-  const c = s.character, race = RACES[c.race] || {};
+  const c = s.character;
   const crowdMult = s.arena.crowd >= CONST.CROWD_MAX ? CONST.CROWD_GOLD_MULT : 1;
   /* An elite is a harder round and pays like one. Read off the ENEMY that was
      actually fought rather than recomputed from the round number, so a boss -
@@ -6014,16 +6663,15 @@ function roundReward(s, round) {
      fought - can never be mistaken for an elite. That is the same trap the
      arena-depth guard in settleRun exists for. */
   const e = s.arena.enemy;
-  const eliteMult = (e && e.elite && e.round === round && !s.arena.boss)
+  const eliteMult = (e && e.elite && e.round === round && paysDepth(s.arena))
     ? CONST.ELITE_GOLD_MULT : 1;
   /* A rival's purse, read off the enemy under the same guard and for the same
      reason. They are not an elite, so the two multipliers cannot stack. */
-  const rivalMult = (e && e.rival && e.round === round && !s.arena.boss)
+  const rivalMult = (e && e.rival && e.round === round && paysDepth(s.arena))
     ? CONST.RIVAL_GOLD_MULT : 1;
   return {
-    gold: FORMULAS.goldPerRound(round, c.stats.cha, bonus(c, 'avarice')) *
-      (race.goldMult || 1) * crowdMult * eliteMult * rivalMult,
-    renown: FORMULAS.renownPerRound(round, c.stats.cha) * (race.renownMult || 1) * eliteMult
+    gold: baseRoundGold(s, round) * crowdMult * eliteMult * rivalMult,
+    renown: baseRoundRenown(s, round) * eliteMult
   };
 }
 
@@ -6102,7 +6750,7 @@ function beginRound(s, round) {
      the sand follows, and for the same reason: a reload has to walk back into
      the fight it left. `rivalMet` is what stops them appearing twice in a run
      that catches up past their round in one go. */
-  const meeting = !a.boss && !a.rivalMet && num(a.rivalRound, 0) === round
+  const meeting = rivalAppears(a) && !a.rivalMet && num(a.rivalRound, 0) === round
     ? (s.account.rival || null) : null;
   if (meeting) a.rivalMet = true;
   const e = enemyFor(round, enemyMods(a), archetypeFor(num(a.seed, 0), round), meeting);
@@ -6238,13 +6886,18 @@ function exchange(s, now) {
       grantFeat(s, 'oddity-thread', now);
     /* A boss ends the fight instead of advancing a round: doc 8 puts bosses
        outside the endless run, so there is no round two to walk into. */
-    if (a.boss) {
+    if (advanceOnClear(a) === 'end') {
       const r = bossReward(s, a.boss.chapter);
       a.pot.gold += r.gold;
       a.pot.renown += r.renown;
       logLine(a, 'clear', a.enemyName + ' falls. The chapter closes.');
       events.push({ who: 'player', kind: 'bossDown', reward: r });
       settleRun(s, 'boss', now);
+      return events;
+    }
+    /* A bout falls into the next bout, or into the card being won. */
+    if (advanceOnClear(a) === 'bout') {
+      advanceBout(s, events, now);
       return events;
     }
     clearRound(s, events);
@@ -6390,7 +7043,7 @@ function clearRound(s, events) {
 
    Returns {ok, msg} like every other core action so the edge does the flashing. */
 function crowdReady(a) {
-  return !!(a && a.active && !a.boss && num(a.crowd, 0) >= CONST.CROWD_MAX);
+  return !!(a && a.active && canSpendCrowd(a) && num(a.crowd, 0) >= CONST.CROWD_MAX);
 }
 
 /* THE one place the meter goes up. It has three sources now - a round clear, a
@@ -6470,6 +7123,11 @@ function autoSpendCrowd(s, events) {
 function settleRun(s, how, now) {
   const a = s.arena, c = s.character;
   if (!a.active) return null;
+  /* AND THE RULE LIVES IN THE CORE, not only in the markup that stopped
+     drawing the button. A rule that exists only in the render is a rule one
+     handler away from being gone, and the whole reason this defect existed is
+     that autoYieldCheck() held it and nothing else did. */
+  if (how === 'yield' && !canYield(a)) return null;
   /* THEY PUT YOU DOWN, and only a knockout counts: walking away from a rival
      is not losing to one, which is the same distinction the yield commission
      draws. Their round does NOT move - they are standing in exactly the same
@@ -6478,6 +7136,36 @@ function settleRun(s, how, now) {
   if (how === 'knockout' && a.enemy && a.enemy.rival && s.account.rival) {
     s.account.rival.beat = Math.max(0, num(s.account.rival.beat, 0)) + 1;
     logLine(a, 'crit', s.account.rival.name + ' stands over you. They will be back.');
+  }
+  /* A CARD PAYS PLACEMENT MONEY, not a pot built round by round. Computed here
+     rather than accrued per bout so that a knockout in the third bout pays
+     exactly what reaching the third bout is worth, from ONE derivation, and so
+     that the payout cannot disagree with what the entry screen quoted.
+
+     Derived from (tier, depth, bouts won). `t.fee` is never read: it is kept
+     on the marker for the screen, and a payout that read it back would let a
+     hand-edited save mint gold by inflating a figure it had already spent. */
+  if (a.tourney) {
+    const t = a.tourney;
+    /* COMPUTED WITH THE RUN'S OWN MODIFIERS OUT OF THE ARITHMETIC. runBonus()
+       gates on a.active, so the entry screen quotes a fee with no sand folded
+       into it while this, mid-settle, still has the run bound - and the two
+       silently disagreed. Measured: a card entered for 4,035g on Packed House
+       (which grants avarice) paid 4,370 where its own screen said 3,833, and
+       on Thin Ranks (-22% gold) it would have broken the other way and paid
+       less than the figure the player accepted.
+
+       The sand belongs in the FIGHT, not in the placement multiple. Unbinding
+       for the length of the derivation is explicit rather than clever: the
+       alternative is reading the stored fee back, and that is the one thing
+       this payout must never do. */
+    const bound = a.active;
+    a.active = false;
+    const payGold = tourneyPayout(s, t.tier, t.depth, t.won);
+    const payRenown = tourneyRenown(s, t.tier, t.depth, t.won);
+    a.active = bound;
+    a.pot.gold += payGold;
+    a.pot.renown += payRenown;
   }
   const keep = how === 'yield' ? CONST.YIELD_POT_KEPT : 1;
   const gold = Math.floor(a.pot.gold * keep);
@@ -6501,7 +7189,7 @@ function settleRun(s, how, now) {
      handing the story ladder the round total that unlocks its own next
      chapter. Doc 8 puts bosses outside the endless run; this is that rule
      spent in the one place it is easy to lose. */
-  const cleared = a.boss ? 0 : a.round - 1;
+  const cleared = paysDepth(a) ? a.round - 1 : 0;
   s.account.lifetime.rounds += Math.max(0, cleared);
   /* Class levels are bought with rounds cleared while wearing the class. A boss
      clears none, so the story ladder cannot be used to level a class - the same
@@ -6578,6 +7266,10 @@ function settleRun(s, how, now) {
     forfeitRenown: Math.floor(a.pot.renown) - renown,
     rounds: cleared, deepest: a.round, racesOpened: racesOpened,
     boss: a.boss || null, chapter: chapter, unlocked: unlocked, feats: feats,
+    /* What card was fought and how far it got, for the post-run panel. A copy,
+       not a reference: the arena is rebuilt by the next fight. */
+    tourney: a.tourney ? { tier: a.tourney.tier, won: a.tourney.won,
+                           fee: a.tourney.fee, depth: a.tourney.depth } : null,
     /* Kept for the post-run card: what you fought on and what you built. */
     conditions: arr(a.conditions, []).slice(), boons: arr(a.boons, []).slice()
   };
@@ -6664,7 +7356,7 @@ function yieldPreview(s) {
 function autoYieldCheck(s, now) {
   const a = s.arena, c = s.character;
   if (!a || !a.active || !c) return false;
-  if (a.boss) return false;                     // a story boss is not a purse to protect
+  if (!canYield(a)) return false;               // a story boss is not a purse to protect
   if (!s.account.unlocks.autoYield) return false;
   const at = num(s.account.autoYieldAt, 0);
   if (!(at > 0)) return false;
@@ -7704,9 +8396,13 @@ function championActivity(s, now) {
   }
   const a = s.arena;
   if (a && a.active) {
-    return a.boss
-      ? { kind: 'boss', icon: 'book', text: 'Story bout · ' + (a.enemyName || 'a boss') }
-      : { kind: 'arena', icon: 'sword', text: 'In the arena · round ' + a.round };
+    const mode = arenaMode(a);
+    if (mode === 'boss')
+      return { kind: 'boss', icon: 'book', text: 'Story bout \u00b7 ' + (a.enemyName || 'a boss') };
+    if (mode === 'tourney')
+      return { kind: 'tourney', icon: 'trophy',
+               text: 'In the bracket \u00b7 ' + tourneyBoutName(a.tourney ? a.tourney.bout : 1) };
+    return { kind: 'arena', icon: 'sword', text: 'In the arena \u00b7 round ' + a.round };
   }
   if (hasSession(c.training)) {
     const f = FACILITIES[c.training.facility];
@@ -9005,19 +9701,33 @@ const crowdPct = a =>
    why. */
 function crowdStateText(a) {
   const pct = Math.round((CONST.CROWD_GOLD_MULT - 1) * 100);
-  if (a.boss) return 'Not spendable in a story bout';
+  if (!canSpendCrowd(a)) return 'Not spendable in ' + modeOf(a).label;
   if (num(a.crowd, 0) >= CONST.CROWD_MAX) return 'Full · +' + pct + '% gold a round';
   return '+' + pct + '% gold at full';
 }
 
+/* What the big number at the top of a fight says. A card counts BOUTS - the
+   round it is scaled from is an implementation detail and "Round 26" on a
+   four-bout bracket is the screen describing the wrong thing. One helper, so
+   the rendered header and the in-place live update cannot disagree, which is
+   the rule the crowd state and the yield line already follow. */
+function roundLabel(a) {
+  return arenaMode(a) === 'tourney' ? 'Bout' : 'Round';
+}
+function roundValue(a) {
+  if (arenaMode(a) !== 'tourney') return String(a.round);
+  const t = a.tourney;
+  return clamp(Math.round(num(t ? t.bout : 1, 1)), 1, CONST.TOURNEY_BOUTS) +
+         ' / ' + CONST.TOURNEY_BOUTS;
+}
 function runMarkup(a, c) {
   const max = maxHpOf(c);
   const y = yieldPreview(state);
 
   return '' +
     '<div class="panel fight">' +
-      '<div class="round-line"><span class="sub">Round</span>' +
-        '<span class="round num" id="ar-round">' + a.round + '</span></div>' +
+      '<div class="round-line"><span class="sub" id="ar-roundlabel">' + roundLabel(a) + '</span>' +
+        '<span class="round num" id="ar-round">' + roundValue(a) + '</span></div>' +
       crowdBarMarkup(a) +
 
       /* Enemy above, champion below - the champion's bar sits closest to the
@@ -9056,8 +9766,19 @@ function runMarkup(a, c) {
 
       '<ol class="log" id="ar-log">' + logMarkup(a.log) + '</ol>' +
 
-      '<button class="btn wide" data-tone="danger" type="button" id="btn-yield">' +
-        'Yield <span class="forfeit num" id="ar-forfeit">' + yieldText(y) + '</span></button>' +
+      /* THE YIELD CONTROL ONLY EXISTS WHERE YIELDING DOES. It was rendered in
+         every mode, and autoYieldCheck() had refused on a boss since Phase 9
+         while the button beside it did not - the automatic path was guarded and
+         the manual one was not, which is this file's oldest shape.
+
+         On a boss it was merely wrong (the pot is empty until the boss falls).
+         On a card it was an exploit: yielding after two bouts banked 70% of the
+         placement money AND skipped the knockout bench, so the fastest way to
+         run cards was to walk out of every one of them. */
+      (canYield(a)
+        ? '<button class="btn wide" data-tone="danger" type="button" id="btn-yield">' +
+            'Yield <span class="forfeit num" id="ar-forfeit">' + yieldText(y) + '</span></button>'
+        : '<p class="armed">There is no walking out of ' + esc(modeOf(a).label) + '.</p>') +
       /* A player mid-run has to know the run may end without them pressing
          anything. The control itself lives on the idle screen, where it is set;
          this is the reminder that it is armed. */
@@ -9076,6 +9797,7 @@ function runMarkup(a, c) {
        doing to you, what you have drafted. The same markup and the same
        handler as the idle screen, so the two cannot describe the setting
        differently. */
+    tourneyBoardMarkup(a, c) +
     autoYieldMarkup(c) +
     sandMarkup(a, Date.now()) +
     commissionMarkup();
@@ -9102,10 +9824,23 @@ function idleArenaMarkup(a, c) {
   const ko = benched(c, now);
   const over = a.over;
 
+  /* A card reports what a card is: how far through the bracket, against what
+     it cost. "Rounds cleared: 0" is true and useless, and it is what the
+     endless run's own panel would have said. */
+  const ot = over && over.tourney ? over.tourney : null;
+  const otTier = ot ? TOURNEY_TIERS[ot.tier] : null;
   const result = over ? '<div class="panel prologue">' +
-    '<h3 class="sub">' + (over.how === 'yield' ? 'You walked out' : 'You went down') + '</h3>' +
+    '<h3 class="sub">' + (ot
+        ? esc((otTier ? otTier.label : 'The card') + ' \u00b7 ' +
+              (ot.won >= CONST.TOURNEY_BOUTS ? 'yours' : 'out in the ' +
+               tourneyBoutName(ot.won + 1).toLowerCase()))
+        : over.how === 'yield' ? 'You walked out' : 'You went down') + '</h3>' +
     '<ul class="yield">' +
-      '<li><span class="k">Rounds cleared</span><span class="v num">' + over.rounds + '</span></li>' +
+      (ot ? '<li><span class="k">Bouts taken</span><span class="v num">' +
+              ot.won + ' of ' + CONST.TOURNEY_BOUTS + '</span></li>' +
+            '<li><span class="k">Fee paid</span><span class="v num">' +
+              Math.max(0, num(ot.fee, 0)).toLocaleString() + '</span></li>'
+          : '<li><span class="k">Rounds cleared</span><span class="v num">' + over.rounds + '</span></li>') +
       '<li><span class="k">Gold taken</span><span class="v num">' + over.gold.toLocaleString() + '</span></li>' +
       '<li><span class="k">Renown</span><span class="v num">' + over.renown.toLocaleString() + '</span></li>' +
       (over.forfeitGold > 0 || over.forfeitRenown > 0
@@ -9124,7 +9859,8 @@ function idleArenaMarkup(a, c) {
       '<p class="hp-line">Entering ends the current training session — it banks first.</p>' +
       '<button class="btn wide" type="button" id="btn-enter">Enter the arena</button></div>';
 
-  return result + rivalMarkup(state, now) + sandMarkup(a, now) + gate +
+  return result + tourneyEntryMarkup(state, now) + rivalMarkup(state, now) +
+         sandMarkup(a, now) + gate +
          autoYieldMarkup(c) + draftPrefMarkup() + commissionMarkup();
 }
 
@@ -9134,7 +9870,7 @@ function idleArenaMarkup(a, c) {
 function autoYieldMarkup(c) {
   if (!state.account.unlocks.autoYield) return '';
   const at = num(state.account.autoYieldAt, 0);
-  const live = state.arena.active && !state.arena.boss;
+  const live = state.arena.active && canYield(state.arena);
   /* Turning it ON below the threshold walks you out on the next exchange -
      which is exactly what the setting says it does, but a player deserves to
      be told before they press it rather than after. */
@@ -9145,8 +9881,8 @@ function autoYieldMarkup(c) {
     (armsNow ? ' <strong>Set it above your health now and the run ends this exchange.</strong>' : '') +
     /* autoYieldCheck refuses on a boss - a story bout is not a purse to
        protect - so the control must not imply otherwise while one is up. */
-    (state.arena.active && state.arena.boss
-      ? ' <strong>It does not apply to a story bout.</strong>' : '') +
+    (state.arena.active && !canYield(state.arena)
+      ? ' <strong>It does not apply to ' + modeOf(state.arena).label + '.</strong>' : '') +
     '</p>' +
     '<div class="picker">' + CONST.AUTO_YIELD_STEPS.map(v =>
       '<button class="chip-btn' + (v === at ? ' is-on' : '') + '" type="button" ' +
@@ -9399,7 +10135,8 @@ function updateArenaLive() {
     const el = document.getElementById(id);
     if (el && el.textContent !== txt) el.textContent = txt;
   };
-  set('ar-round', String(a.round));
+  set('ar-round', roundValue(a));
+  set('ar-roundlabel', roundLabel(a));
   set('ar-php', Math.round(a.playerHp) + ' / ' + max);
   set('ar-ehp', Math.round(a.enemyHp) + ' / ' + Math.round(a.enemyMaxHp));
   set('ar-ename', a.enemyName);
@@ -9649,6 +10386,17 @@ function commissionMarkup() {
 }
 
 function wireArena() {
+  /* The core returns {ok,msg} and the edge flashes - same rule as every other
+     control on this screen. */
+  document.querySelectorAll('[data-tourney]').forEach(b =>
+    b.addEventListener('click', () => {
+      const r = startTourney(state, b.dataset.tourney, Date.now());
+      if (!r.ok) { flash(r.msg || 'No.'); return; }
+      save('tourney-enter');
+      startArenaTick();
+      renderAll();
+      flash('Paid ' + gp(r.fee) + ' · ' + r.enemy.name + ' takes the sand.');
+    }));
   const com = document.getElementById('btn-commission');
   if (com) com.addEventListener('click', () => {
     const r = claimCommission(state, Date.now());
@@ -9992,6 +10740,86 @@ function rivalMarkup(s, now) {
     '</p></div>';
 }
 
+
+/* --- the tournament, on screen -------------------------------
+   The entry card carries what a locked row is required to carry: the fee, what
+   it pays, and the reason you may not enter yet. Doc 3.8's rule - the road you
+   have not earned stays visible with its requirement showing - and the same
+   shape chapterBlocked() feeds the story ladder. */
+function tourneyBoutName(bout) {
+  const names = ['Round of sixteen', 'Quarter-final', 'Semi-final', 'The final'];
+  return names[clamp(Math.round(num(bout, 1)), 1, CONST.TOURNEY_BOUTS) - 1] || 'Bout';
+}
+
+function tourneyEntryMarkup(s, now) {
+  const c = s.character;
+  if (!c || !s.account.unlocks.tourney) return '';
+  const depth = tourneyDepth(s);
+  const won = Math.max(0, num(s.account.tourneysWon, 0));
+  const entered = Math.max(0, num(s.account.tourneysEntered, 0));
+  const rows = TOURNEY_TIER_KEYS.map(k => {
+    const t = TOURNEY_TIERS[k];
+    const fee = tourneyFee(s, k, depth);
+    const blocked = tourneyBlocked(s, k, now);
+    /* The purse and the placement money both quoted, because "what do I get if
+       it goes wrong" is half of the decision and the fee is not refundable. */
+    const win = tourneyPayout(s, k, depth, CONST.TOURNEY_BOUTS);
+    const final = tourneyPayout(s, k, depth, CONST.TOURNEY_BOUTS - 1);
+    return '<li class="cond">' + icon(t.icon) +
+      '<div><strong>' + esc(t.label) + '</strong>' +
+      '<span>' + esc(t.text) + '</span>' +
+      '<span class="cond-fx">' +
+        '<span class="mod down">' + gp(fee) + ' to enter</span>' +
+        '<span class="mod up">' + gp(win) + ' to win</span>' +
+        '<span class="mod">' + gp(final) + ' losing the final</span>' +
+      '</span>' +
+      (blocked
+        ? '<span class="tny-locked">' + esc(blocked) + '</span>'
+        : '<button class="btn small" type="button" data-tourney="' + k + '" ' +
+          'aria-label="Enter ' + esc(t.label) + ' for ' + fee.toLocaleString() + ' gold">' +
+          'Enter · ' + gp(fee) + '</button>') +
+      '</div></li>';
+  }).join('');
+  return '<div class="panel sand"><h3 class="sub">' + icon('trophy') +
+    ' The tournament<span class="sand-when" id="tny-record">' +
+    (entered > 0 ? won + ' of ' + entered + ' taken' : 'never entered') + '</span></h3>' +
+    '<p class="hp-line">Sixteen names, four bouts, <strong>one health bar</strong> — patched up ' +
+    Math.round(CONST.TOURNEY_PATCH_PCT * 100) + '% between them, and no walking out. ' +
+    'The fee is not returned.</p>' +
+    '<ul class="cond-list">' + rows + '</ul></div>';
+}
+
+/* The board, during a card. The fourteen fights the champion is not in are
+   settled by a seeded strength comparison rather than by running the combat
+   core seven more times - they exist to fill this and to name who is next. */
+function tourneyBoardMarkup(a, c) {
+  const t = a.tourney;
+  if (!t) return '';
+  const tier = TOURNEY_TIERS[t.tier];
+  const bout = clamp(Math.round(num(t.bout, 1)), 1, CONST.TOURNEY_BOUTS);
+  const won = clamp(Math.round(num(t.won, 0)), 0, CONST.TOURNEY_BOUTS);
+  const steps = [];
+  for (let b = 1; b <= CONST.TOURNEY_BOUTS; b++) {
+    const opp = tourneyEntrantFor(state, t, b);
+    const done = b <= won;
+    const here = b === bout;
+    steps.push('<li class="tny-step' + (done ? ' is-done' : '') + (here ? ' is-here' : '') + '">' +
+      '<span class="tny-when">' + esc(tourneyBoutName(b)) + '</span>' +
+      '<span class="tny-who">' + esc(opp ? opp.name : 'To be decided') +
+      (opp && opp.rival ? ' <span class="mod down">rival</span>' : '') + '</span></li>');
+  }
+  return '<div class="panel sand"><h3 class="sub">' + icon(tier ? tier.icon : 'trophy') +
+    ' ' + esc(tier ? tier.label : 'The card') +
+    '<span class="sand-when" id="tny-bout">' + esc(tourneyBoutName(bout)) + '</span></h3>' +
+    '<ol class="tny-board">' + steps.join('') + '</ol>' +
+    '<p class="hp-line">' + won + ' of ' + CONST.TOURNEY_BOUTS + ' taken. ' +
+    'No yield, and the fee is already paid — ' +
+    (won >= CONST.TOURNEY_BOUTS - 1
+      ? 'this is the one they write down.'
+      : 'reaching the final pays ' +
+        gp(tourneyPayout(state, t.tier, t.depth, CONST.TOURNEY_BOUTS - 1)) + '.') +
+    '</p></div>';
+}
 function academyDayMarkup() {
   const now = trainingClockOf(state);
   const d = TRAINING_DAYS[trainingDayAt(now)];
@@ -10827,6 +11655,98 @@ function healMs(s) {
   return perMin > 0 ? (missing / perMin) * 60000 : 0;
 }
 
+
+/* --- the tournament, swept (Rob, 2026-09-15) ------------------
+   simulate() runs endless runs and nothing else, so a sweep could not run a
+   tournament at all - and a sweep that cannot vary the thing being balanced
+   cannot find an imbalance in it. This is the FOURTH instance of that exact
+   gap in this file, after `battleClass`, `renownRank` and the weapon, and the
+   boss table is the standing warning about what happens without it: three
+   defensible rigs, three different answers, and no honest way to tune.
+
+   The rig's honesty rests on ONE decision. `bestRound` is not handed in - it
+   is MEASURED, by running the endless arena with the same config first and
+   taking the depth that build actually reaches. Every bout and the fee are
+   scaled from it, so a champion's power and their depth can never disagree the
+   way a hand-made rig lets them: writing `bestRound: 30` on a build that
+   really clears 45 is how a card measures as trivial and a tuning pass fits
+   itself to the rig instead of the game. */
+function measuredDepth(config, seeds) {
+  const n = seeds == null ? 6 : seeds;
+  const runs = [];
+  for (let i = 0; i < n; i++) runs.push(simulateRun(config, 101 + i).rounds);
+  return Math.max(1, Math.round(median(runs)));
+}
+
+function simulateTourneyRun(config, tierKey, depth, seed) {
+  const cfg = config || {};
+  const s = harnessState(cfg);
+  const prev = rng;
+  rng = makeRng(seed);
+  const T = seed * CONST.CONDITION_ROTATE_MS;
+  /* Past the gates, for the same reason the rig fits augments past the slot
+     limit: the question is what a card is WORTH, not whether this rig could
+     have qualified for it. The fee is still charged and still measured. */
+  s.account.unlocks.tourney = true;
+  s.character.bestRound = depth;
+  s.character.hp = maxHpOf(s.character);
+  s.character.gold = Number.MAX_SAFE_INTEGER / 4;
+  const before = s.character.gold;
+  const cap = cfg.maxExchanges == null ? 200000 : cfg.maxExchanges;
+  const started = startTourney(s, tierKey, T);
+  if (!started.ok) { rng = prev; return null; }
+  const fee = started.fee;
+  let exchanges = 0;
+  while (s.arena.active && exchanges < cap) { exchange(s, T); exchanges++; }
+  if (s.arena.active) settleRun(s, 'knockout', T);
+  rng = prev;
+  const over = s.arena.over;
+  const won = over && over.tourney ? over.tourney.won : 0;
+  return {
+    tier: tierKey, depth: depth, fee: fee, won: won, cleared: won >= CONST.TOURNEY_BOUTS,
+    gold: over.gold, renown: over.renown, how: over.how,
+    net: s.character.gold - before,
+    exchanges: exchanges, fightMs: exchanges * CONST.ARENA_TICK_MS,
+    /* Same two terms an endless run is charged: the bench a knockout costs and
+       the time spent being patched up afterwards. A card that pays well and
+       leaves the champion on the floor for half an hour has not paid well. */
+    downMs: (over.how === 'knockout' ? Math.max(0, num(s.character.knockoutUntil, 0) - T) : 0) +
+            healMs(s)
+  };
+}
+
+function simulateTourney(config, n, tierKey, depth) {
+  const cfg = config || {};
+  const count = n == null ? 40 : n;
+  const tier = TOURNEY_TIERS[tierKey] ? tierKey : 'grand';
+  const d = depth == null ? measuredDepth(cfg) : depth;
+  const runs = [];
+  for (let i = 0; i < count; i++) {
+    const r = simulateTourneyRun(cfg, tier, d, (cfg.seed == null ? 1 : cfg.seed) + i);
+    if (r) runs.push(r);
+  }
+  if (!runs.length) return null;
+  const totalMs = runs.reduce((a, r) => a + r.fightMs + r.downMs, 0);
+  const totalNet = runs.reduce((a, r) => a + r.net, 0);
+  const byBout = [0, 0, 0, 0, 0];
+  runs.forEach(r => { byBout[clamp(r.won, 0, CONST.TOURNEY_BOUTS)]++; });
+  return {
+    tier: tier, depth: d, runs: runs.length,
+    fee: runs[0].fee,
+    winRate: +(runs.filter(r => r.cleared).length / runs.length).toFixed(3),
+    /* Where cards END, which is the shape that says whether the four bouts are
+       a curve or a cliff. A card that is always won or always lost in bout one
+       is not four fights. */
+    endedAtBout: byBout,
+    meanBoutsWon: +mean(runs.map(r => r.won)).toFixed(2),
+    medianMinutes: +(median(runs.map(r => r.fightMs)) / 60000).toFixed(2),
+    meanNet: Math.round(totalNet / runs.length),
+    /* THE number that decides whether this mechanic is allowed to exist: a
+       card must not out-earn the endless run it is meant to sit beside, or the
+       arena becomes the place you grind fee money. */
+    goldPerHour: +(totalNet / (totalMs / 3600000)).toFixed(1)
+  };
+}
 function simulate(config, n) {
   const cfg = config || {};
   const count = n == null ? 200 : n;
@@ -11776,6 +12696,491 @@ function assertAll() {
     ok(fb.account.rival.beat === 2, 'a legitimate rival record was thrown away');
   })();
 
+  /* --- the tournament (Rob, 2026-09-15) -----------------------
+     The mode table first, because a third kind of fight arriving as an ad-hoc
+     `!a.boss && !a.tourney` at fourteen call sites is the shape this file has
+     been bitten by three times. A mode is a ROW, and the row has to be whole. */
+  (function () {
+    const FLAGS = ['depth', 'yield', 'draft', 'crowd', 'rival'];
+    ARENA_MODE_KEYS.forEach(k => {
+      const m = ARENA_MODES[k];
+      ok(typeof m.label === 'string' && m.label.length > 0, k + ' has no label');
+      FLAGS.forEach(f => ok(typeof m[f] === 'boolean',
+        k + ' does not answer "' + f + '" - a mode that leaves a question open ' +
+        'is a call site that has to remember, which is how the last three got out'));
+      ok(['round', 'bout', 'end'].indexOf(m.advance) !== -1, k + ' advances nowhere');
+    });
+    /* Every mode must be REACHABLE, or it is a dead registry row - the same
+       shape the five dead weapon glyphs and the epithet pool were deleted for,
+       and just as silent. */
+    const reached = {};
+    reached[arenaMode(null)] = true;
+    reached[arenaMode({ boss: { story: 'x', chapter: 0 } })] = true;
+    reached[arenaMode({ tourney: { tier: 'grand' } })] = true;
+    ARENA_MODE_KEYS.forEach(k => ok(reached[k],
+      'no arena state produces the "' + k + '" mode - it is a dead row'));
+    /* And the endless run must still be what an ordinary arena is, or the
+       refactor that introduced this table changed the game. */
+    ok(arenaMode(defaultArena()) === 'endless', 'a plain arena is no longer an endless run');
+    ok(paysDepth(defaultArena()) && canYield(defaultArena()) && canDraft(defaultArena()),
+       'the endless run lost one of its own properties to the mode table');
+  })();
+
+  (function () {
+    /* A champion who can actually stand in a bracket. Built once and copied,
+       so every check below starts from the same place. */
+    function rig(depth, gold) {
+      const s = defaultState();
+      s.account.unlocks.tourney = true;
+      s.account.prestige = CONST.TOURNEY_RANK;
+      s.character = newCharacter('human', 'Bracket', s.account);
+      const c = s.character;
+      c.stats = { str: 60, dex: 40, int: 20, con: 60, cha: 20 };
+      c.weapons = { swords: { level: 6, tp: 0 } };
+      c.activeWeapon = 'swords';
+      c.gear = { weapon: { quality: 2, augments: [] }, armor: { quality: 2, augments: [] } };
+      c.bestRound = depth;
+      c.renown = FORMULAS.rankThreshold(CONST.TOURNEY_RANK);
+      c.renownRank = renownRankFor(c.renown);
+      c.gold = gold == null ? 10000000 : gold;
+      c.hp = maxHpOf(c);
+      return s;
+    }
+
+    /* THE GATE. Three separate conditions and each is checked on its own,
+       because a gate that passes for the wrong reason is not a gate. */
+    ok(tourneyBlocked(rig(30), 'grand', 0) === null, 'a qualified champion was refused the bracket');
+    const noRank = rig(30); noRank.account.unlocks.tourney = false;
+    ok(!!tourneyBlocked(noRank, 'grand', 0), 'the tournament let an unranked account in');
+    /* PINNED TO AN ABSOLUTE, not to the constant. The first version of this
+       built its rig at `TOURNEY_MIN_ROUND - 1` and asserted refusal - which is
+       true at every value of the constant including zero, so driving the floor
+       to 0 produced no failure at all. The seventh tautology found in this
+       file, and the same shape as the traits-per-champion one: a check that
+       compares a setting to itself passes however the setting is set.
+
+       The property that matters is that a champion who has never fought cannot
+       buy their way into a bracket, and that the floor is a real floor. */
+    const neverFought = rig(0);
+    neverFought.character.bestRound = 0;
+    ok(!!tourneyBlocked(neverFought, 'grand', 0),
+       'a champion who has never cleared a round was admitted to the bracket');
+    ok(CONST.TOURNEY_MIN_ROUND >= 5,
+       'the bracket opens at round ' + CONST.TOURNEY_MIN_ROUND + ' - that is not a floor');
+    const tooShallow = rig(CONST.TOURNEY_MIN_ROUND - 1);
+    ok(!!tourneyBlocked(tooShallow, 'grand', 0),
+       'a champion below round ' + CONST.TOURNEY_MIN_ROUND + ' was admitted to the bracket');
+    ok(!!tourneyBlocked(rig(30, 0), 'grand', 0), 'the fee was not required to enter');
+    ok(!!tourneyBlocked(rig(30), 'nosuchcard', 0), 'an invented card was accepted');
+    const benchedRig = rig(30);
+    benchedRig.character.knockoutUntil = 600000;
+    ok(!!tourneyBlocked(benchedRig, 'grand', 0), 'a benched champion entered a tournament');
+
+    /* THE FEE IS CHARGED, and it is the figure the entry screen would quote. */
+    const paying = rig(30);
+    const owed = tourneyFee(paying, 'grand', tourneyDepth(paying));
+    const purseBefore = paying.character.gold;
+    const opened = startTourney(paying, 'grand', 0);
+    ok(opened.ok, 'a qualified champion could not open a card');
+    ok(purseBefore - paying.character.gold === owed,
+       'the fee charged was not the fee quoted: ' + (purseBefore - paying.character.gold) + ' against ' + owed);
+    ok(arenaMode(paying.arena) === 'tourney', 'a started card is not in tournament mode');
+    ok(paying.account.tourneysEntered === 1, 'entering a card went unrecorded');
+
+    /* A FEE THAT CANNOT BE OUTGROWN is the entire reason this mechanic exists,
+       so it is asserted rather than assumed: a deeper champion pays more. A
+       flat price is what made every other sink in this game finite. */
+    const shallow = rig(CONST.TOURNEY_MIN_ROUND), deep = rig(CONST.TOURNEY_DEPTH_CAP);
+    ok(tourneyFee(deep, 'grand', tourneyDepth(deep)) >
+       tourneyFee(shallow, 'grand', tourneyDepth(shallow)) * 2,
+       'the fee barely moves between round ' + CONST.TOURNEY_MIN_ROUND + ' and round ' +
+       CONST.TOURNEY_DEPTH_CAP + ' - it will go stale exactly as the shop did');
+    /* And it must keep moving PAST the gold soft cap, which is where a
+       round-denominated fee stopped and a run-denominated one does not. */
+    ok(runPurse(deep, CONST.GOLD_SOFTCAP_ROUND + 20) > runPurse(deep, CONST.GOLD_SOFTCAP_ROUND),
+       'depth past the soft cap adds nothing to the fee - it is priced off a curve that stopped');
+  })();
+
+
+  (function () {
+    function rig(depth) {
+      const s = defaultState();
+      s.account.unlocks.tourney = true;
+      s.account.prestige = CONST.TOURNEY_RANK;
+      s.character = newCharacter('human', 'Bracket', s.account);
+      const c = s.character;
+      c.stats = { str: 60, dex: 40, int: 20, con: 60, cha: 20 };
+      c.weapons = { swords: { level: 6, tp: 0 } };
+      c.activeWeapon = 'swords';
+      c.gear = { weapon: { quality: 2, augments: [] }, armor: { quality: 2, augments: [] } };
+      c.bestRound = depth;
+      c.renown = FORMULAS.rankThreshold(CONST.TOURNEY_RANK);
+      c.renownRank = renownRankFor(c.renown);
+      c.gold = 10000000;
+      c.hp = maxHpOf(c);
+      return s;
+    }
+
+    /* A TOURNAMENT CREDITS NO ARENA DEPTH. This is the single highest-risk
+       line in the whole mechanic: get it wrong and bestRound inflates, which
+       feeds the story gate, Seeded Entry, every depth feat, the rival's round
+       AND the tournament's own scaling - a loop that feeds itself. It is the
+       boss rule, and it is checked on the thing a player keeps rather than on
+       the flag that implies it. */
+    const depthRig = rig(30);
+    const bestBefore = depthRig.character.bestRound;
+    startTourney(depthRig, 'grand', 0);
+    depthRig.arena.tourney.won = CONST.TOURNEY_BOUTS;
+    settleRun(depthRig, 'tourney', 0);
+    ok(depthRig.character.bestRound === bestBefore,
+       'winning a card moved bestRound to ' + depthRig.character.bestRound +
+       ' - the tournament is being credited as arena depth');
+    ok(num(depthRig.character.lifetimeRounds, 0) === 0, 'a card added to lifetime rounds');
+    ok(depthRig.arena.over.rounds === 0, 'a card reported rounds cleared');
+    ok(!depthRig.character.classRounds || !Object.keys(depthRig.character.classRounds).length,
+       'a card levelled a battle class - rounds cleared is the currency and it cleared none');
+    ok(depthRig.account.tourneysWon === 0,
+       'settleRun counted a win by itself - the tally belongs to advanceBout, ' +
+       'or a card settled any other way pays a trophy');
+
+    /* PLACEMENT IS MONOTONE, and winning beats reaching the final. A payout
+       that does not reward getting further is not placement money. */
+    const pr = rig(30), d = tourneyDepth(pr);
+    let last = -1;
+    for (let w = 0; w <= CONST.TOURNEY_BOUTS; w++) {
+      const p = tourneyPayout(pr, 'grand', d, w);
+      ok(p >= last, 'reaching bout ' + w + ' pays less than reaching bout ' + (w - 1));
+      last = p;
+    }
+    ok(tourneyPayout(pr, 'grand', d, CONST.TOURNEY_BOUTS) >
+       tourneyPayout(pr, 'grand', d, CONST.TOURNEY_BOUTS - 1) * 1.5,
+       'winning the card is barely better than losing the final');
+    ok(tourneyPayout(pr, 'grand', d, 0) === 0, 'going out in the first bout still paid');
+    /* Losing the FINAL must not be a profit, or the top card is not a gamble. */
+    ok(tourneyPayout(pr, 'crimson', d, CONST.TOURNEY_BOUTS - 1) <
+       tourneyFee(pr, 'crimson', d),
+       'reaching the final of the top card turns a profit - there is nothing at stake');
+
+    /* THE PAYOUT IGNORES THE STORED FEE, driven through a real settle. `fee` is
+       kept on the marker for the screen to quote, and a payout that read it
+       back would let a hand-edited save mint gold by inflating a figure it had
+       already spent.
+
+       The first version of this check called tourneyPayout() directly and
+       compared it to itself, and the falsification proved it worthless: wiring
+       settleRun to pass the stored fee through produced ZERO failures, because
+       the check never went near the call site where the defect lives. A rule
+       can have a correct implementation and a caller that never reaches it -
+       which is the same miss the healing gate made, and the reason the tick
+       there got a behavioural check of its own. */
+    const forged = rig(30);
+    startTourney(forged, 'grand', 0);
+    forged.arena.tourney.won = 2;
+    const honestPay = (function () {
+      const clean = rig(30);
+      startTourney(clean, 'grand', 0);
+      clean.arena.tourney.won = 2;
+      const before = clean.character.gold;
+      settleRun(clean, 'knockout', 0);
+      return clean.character.gold - before;
+    })();
+    forged.arena.tourney.fee = Math.max(1, num(forged.arena.tourney.fee, 1)) * 1000;
+    const forgedBefore = forged.character.gold;
+    settleRun(forged, 'knockout', 0);
+    ok(forged.character.gold - forgedBefore === honestPay,
+       'inflating the stored fee paid out ' + (forged.character.gold - forgedBefore) +
+       ' against an honest ' + honestPay + ' - the fee is being read back');
+
+    /* THE BOUTS ESCALATE. Monotone in the opponent's health, or four bouts are
+       one fight repeated - and the whole difficulty design rests on this table
+       being a curve. */
+    const bt = rig(30);
+    startTourney(bt, 'grand', 0);
+    let prevHp = 0;
+    for (let b = 1; b <= CONST.TOURNEY_BOUTS; b++) {
+      const m = tourneyBoutMods(bt, bt.arena.tourney, b);
+      ok(m.hp > prevHp, 'bout ' + b + ' is no harder than bout ' + (b - 1));
+      prevHp = m.hp;
+    }
+    /* And a dearer card is a harder card, or the tiers are a price list rather
+       than a ladder. */
+    const tierRig = rig(30);
+    startTourney(tierRig, 'local', 0);
+    const localHp = tourneyBoutMods(tierRig, tierRig.arena.tourney, CONST.TOURNEY_BOUTS).hp;
+    const crimsonT = Object.assign({}, tierRig.arena.tourney, { tier: 'crimson' });
+    ok(tourneyBoutMods(tierRig, crimsonT, CONST.TOURNEY_BOUTS).hp > localHp,
+       'the dearest card is no harder than the cheapest - the tiers are a price list, not a ladder');
+    TOURNEY_TIER_KEYS.forEach(k => {
+      const t = TOURNEY_TIERS[k];
+      ok(t.feeRuns > 0 && t.purse > 0, k + ' is free or pays nothing');
+      ok(ICON_NAMES.indexOf(t.icon) !== -1, k + ' names an icon that is not in the sprite');
+    });
+  })();
+
+  (function () {
+    function rig(depth) {
+      const s = defaultState();
+      s.account.unlocks.tourney = true;
+      s.account.prestige = CONST.TOURNEY_RANK;
+      s.character = newCharacter('human', 'Bracket', s.account);
+      const c = s.character;
+      c.stats = { str: 60, dex: 40, int: 20, con: 60, cha: 20 };
+      c.weapons = { swords: { level: 6, tp: 0 } };
+      c.activeWeapon = 'swords';
+      c.gear = { weapon: { quality: 2, augments: [] }, armor: { quality: 2, augments: [] } };
+      c.bestRound = depth;
+      c.renown = FORMULAS.rankThreshold(CONST.TOURNEY_RANK);
+      c.renownRank = renownRankFor(c.renown);
+      c.gold = 10000000;
+      c.hp = maxHpOf(c);
+      return s;
+    }
+    /* A save round trip, through migrate() - the entry point a reload actually
+       uses. Anything short of that tests a branch rather than the journey. */
+    const trip = s => migrate(JSON.parse(JSON.stringify(s)));
+
+    /* A TOURNAMENT SURVIVES A RELOAD AS A TOURNAMENT. This is the boss defect
+       of 2026-08-22 verbatim, in a mode the player has PAID to be in: losing
+       the marker leaves the bout enemy standing while the mode reads endless,
+       so the card can never be won however well they fight and the run rolls
+       on from a deep start - Seeded Entry without earning it, after the fee. */
+    const live = rig(30);
+    startTourney(live, 'grand', 0);
+    live.arena.tourney.won = 2;
+    live.arena.tourney.bout = 3;
+    const back = trip(live);
+    ok(back.arena.active, 'a card in progress did not resume at all');
+    ok(arenaMode(back.arena) === 'tourney',
+       'a card resumed as ' + arenaMode(back.arena) + ' - the marker was lost and ' +
+       'the player has already paid the fee');
+    /* GUARDED, because the obvious falsification of this whole block - drop
+       the marker in migrateArena - made these reads THROW rather than report,
+       and a throw inside the suite hides every check after it. Fifth time this
+       file has paid for walking into a bad row; the rule is unchanged, and it
+       applies to the checks written to police it. */
+    const bt = back.arena.tourney;
+    ok(!!bt, 'the card marker did not survive migration at all');
+    ok(!bt || bt.won === 2, 'the bouts already won were lost on reload');
+    ok(!bt || bt.tier === 'grand', 'the card changed tier across a reload');
+    ok(!paysDepth(back.arena), 'a resumed card started crediting arena depth');
+
+    /* THE BRACKET IS DERIVED, NOT RESTORED - so the sixteen names, their
+       strengths and the rival's place in the draw are the same on the other
+       side of a reload and there is nothing in them to forge. */
+    ok(bt && bt.entrants.length === CONST.TOURNEY_ENTRANTS,
+       'the bracket came back with ' + (bt ? bt.entrants.length : 'no') + ' entrants');
+    const beforeNames = live.arena.tourney.entrants.map(e => e.name).join('|');
+    ok(bt && bt.entrants.map(e => e.name).join('|') === beforeNames,
+       'the bracket was redrawn across a reload - the player came back to different opponents');
+    const forgedNames = JSON.parse(JSON.stringify(live));
+    forgedNames.arena.tourney.entrants = [{ you: true, name: 'Cheat', strength: 1, archetype: 'turtle' }];
+    const fn = trip(forgedNames).arena.tourney;
+    ok(fn && fn.entrants.map(e => e.name).join('|') === beforeNames,
+       'a forged entrant list survived migration');
+
+    /* `won` and `bout` cannot disagree. A record claiming three wins while
+       standing in bout one is four payouts for one fight. */
+    const skew = JSON.parse(JSON.stringify(live));
+    skew.arena.tourney.won = 3; skew.arena.tourney.bout = 1;
+    const sk = trip(skew).arena.tourney;
+    ok(sk && sk.bout === 4, 'bouts won and the bout being fought drifted apart');
+    const overWon = JSON.parse(JSON.stringify(live));
+    overWon.arena.tourney.won = 99;
+    const ow = trip(overWon).arena.tourney;
+    ok(ow && ow.won < CONST.TOURNEY_BOUTS,
+       'a record arrived having already won the card it is still standing in');
+
+    /* DEPTH IS RE-CLAMPED AGAINST THE CHAMPION. It is what the fee and every
+       bout are scaled from, so an inflated one is an inflated purse - and a
+       card credits no depth, so it can never honestly exceed bestRound. */
+    const deepForge = JSON.parse(JSON.stringify(live));
+    deepForge.arena.tourney.depth = CONST.TOURNEY_DEPTH_CAP;
+    deepForge.character.bestRound = 12;
+    const clamped = trip(deepForge);
+    const cl = clamped.arena.tourney;
+    ok(cl && cl.depth <= 12,
+       'a forged depth of ' + (cl ? cl.depth : 'nothing') + ' survived against a best round of 12');
+
+    /* THE UNLOCK IS RE-DERIVED, never trusted - the hole the Phase 9 audit
+       found in all three rank unlocks, applied to the one this build adds. */
+    const forgedGate = defaultState();
+    forgedGate.account.unlocks.tourney = true;
+    forgedGate.character = newCharacter('human', 'Nobody', forgedGate.account);
+    ok(!trip(forgedGate).account.unlocks.tourney,
+       'a rank-0 account kept a forged tournament unlock through a load');
+    const earned = rig(30);
+    earned.account.unlocks.tourney = false;
+    ok(trip(earned).account.unlocks.tourney,
+       'an account that has earned the rank did not pick the tournament up on load');
+  })();
+
+  (function () {
+    function rig(depth) {
+      const s = defaultState();
+      s.account.unlocks.tourney = true;
+      s.account.unlocks.autoYield = true;
+      s.account.prestige = CONST.TOURNEY_RANK;
+      s.character = newCharacter('human', 'Bracket', s.account);
+      const c = s.character;
+      c.stats = { str: 60, dex: 40, int: 20, con: 60, cha: 20 };
+      c.weapons = { swords: { level: 6, tp: 0 } };
+      c.activeWeapon = 'swords';
+      c.gear = { weapon: { quality: 2, augments: [] }, armor: { quality: 2, augments: [] } };
+      c.bestRound = depth;
+      c.renown = FORMULAS.rankThreshold(CONST.TOURNEY_RANK);
+      c.renownRank = renownRankFor(c.renown);
+      c.gold = 10000000;
+      c.hp = maxHpOf(c);
+      return s;
+    }
+
+    /* WHAT THE MODE ACTUALLY DOES, checked through behaviour rather than by
+       reading the flags back - comparing a table to itself would pass with the
+       table wired to nothing at all. */
+    const m = rig(30);
+    startTourney(m, 'grand', 0);
+    m.account.autoYieldAt = 0.9;
+    ok(autoYieldCheck(m, 0) === false,
+       'Auto-Yield fired inside a tournament - there is no walking out of a card');
+    settleDraftOwed(m);
+    ok(m.arena.draft === null, 'a boon was offered mid-card - the draft belongs to the endless run');
+    ok(arr(m.arena.boons, []).length === 0, 'a card arrived holding drafted boons');
+    /* The crowd IS spendable here, and deliberately so: four bouts on one
+       health bar is exactly where a banked heal earns its keep. */
+    m.arena.crowd = CONST.CROWD_MAX;
+    ok(crowdReady(m.arena), 'the crowd cannot be spent in a tournament - four bouts on one bar is where it matters');
+    /* NO WALKING OUT, and the core holds it rather than the markup. Rendering
+       the button only where it belongs is the visible half; this is the half
+       that matters, because yielding a card after two bouts would have banked
+       70% of the placement money AND skipped the knockout bench - making the
+       fastest way to run cards walking out of every one of them. */
+    const bail = rig(30);
+    startTourney(bail, 'grand', 0);
+    bail.arena.tourney.won = 2;
+    const goldAtBail = bail.character.gold;
+    ok(settleRun(bail, 'yield', 0) === null, 'a tournament could be yielded');
+    ok(bail.arena.active, 'yielding a card ended it anyway');
+    ok(bail.character.gold === goldAtBail, 'yielding a card paid out');
+    /* The same hole was open on a story bout since Phase 9 - autoYieldCheck
+       refused there and the button beside it did not. */
+    const bossBail = rig(30);
+    bossBail.character.bestRound = 40;
+    /* Guarded rather than indexed straight into: this probe threw on its
+       first run (STORY_KEYS does not exist), and a throw inside the suite
+       hides every check after it - the fourth time this file has paid for
+       walking into a bad row instead of reporting it. */
+    const tale = STORIES && STORIES.length ? STORIES[0] : null;
+    const started = tale ? startBoss(bossBail, tale.id, 0, 0) : { ok: false };
+    ok(!!tale, 'the story table is empty, so the boss half of this check could not run');
+    if (started.ok) {
+      ok(settleRun(bossBail, 'yield', 0) === null, 'a story bout could be yielded');
+      ok(bossBail.arena.active, 'yielding a story bout ended it anyway');
+    }
+    /* And an endless run must still be walkable, or the guard is an off switch
+       rather than a gate - the reduced-motion lesson, applied to a rule. */
+    const walk = rig(30);
+    startRun(walk, 0, []);
+    ok(settleRun(walk, 'yield', 0) !== null, 'the endless run can no longer be yielded');
+
+    /* THE PAYOUT IS THE FIGURE THE ENTRY SCREEN QUOTED. The fee is quoted with
+       no run bound and the payout used to be derived mid-settle with one bound,
+       so the day's sand silently moved the placement money without moving the
+       fee: a card entered for 4,035g on Packed House paid 4,370 against its own
+       screen's 3,833, and on Thin Ranks it would have paid less than the player
+       accepted. Driven through a real settle on a gold-bearing sand rather than
+       compared to itself, because comparing the derivation to the derivation is
+       exactly what passed while this was broken. */
+    const gold = TOURNEY_TIER_KEYS.map(k => {
+      const q = rig(30);
+      const quotedFee = tourneyFee(q, k, tourneyDepth(q));
+      const quotedAt3 = tourneyPayout(q, k, tourneyDepth(q), CONST.TOURNEY_BOUTS - 1);
+      const purseBefore = q.character.gold;
+      /* A sand that pays, forced rather than waited for. */
+      startTourney(q, k, 0);
+      q.arena.conditions = ['packedhouse'];
+      bindRun(q);
+      q.arena.tourney.won = CONST.TOURNEY_BOUTS - 1;
+      settleRun(q, 'knockout', 0);
+      const net = q.character.gold - purseBefore;
+      ok(net === quotedAt3 - quotedFee,
+        k + ': the card settled at ' + (net + quotedFee) + ' against the ' + quotedAt3 +
+        ' its own entry screen quoted - the sand is moving the placement money');
+      return net;
+    });
+    ok(gold.length === TOURNEY_TIER_KEYS.length, 'a card could not be settled at all');
+
+    /* THE RIVAL IS THE FINALIST, by construction rather than by luck. At
+       strength 1 the jitter in tourneyWinner could and did knock them out of
+       their own half of the draw, and a grudge that only sometimes turns up is
+       not a grudge. Checked over several seeds, because "by construction"
+       means every draw and not the one that happened to work. */
+    for (let i = 0; i < 6; i++) {
+      const rv = rig(30);
+      rv.account.rival = { name: 'Halbrand the House Champion', archetype: ELITE_ARCHETYPES[0],
+                           round: 18, beat: 1, since: 0 };
+      const ents = tourneyEntrants(rv, 1000 + i, 'grand');
+      const fin = ents[tourneyWinner(ents, Math.pow(2, CONST.TOURNEY_BOUTS - 1),
+                                     CONST.TOURNEY_ENTRANTS - 1, 1000 + i)];
+      ok(fin && fin.rival,
+         'seed ' + (1000 + i) + ': the rival did not reach the final of their own bracket');
+    }
+    /* And no rival means no rival in the draw, rather than a phantom. */
+    const norv = rig(30);
+    ok(tourneyEntrants(norv, 7, 'grand').filter(e => e.rival).length === 0,
+       'an account with no rival drew one into the bracket anyway');
+
+    /* Sixteen distinct names, because a bracket with the same gladiator in it
+       twice is the duplicate-path state the class sprite was fixed out of, and
+       just as invisible in review. */
+    const names = tourneyEntrants(rig(30), 424242, 'grand').map(e => e.name);
+    ok(names.length === CONST.TOURNEY_ENTRANTS, 'the bracket is not full');
+    ok(names.filter((v, i) => names.indexOf(v) === i).length === names.length,
+       'the same name appears twice in one bracket');
+
+    /* The board is DERIVED: same seed, same draw, every time. */
+    const a1 = tourneyEntrants(rig(30), 99, 'grand').map(e => e.name).join('|');
+    const a2 = tourneyEntrants(rig(30), 99, 'grand').map(e => e.name).join('|');
+    ok(a1 === a2, 'the same seed drew two different brackets');
+  })();
+
+  /* THE ONE NUMBER THAT DECIDES WHETHER THIS MECHANIC MAY EXIST. A card must
+     not out-earn the endless run it sits beside, or the arena stops being the
+     game and becomes the place you grind fee money - which is the disease this
+     was built to cure, arriving through the cure.
+
+     Measured, not asserted from the constants: the same simulate() the economy
+     guard uses, against simulateTourney() on a depth that is itself MEASURED
+     by running the arena. Both bounds matter - a card that pays far less than
+     the arena is a trap nobody should take, and one that pays far more is the
+     money printer. Measured 2026-09-15 at 0.68x to 1.23x across mid and late. */
+  (function () {
+    const cfg = { seed: 1, stats: { str: 40, dex: 30, int: 20, con: 40, cha: 15 },
+                  weaponLevel: 6, weaponQuality: 2, armorQuality: 2 };
+    const depth = measuredDepth(cfg, 3);
+    const arena = simulate(cfg, 6);
+    TOURNEY_TIER_KEYS.forEach(k => {
+      /* FORTY runs, not ten, and the reason is worth keeping: the top card is
+         won about one time in six, so ten samples routinely contain no wins at
+         all and the realised mean collapses to nothing. The first version of
+         this check fired at 0.02x on a card that really pays 1.06x - a suite
+         that cries wolf is a suite that gets ignored, and a probabilistic
+         assertion needs enough samples to see the event it is asking about.
+         A tournament run is ~110 exchanges against the pricing rig's ~350, so
+         this costs a fraction of what that check already spends. */
+      const card = simulateTourney(cfg, 40, k, depth);
+      if (!card) { ok(false, k + ' could not be simulated at all'); return; }
+      const ratio = card.goldPerHour / Math.max(1, arena.goldPerHour);
+      ok(ratio <= 2.2,
+        k + ' pays ' + ratio.toFixed(2) + 'x what the endless run does - the arena is now ' +
+        'the place you grind fee money, which is the thing this mode exists to fix');
+      ok(ratio >= 0.2,
+        k + ' pays ' + ratio.toFixed(2) + 'x the endless run - it is a trap, not a choice');
+      /* And a card is a SET PIECE, not a run: two minutes against the arena's
+         five to twelve, the same contrast a story bout draws. */
+      ok(card.medianMinutes > 0.5 && card.medianMinutes < 5,
+        k + ' takes ' + card.medianMinutes + ' minutes - a card is a set piece, not a run');
+    });
+  })();
   /* --- DEPTH IN THE TREE IS WORTH SOMETHING (Rob, 2026-09-13) ---
      It was worth nothing at all: every weapon shared PROF_DMG_PER, so a Great
      Axe at proficiency 10 hit exactly as hard as the Daggers a champion is born
@@ -14978,8 +16383,15 @@ function assertAll() {
     const s = defaultState();
     s.character = newCharacter('human', 'Ranker', s.account);
     ok(evaluateRankUnlocks(s).length === 0, 'a rank unlock fired at rank 0');
-    s.character.renown = FORMULAS.rankThreshold(CONST.RANK_SEEDED_ENTRY);
-    s.account.prestige = CONST.RANK_SEEDED_ENTRY;
+    /* THE TOP RANK, read out of the table rather than named. This was pinned
+       to RANK_SEEDED_ENTRY, which was the deepest unlock when it was written
+       and stopped being so the moment the tournament landed at rank 8 - so a
+       check whose own sentence says "every unlock" was really asking about the
+       six rungs it happened to know about. It failed on the first boot after
+       the new row, correctly, and the fix is to derive the ceiling. */
+    const topRank = RANK_UNLOCKS.reduce((m, u) => Math.max(m, u.rank), 0);
+    s.character.renown = FORMULAS.rankThreshold(topRank);
+    s.account.prestige = topRank;
     const opened = evaluateRankUnlocks(s);
     ok(opened.length === RANK_UNLOCKS.length, 'not every unlock fired at the top rank');
     ok(s.account.unlocks.seededEntry && s.account.unlocks.autoYield,
@@ -17149,6 +18561,13 @@ window.EA = {
   startArenaTick, stopArenaTick, arenaStep, catchUpArena, defaultScreen, startingRenownFor, RENOWN_TOP_RANK,
   AUGMENTS, AUGMENT_KEYS, AUGMENT_SLOTS, AUGMENTS_BY_SLOT, budgetConflict,
   migrateGear, repairAugmentLists, healMs, sustainForYou, regenSourceOf, regenOver, hpStatusLine,
+  simulateTourney, simulateTourneyRun, measuredDepth,
+  ARENA_MODES, ARENA_MODE_KEYS, arenaMode, modeOf, paysDepth, canYield, canDraft,
+  canSpendCrowd, rivalAppears, advanceOnClear, baseRoundGold, baseRoundRenown,
+  tourneyEntryMarkup, tourneyBoardMarkup, tourneyBoutName,
+  TOURNEY_TIERS, TOURNEY_TIER_KEYS, runPurse, tourneyDepth, tourneyFee, tourneyPayout, tourneyRenown,
+  tourneyEntrants, tourneyBracketRange, tourneyWinner, tourneyEntrantFor, tourneyBoutRound, tourneyBoutMods,
+  beginBout, advanceBout, tourneyBlocked, startTourney,
   ARENA_CONDITIONS, CONDITION_KEYS, BOONS, BOON_KEYS, DRAFT_BUCKETS,
   conditionsForBlock, conditionsAt, conditionBlock, conditionsLeftMs, enemyMods,
   conditionEffects, bonusText,
